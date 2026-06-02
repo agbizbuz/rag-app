@@ -1,0 +1,568 @@
+{
+  "nodes": [
+    {
+      "id": "config_py",
+      "label": "config.py",
+      "file_type": "code",
+      "source_file": "config.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_config_settings",
+      "label": "Settings",
+      "file_type": "code",
+      "source_file": "config.py",
+      "source_location": "L10"
+    },
+    {
+      "id": "basesettings",
+      "label": "BaseSettings",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_config_config",
+      "label": "Config",
+      "file_type": "code",
+      "source_file": "config.py",
+      "source_location": "L19"
+    },
+    {
+      "id": "app_py",
+      "label": "app.py",
+      "file_type": "code",
+      "source_file": "app.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "rag_core_vector_store_py",
+      "label": "vector_store.py",
+      "file_type": "code",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "rag_core_vector_store_vectorstore",
+      "label": "VectorStore",
+      "file_type": "code",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L7"
+    },
+    {
+      "id": "rag_core_vector_store_vectorstore_init",
+      "label": ".__init__()",
+      "file_type": "code",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L13"
+    },
+    {
+      "id": "rag_core_vector_store_vectorstore_get_or_create_collection",
+      "label": "._get_or_create_collection()",
+      "file_type": "code",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L20"
+    },
+    {
+      "id": "rag_core_vector_store_vectorstore_add_documents",
+      "label": ".add_documents()",
+      "file_type": "code",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L33"
+    },
+    {
+      "id": "rag_core_vector_store_vectorstore_get_collection_size",
+      "label": ".get_collection_size()",
+      "file_type": "code",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L49"
+    },
+    {
+      "id": "rag_core_vector_store_vectorstore_query",
+      "label": ".query()",
+      "file_type": "code",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L52"
+    },
+    {
+      "id": "rag_core_vector_store_vectorstore_delete_collection",
+      "label": ".delete_collection()",
+      "file_type": "code",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L74"
+    },
+    {
+      "id": "rag_core_vector_store_rationale_8",
+      "label": "Initializes a persistent ChromaDB client and collection.     The underlying data",
+      "file_type": "rationale",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L8"
+    },
+    {
+      "id": "rag_core_vector_store_rationale_21",
+      "label": "Create or retrieve the collection, prioritizing OpenAI embedders if a key exists",
+      "file_type": "rationale",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L21"
+    },
+    {
+      "id": "rag_core_vector_store_rationale_34",
+      "label": "Upserts a list of documents into the vector store.         documents: List of di",
+      "file_type": "rationale",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L34"
+    },
+    {
+      "id": "rag_core_vector_store_rationale_53",
+      "label": "Performs a semantic search.         Returns a list of dicts: { 'id', 'text', 'me",
+      "file_type": "rationale",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L53"
+    },
+    {
+      "id": "rag_core_init_py",
+      "label": "__init__.py",
+      "file_type": "code",
+      "source_file": "rag_core/__init__.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "rag_core_llm_py",
+      "label": "llm.py",
+      "file_type": "code",
+      "source_file": "rag_core/llm.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "rag_core_llm_get_llm_response",
+      "label": "get_llm_response()",
+      "file_type": "code",
+      "source_file": "rag_core/llm.py",
+      "source_location": "L6"
+    },
+    {
+      "id": "rag_core_llm_rationale_7",
+      "label": "Queries the selected LLM provider using the provided context and prompt.",
+      "file_type": "rationale",
+      "source_file": "rag_core/llm.py",
+      "source_location": "L7"
+    },
+    {
+      "id": "rag_core_parser_py",
+      "label": "parser.py",
+      "file_type": "code",
+      "source_file": "rag_core/parser.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "rag_core_parser_process_file",
+      "label": "process_file()",
+      "file_type": "code",
+      "source_file": "rag_core/parser.py",
+      "source_location": "L7"
+    },
+    {
+      "id": "rag_core_parser_rationale_8",
+      "label": "Parse an uploaded file into standardized document chunks.     Returns a list of",
+      "file_type": "rationale",
+      "source_file": "rag_core/parser.py",
+      "source_location": "L8"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config_py",
+      "target": "pydantic_settings",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "config.py",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "config_py",
+      "target": "pydantic",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "config.py",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "config_py",
+      "target": "dotenv",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "config.py",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "config_py",
+      "target": "os",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "config.py",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "config_py",
+      "target": "src_config_settings",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "config.py",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "src_config_settings",
+      "target": "basesettings",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "config.py",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "config_py",
+      "target": "src_config_config",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "config.py",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "app_py",
+      "target": "streamlit",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "app_py",
+      "target": "os",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "app_py",
+      "target": "rag_core_vector_store",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "app_py",
+      "target": "rag_core_parser",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "app_py",
+      "target": "rag_core_llm",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "app_py",
+      "target": "config",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_py",
+      "target": "chromadb",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_py",
+      "target": "chromadb_utils_embedding_functions",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_py",
+      "target": "config",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_py",
+      "target": "os",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_py",
+      "target": "rag_core_vector_store_vectorstore",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_vectorstore",
+      "target": "rag_core_vector_store_vectorstore_init",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_vectorstore",
+      "target": "rag_core_vector_store_vectorstore_get_or_create_collection",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_vectorstore",
+      "target": "rag_core_vector_store_vectorstore_add_documents",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_vectorstore",
+      "target": "rag_core_vector_store_vectorstore_get_collection_size",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L49",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_vectorstore",
+      "target": "rag_core_vector_store_vectorstore_query",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L52",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_vectorstore",
+      "target": "rag_core_vector_store_vectorstore_delete_collection",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L74",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_vectorstore_init",
+      "target": "rag_core_vector_store_vectorstore_get_or_create_collection",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_vectorstore_add_documents",
+      "target": "rag_core_vector_store_vectorstore_get_or_create_collection",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_rationale_8",
+      "target": "rag_core_vector_store_vectorstore",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_rationale_21",
+      "target": "rag_core_vector_store_vectorstore_get_or_create_collection",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_rationale_34",
+      "target": "rag_core_vector_store_vectorstore_add_documents",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_vector_store_rationale_53",
+      "target": "rag_core_vector_store_vectorstore_query",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/vector_store.py",
+      "source_location": "L53",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_llm_py",
+      "target": "os",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/llm.py",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_llm_py",
+      "target": "openai",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/llm.py",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_llm_py",
+      "target": "anthropic",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/llm.py",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_llm_py",
+      "target": "rag_core_llm_get_llm_response",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/llm.py",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_llm_rationale_7",
+      "target": "rag_core_llm_get_llm_response",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/llm.py",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_parser_py",
+      "target": "uuid",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/parser.py",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_parser_py",
+      "target": "pandas",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/parser.py",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_parser_py",
+      "target": "pypdf",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/parser.py",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_parser_py",
+      "target": "docx",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/parser.py",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_parser_py",
+      "target": "rag_core_parser_process_file",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/parser.py",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "rag_core_parser_rationale_8",
+      "target": "rag_core_parser_process_file",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "rag_core/parser.py",
+      "source_location": "L8",
+      "weight": 1.0
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}
