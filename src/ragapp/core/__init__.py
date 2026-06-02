@@ -1,1 +1,1 @@
-# Core logic for the RAG application
+# ragapp.core logic for the RAG application

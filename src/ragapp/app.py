@@ -1,8 +1,8 @@
 import streamlit as st
 import os
-from rag_core.vector_store import VectorStore
-from rag_core.parser import process_file
-from rag_core.llm import get_llm_response
+from ragapp.core.vector_store import VectorStore
+from ragapp.core.parser import process_file
+from ragapp.core.llm import get_llm_response
 from config import settings
 
 # Page configuration
