@@ -15,19 +15,21 @@ This application allows you to ingest local documents (PDF, DOCX, TXT, CSV) into
 ## 🏗️ Project Structure
 
 ```text
-rag_app/
-├── app.py                          # 🖥️ Main Streamlit Web Interface
-├── config.py                       # ⚙️ Settings and .env loader
-├── .env.example                    # 🔑 Template for API keys
-├── pyproject.toml                  # 📦 Project dependencies
-├── rag_core/                       # 🧠 Core Application Logic
-│   ├── __init__.py
-│   ├── parser.py                   # File parsing and chunking
-│   ├── llm.py                      # LLM API abstraction
-│   └── vector_store.py             # ChromaDB interaction
+rag-app/
+├── src/ragapp/                     # 📁 RAG Application source
+│   ├── app.py                      # 🖥️ Main Streamlit Web Interface
+│   ├── config.py                   # ⚙️ Settings and .env loader
+│   ├── .env.example                # 🔑 Template for API keys
+│   └── core/                       # 🧠 Core Application Logic
+│       ├── __init__.py
+│       ├── parser.py               # File parsing and chunking
+│       ├── llm.py                  # LLM API abstraction
+│       └── vector_store.py         # ChromaDB interaction
+├── AGENTS.md                       # 📖 Agent/LLM usage guide
 ├── chroma_db/                      # 🗄️ Persistent Storage (auto-created)
-├── uploads/                        # 📂 Temporary file storage (auto-created)
-└── README.md
+├── pyproject.toml                  # 📦 Project dependencies
+├── README.md                       # 📄 This file
+└── uploads/                        # 📂 Temporary file storage (auto-created)
 ```
 
 ## 🚀 Getting Started
@@ -37,16 +39,15 @@ rag_app/
 2.  **`uv`** (Python package manager) installed. *[Install uv]*
 
 ### Installation
-Navigate to the `rag_app` directory and sync dependencies:
+Sync dependencies using `uv`:
 ```bash
-cd rag_app
 uv sync
 ```
 
 ### 1. Configure API Keys
 Create a `.env` file and add your API keys. You don't need all of them unless you plan to use those specific providers.
 ```bash
-cp .env.example .env
+cp src/ragapp/.env.example .env
 ```
 Open `.env` in a text editor and paste your keys:
 ```dotenv
@@ -58,7 +59,7 @@ GOOGLE_API_KEY=your-google-gemini-key
 ### 2. Launch the App
 Run the Streamlit interface:
 ```bash
-streamlit run app.py
+streamlit run src/ragapp/app.py
 ```
 
 ## 💡 How to Use
@@ -81,9 +82,9 @@ streamlit run app.py
 
 ## 🐛 Troubleshooting
 
-*   **"Missing API Key" error**: Ensure your `.env` file is in the same directory as `app.py` and that you have restarted the Streamlit app after adding keys.
+*   **"Missing API Key" error**: Ensure your `.env` file is in the project root (not `src/ragapp/`) and that you have restarted the Streamlit app after adding keys.
 *   **"Database is empty"**: Make sure you have processed files in the "Builder" tab before attempting to query.
-*   **Import Errors**: Ensure you ran `uv sync` in the `rag_app` directory before attempting to `streamlit run app.py`.
+*   **Import Errors**: Ensure you ran `uv sync` in the project root directory before launching the app.
 
 ## 🍽️ License
 
