@@ -1,8 +1,8 @@
 import streamlit as st
 import os
-from ragapp.core.vector_store import VectorStore
-from ragapp.core.parser import process_file
-from ragapp.core.llm import get_llm_response
+from core.vector_store import VectorStore
+from core.parser import process_file
+from core.llm import get_llm_response
 from config import settings
 
 # Page configuration
@@ -127,4 +127,4 @@ with tab_query:
     else:
         st.warning("🚨 Database is empty.")
         st.info("Please navigate to the **'Builder (Create DB)'** tab to ingest your documents first.")
-        st.page_link("https://google.com", text="Google Search", use_container_width=True)
+        st.page_link("https://google.com", label="Google Search", use_container_width=True)
