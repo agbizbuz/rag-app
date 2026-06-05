@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     collection_name: str = Field(default="my_rag_collection", validation_alias="COLLECTION_NAME")
     default_llm: str = Field(default="gpt-4o-mini", validation_alias="DEFAULT_LLM")
 
+    groq_api_key: str = ""
+    huggingface_api_key: str = ""
+    ollama_base_url: str = "http://localhost:11434/v1"
+    lm_studio_base_url: str = "http://localhost:1234/v1"
     class Config:
         env_file = ".env"
 

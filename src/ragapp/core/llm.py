@@ -1,4 +1,5 @@
 import os
+import re
 from openai import OpenAI
 from anthropic import Anthropic
 
@@ -6,6 +7,15 @@ from anthropic import Anthropic
 def get_llm_response(query_context: str, llm_model: str) -> str:
     """
     Queries the selected LLM provider using the provided context and prompt.
+
+    Provider selection by model name prefix:
+        groq:<model>         → Groq (API key: GROQ_API_KEY)
+        ollama:<model>       → Ollama (local, no key; set OLLAMA_BASE_URL)
+        lmstudio:<model>     → LM Studio (local, no key; set LM_STUDIO_BASE_URL)
+        meta-llama/...       → HuggingFace Inference API (API key: HUGGINGFACE_API_KEY)
+        gpt-*                → OpenAI
+        claude-*             → Anthropic
+        gemini-*             → Google Gemini
     """
     # We prepend a system-style instruction directly to the user prompt for simplicity
     prompt = f"""
@@ -20,10 +30,113 @@ Provide the answer clearly and concisely.
 === USER QUERY ===
 """
 
-    # Determine provider
-    model_lower = llm_model.lower()
+    model_lower = llm_model.lower().strip()
 
-    # 1. OpenAI
+    # ---------------------------------------------------------------
+    # 1. Groq (OpenAI-compatible API)
+    # ---------------------------------------------------------------
+    if model_lower.startswith("groq:"):
+        if not os.environ.get("GROQ_API_KEY"):
+            return "⚠️ Error: `GROQ_API_KEY` is missing in the environment."
+
+        groq_client = OpenAI(
+            api_key=os.environ["GROQ_API_KEY"],
+            base_url="https://api.groq.com/openai/v1",
+        )
+        actual_model = llm_model[len("groq:"):]
+        try:
+            response = groq_client.chat.completions.create(
+                model=actual_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2,
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            return f"⚠️ Groq API Error: {e}"
+
+    # ---------------------------------------------------------------
+    # 2. Ollama (OpenAI-compatible local server)
+    # ---------------------------------------------------------------
+    elif model_lower.startswith("ollama:"):
+        ollama_base_url = os.environ.get(
+            "OLLAMA_BASE_URL", "http://localhost:11434/v1"
+        )
+        actual_model = llm_model[len("ollama:"):]
+        try:
+            ollama_client = OpenAI(
+                api_key="ollama",
+                base_url=ollama_base_url,
+            )
+            response = ollama_client.chat.completions.create(
+                model=actual_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2,
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            return f"⚠️ Ollama API Error: {e}"
+
+    # ---------------------------------------------------------------
+    # 3. LM Studio (OpenAI-compatible local server)
+    # ---------------------------------------------------------------
+    elif model_lower.startswith("lmstudio:") or model_lower.startswith("lm-studio:"):
+        prefix_len = len("lmstudio:") if model_lower.startswith("lmstudio:") else len("lm-studio:")
+        actual_model = llm_model[prefix_len:]
+        lm_studio_base_url = os.environ.get(
+            "LM_STUDIO_BASE_URL", "http://localhost:1234/v1"
+        )
+        try:
+            lm_client = OpenAI(
+                api_key="lm-studio",
+                base_url=lm_studio_base_url,
+            )
+            response = lm_client.chat.completions.create(
+                model=actual_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2,
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            return f"⚠️ LM Studio API Error: {e}"
+
+    # ---------------------------------------------------------------
+    # 4. HuggingFace Inference API (REST)
+    # ---------------------------------------------------------------
+    elif re.match(r"^[\w-]+/[\w.-]+", llm_model.strip()) and not re.match(
+        r"^(gpt|claude|gemini|ollama|groq|lmstudio|lm-studio)", model_lower
+    ):
+        # Looks like a HuggingFace Hub model ID (user/model format)
+        if not os.environ.get("HUGGINGFACE_API_KEY"):
+            return "⚠️ Error: `HUGGINGFACE_API_KEY` is missing in the environment."
+
+        try:
+            import requests
+
+            response = requests.post(
+                f"https://api-inference.huggingface.co/models/{llm_model.strip()}",
+                headers={"Authorization": f"Bearer {os.environ['HUGGINGFACE_API_KEY']}"},
+                json={"inputs": prompt, "parameters": {"max_new_tokens": 1024}},
+            )
+            response.raise_for_status()
+            result = response.json()
+
+            # HF returns either [{"generated_text": "..."}] or just the string
+            if isinstance(result, list) and len(result) > 0:
+                return result[0].get("generated_text", result[0])
+            elif isinstance(result, str):
+                return result
+            else:
+                return f"⚠️ Unexpected HuggingFace response format: {result}"
+        except requests.exceptions.HTTPError as e:
+            if e.response is not None and e.response.status_code == 429:
+                return "⚠️ HuggingFace Inference API: rate limited. Try again later or use a self-hosted model."
+            return f"⚠️ HuggingFace API Error: {e}"
+        except Exception as e:
+            return f"⚠️ HuggingFace API Error: {e}"
+
+    # ---------------------------------------------------------------
+    # 5. OpenAI (existing)
+    # ---------------------------------------------------------------
     if "gpt" in model_lower:
         if not os.environ.get("OPENAI_API_KEY"):
             return "⚠️ Error: `OPENAI_API_KEY` is missing in the environment."
@@ -37,7 +150,9 @@ Provide the answer clearly and concisely.
         except Exception as e:
             return f"⚠️ OpenAI API Error: {e}"
 
-    # 2. Anthropic
+    # ---------------------------------------------------------------
+    # 6. Anthropic (existing)
+    # ---------------------------------------------------------------
     elif "claude" in model_lower:
         if not os.environ.get("ANTHROPIC_API_KEY"):
             return "⚠️ Error: `ANTHROPIC_API_KEY` is missing in the environment."
@@ -51,7 +166,9 @@ Provide the answer clearly and concisely.
         except Exception as e:
             return f"⚠️ Anthropic API Error: {e}"
 
-    # 3. Google Gemini
+    # ---------------------------------------------------------------
+    # 7. Google Gemini (existing)
+    # ---------------------------------------------------------------
     elif "gemini" in model_lower:
         if not os.environ.get("GOOGLE_API_KEY"):
             return "⚠️ Error: `GOOGLE_API_KEY` is missing in the environment."

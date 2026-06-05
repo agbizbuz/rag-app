@@ -1,9 +1,28 @@
-import streamlit as st
 import os
-from core.vector_store import VectorStore
-from core.parser import process_file
+import requests
+import streamlit as st
 from core.llm import get_llm_response
+from core.parser import process_file
+from core.vector_store import VectorStore
 from config import settings
+def fetch_ollama_models(base_url: str) -> list[str]:
+    """Fetch available models from an Ollama server."""
+    try:
+        resp = requests.get(f"{base_url}/api/tags", timeout=3)
+        resp.raise_for_status()
+        data = resp.json()
+        return [f"ollama:{m['name']}" for m in data.get("models", [])]
+    except Exception:
+        return []
+def fetch_lm_studio_models(base_url: str) -> list[str]:
+    """Fetch available models from an LM Studio server."""
+    try:
+        resp = requests.get(f"{base_url}/v1/models", timeout=3)
+        resp.raise_for_status()
+        data = resp.json()
+        return [f"lmstudio:{m['id']}" for m in data.get("data", [])]
+    except Exception:
+        return []
 
 # Page configuration
 st.set_page_config(page_title="Local RAG Assistant", page_icon="📚", layout="wide")
@@ -14,7 +33,23 @@ st.set_page_config(page_title="Local RAG Assistant", page_icon="📚", layout="w
 if "vector_store" not in st.session_state:
     # We initialize on first load. The path is persistent on disk.
     st.session_state.vector_store = VectorStore()
-
+_QUIT_HTML = """
+<script>
+try { window.open('about:blank', '_self').close(); } catch(e) {}
+</script>
+<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;background:#f7f7f7;z-index:9999;font-family:sans-serif;">
+  <div style="text-align:center;">
+    <div style="font-size:48px;margin-bottom:16px;">👋</div>
+    <h2 style="margin:0 0 8px;color:#333;">Session Ended</h2>
+    <p style="color:#777;font-size:14px;">Close this tab to finish.</p>
+    <p style="color:#999;font-size:12px;margin-top:16px;">(If the page did not close automatically, you can also stop the streamlit server with Ctrl+C in the terminal.)</p>
+  </div>
+</div>
+"""
+if st.session_state.get("_quit_requested"):
+    import streamlit.components.v1 as _c
+    _c.html(_QUIT_HTML, height=0, width=0)
+    import sys; sys.exit(0)
 # ------------------------------------------------
 # Sidebar Configuration
 # ------------------------------------------------
@@ -22,23 +57,92 @@ with st.sidebar:
     st.header("🛠️ Configuration")
     st.info("Environment variables (API keys) are automatically loaded from the `.env` file.")
 
-    # Provider selection
-    provider = st.radio("LLM Provider", options=["OpenAI", "Anthropic", "Google Gemini"], index=0)
-
+    provider = st.radio(
+        "LLM Provider",
+        options=["OpenAI", "Anthropic", "Google Gemini", "Groq", "Ollama", "LM Studio", "HuggingFace"],
+        index=0,
+    )
     if provider == "OpenAI":
         st.info("Requires `OPENAI_API_KEY`")
-        selected_model = st.selectbox("Select Model", ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"], index=0)
+        selected_model = st.selectbox(
+            "Select Model", ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"], index=0
+        )
         st.success("✅ Ready (OpenAI)")
     elif provider == "Anthropic":
         st.info("Requires `ANTHROPIC_API_KEY`")
         selected_model = st.selectbox(
-            "Select Model", ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"], index=2
+            "Select Model",
+            ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"],
+            index=2,
         )
         st.success("✅ Ready (Anthropic)")
-    else:
+    elif provider == "Google Gemini":
         st.info("Requires `GOOGLE_API_KEY`")
-        selected_model = st.selectbox("Select Model", ["gemini-pro", "gemini-pro-vision"], index=0)
+        selected_model = st.selectbox(
+            "Select Model", ["gemini-pro", "gemini-pro-vision"], index=0
+        )
         st.success("✅ Ready (Google Gemini)")
+    elif provider == "Groq":
+        st.info("Requires `GROQ_API_KEY`")
+        selected_model = st.selectbox(
+            "Select Model",
+            [
+                "groq:llama-3.1-8b-instant",
+                "groq:llama-3.1-70b-versatile",
+                "groq:llama-3.1-405b-reasoning",
+                "groq:gemma2-9b-it",
+            ],
+            index=0,
+        )
+        st.success("✅ Ready (Groq)")
+    elif provider == "Ollama":
+        st.info(
+            "Local AI server. Start Ollama and run `ollama pull <model>` first.\n\n"
+            "Change base URL in `.env` (`OLLAMA_BASE_URL`) if needed."
+        )
+        ollama_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+        available_models = fetch_ollama_models(ollama_url)
+        if available_models:
+            default_model = available_models[0]
+        else:
+            st.warning(f"⚠️ Could not reach Ollama server at `{ollama_url}`. Is it running?")
+            default_model = "ollama:llama3.1"
+        selected_model = st.selectbox(
+            "Select Model", available_models if available_models else [default_model], index=0
+        )
+        st.success("✅ Ready (Ollama)")
+    elif provider == "LM Studio":
+        st.info(
+            "Local AI server. Start a local model server in LM Studio first.\n\n"
+            "Change base URL in `.env` (`LM_STUDIO_BASE_URL`) if needed."
+        )
+        lm_url = os.environ.get("LM_STUDIO_BASE_URL", "http://localhost:1234")
+        available_models = fetch_lm_studio_models(lm_url)
+        if available_models:
+            default_model = available_models[0]
+        else:
+            st.warning(f"⚠️ Could not reach LM Studio server at `{lm_url}`. Is it running?")
+            default_model = "lmstudio:llama-3.1-instruct"
+        selected_model = st.selectbox(
+            "Select Model", available_models if available_models else [default_model], index=0
+        )
+        st.success("✅ Ready (LM Studio)")
+    elif provider == "HuggingFace":
+        st.info(
+            "Requires `HUGGINGFACE_API_KEY`.\n\n"
+            "Uses HuggingFace Inference API. Free tier may be rate-limited."
+        )
+        selected_model = st.selectbox(
+            "Select Model",
+            [
+                "meta-llama/Llama-3.3-70B-Instruct",
+                "meta-llama/Meta-Llama-3.1-70B-Instruct",
+                "mistralai/Mistral-7B-Instruct-v0.3",
+                "nomic-ai/gpt4all-falcon",
+            ],
+            index=0,
+        )
+        st.success("✅ Ready (HuggingFace)")
 
     st.divider()
 
@@ -49,8 +153,10 @@ with st.sidebar:
     if st.button("🗑️ Clear Database", type="secondary"):
         st.session_state.vector_store.delete_collection()
         st.rerun()
-
-# ------------------------------------------------
+    st.divider()
+    if st.button("⏹️ Quit App", type="primary"):
+        st.session_state._quit_requested = True
+        st.rerun()
 # Main Layout (Tabs)
 # ------------------------------------------------
 st.title("📚 Local Research RAG")

@@ -4,14 +4,14 @@
 
 This is a Streamlit-based Retrieval-Augmented Generation (RAG) application that allows users to:
 - Ingest local documents (PDF, DOCX, TXT, CSV) into a persistent vector database (ChromaDB)
-- Query documents using LLMs (OpenAI GPT, Anthropic Claude, Google Gemini)
+- Query documents using LLMs (OpenAI GPT, Anthropic Claude, Google Gemini, Groq, Ollama, LM Studio, HuggingFace)
 
 ## Core Components
 
 | File | Purpose |
 |------|---------|
 | `src/ragapp/app.py` | Main Streamlit UI with Builder and Query tabs |
-| `src/ragapp/core/llm.py` | LLM abstraction layer for OpenAI, Anthropic, Gemini |
+| `src/ragapp/core/llm.py` | LLM abstraction layer for OpenAI, Anthropic, Gemini, Groq, Ollama, LM Studio, HuggingFace |
 | `src/ragapp/core/parser.py` | File parsing and chunking for PDF, TXT, CSV, DOCX |
 | `src/ragapp/core/vector_store.py` | ChromaDB persistence wrapper |
 | `src/ragapp/config.py` | Pydantic settings with .env loading |
@@ -138,10 +138,39 @@ Required environment variables (see `src/ragapp/.env.example`):
 | `OPENAI_API_KEY` | OpenAI/GPT model access | empty |
 | `ANTHROPIC_API_KEY` | Anthropic/Claude access | empty |
 | `GOOGLE_API_KEY` | Google Gemini access | empty |
+| `GROQ_API_KEY` | Groq API access | empty |
+| `HUGGINGFACE_API_KEY` | HuggingFace Inference API access | empty |
 | `CHROMA_DB_PATH` | Vector store persistence path | `./chroma_db` |
 | `COLLECTION_NAME` | ChromaDB collection name | `my_rag_collection` |
 | `DEFAULT_LLM` | Default model selector | `gpt-4o-mini` |
+| `OLLAMA_BASE_URL` | Ollama server URL | `http://localhost:11434/v1` |
+| `LM_STUDIO_BASE_URL` | LM Studio server URL | `http://localhost:1234/v1` |
 
+## Provider Model Prefixes
+
+Model names are prefixed to route to the correct provider in `get_llm_response`:
+
+| Prefix | Provider | Example |
+|--------|----------|---------|
+| `groq:` | Groq (cloud) | `groq:llama-3.1-8b-instant` |
+| `ollama:` | Ollama (local) | `ollama:llama3.1` |
+| `lmstudio:` or `lm-studio:` | LM Studio (local) | `lmstudio:llama-3.1-instruct` |
+| *none* (Hub ID pattern) | HuggingFace Inference API | `meta-llama/Llama-3.3-70B-Instruct` |
+| No prefix (`gpt-*`) | OpenAI | `gpt-4o-mini` |
+| No prefix (`claude-*`) | Anthropic | `claude-3-haiku-20240307` |
+| No prefix (`gemini-*`) | Google Gemini | `gemini-pro` |
+
+### Dynamic Model Discovery
+
+For **Ollama** and **LM Studio**, the app fetches available models at runtime:
+- Ollama: queries `{OLLAMA_BASE_URL}/api/tags`
+- LM Studio: queries `{LM_STUDIO_BASE_URL}/v1/models`
+
+If the server is unreachable, a fallback default model is used with a warning.
+
+### Quit Button
+
+A **⏹️ Quit App** button in the sidebar stops Streamlit execution via `st.stop()`. Use it to halt the app without closing the browser window.
 ## File Format Support
 
 | Format | Parser | Metadata |
