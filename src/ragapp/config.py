@@ -24,7 +24,8 @@ class Settings(BaseSettings):
     huggingface_api_key: str = ""
     ollama_base_url: str = "http://localhost:11434/v1"
     lm_studio_base_url: str = "http://localhost:1234/v1"
-
+    llm_temperature: float = Field(default=0.2, validation_alias="LLM_TEMPERATURE")
+    llm_max_tokens: int = Field(default=1024, validation_alias="LLM_MAX_TOKENS")
     model_config = {"env_file": str(_ENV_PATH), "env_file_encoding": "utf-8"}
 
 

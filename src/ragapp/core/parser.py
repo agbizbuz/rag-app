@@ -18,21 +18,36 @@ def process_file(file) -> list[dict]:
         reader = PdfReader(file)
         for i, page in enumerate(reader.pages):
             text = page.extract_text()
-            if text and text.strip():
+            if not (text and text.strip()):
+                continue
+            # Split long pages into paragraph-level chunks for better embedding quality
+            para_chunks = [p.strip() for p in text.split("\n\n") if p.strip()]
+            if len(para_chunks) > 1:
+                for j, para in enumerate(para_chunks):
+                    chunks.append({"id": str(uuid.uuid4()), "text": para, "metadata": {"source": file_name, "page": i + 1, "paragraph": j}})
+            else:
                 chunks.append({"id": str(uuid.uuid4()), "text": text, "metadata": {"source": file_name, "page": i + 1}})
 
     # --- TXT Parsing ---
     elif file_ext == "txt":
         content = file.read().decode("utf-8")
         chunk_size = 1000
-        for i in range(0, len(content), chunk_size):
+        start = 0
+        while start < len(content):
+            end = min(start + chunk_size, len(content))
+            if end < len(content):
+                # Find the last space within this window to avoid splitting words
+                split_at = content.rfind(" ", start, end)
+                if split_at > start:
+                    end = split_at
             chunks.append(
                 {
                     "id": str(uuid.uuid4()),
-                    "text": content[i : i + chunk_size],
-                    "metadata": {"source": file_name, "chunk": i // chunk_size},
+                    "text": content[start:end].strip(),
+                    "metadata": {"source": file_name, "chunk": len(chunks)},
                 }
             )
+            start = end
 
     # --- CSV Parsing ---
     elif file_ext == "csv":

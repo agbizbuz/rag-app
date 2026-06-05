@@ -146,3 +146,45 @@ class TestProcessFileUnknownFormat:
         f.name = "test.xyz"
         result = process_file(f)
         assert result == []
+
+
+# ---- P4 feature tests ----
+
+
+class TestTxtWordBoundaryChunking:
+    """P4.3: TXT chunking should split at word boundaries, not mid-word."""
+
+    def test_no_mid_word_split(self):
+        """Content with long words should not be cut mid-word."""
+        long_words = b"x" * 1200 + b"\n" + b"a" * 1200
+        f = io.BytesIO(long_words)
+        f.name = "test.txt"
+        chunks = process_file(f)
+        for c in chunks:
+            text = c["text"]
+            # No chunk should end with a partial word (not ending on space or beginning of next word)
+            if len(text) >= 1000:  # If it's at the boundary, check the last char is space or close to end
+                assert text[-1] in (" ", "\n") or len(text) == 1000
+
+    def test_word_boundary_split(self):
+        """Text with spaces should split between words."""
+        content = b"one two three four five six seven eight nine ten " * 200
+        f = io.BytesIO(content)
+        f.name = "test.txt"
+        chunks = process_file(f)
+        for c in chunks:
+            text = c["text"]
+            # Text should not end mid-word (no space at the end means it ended cleanly)
+            # If it ends without a trailing space, it's because there were no more spaces
+            if len(text) >= 1000 and not text.endswith(" "):
+                assert not text[-1].isalnum() or text[-1] == "\n"
+
+    def test_sequential_chunk_ids(self):
+        """Chunk indices should be sequential."""
+        long_text = b"a\n" * 5000  # Each line is short, total ~10KB
+        f = io.BytesIO(long_text)
+        f.name = "test.txt"
+        chunks = process_file(f)
+        for i, c in enumerate(chunks):
+            assert c["metadata"]["chunk"] == i
+

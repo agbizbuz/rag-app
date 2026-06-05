@@ -130,3 +130,9 @@ class TestProviderRouting:
 
         result = get_llm_response("ctx", "unsupported-model")
         assert "Unsupported" in result or result.startswith("\u26a0\ufe0f")
+
+    def test_default_temperature(self):
+        """Default temperature should be 0.2."""
+        from src.ragapp.core.llm import _get_settings
+        s = _get_settings()
+        assert s.llm_temperature == 0.2

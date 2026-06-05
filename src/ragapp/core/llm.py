@@ -4,6 +4,11 @@ from openai import OpenAI, APIError as OpenAIAPIError
 from anthropic import Anthropic, APIError as AnthropicAPIError
 
 
+def _get_settings():
+    from src.ragapp.config import settings
+
+    return settings
+
 def get_llm_response(query_context: str, llm_model: str) -> str:
     """
     Queries the selected LLM provider using the provided context and prompt.
@@ -30,6 +35,10 @@ Provide the answer clearly and concisely.
 === USER QUERY ===
 """
 
+    _s = _get_settings()
+    temperature = _s.llm_temperature
+    max_tokens = _s.llm_max_tokens
+
     model_lower = llm_model.lower().strip()
 
     # ---------------------------------------------------------------
@@ -48,7 +57,7 @@ Provide the answer clearly and concisely.
             response = groq_client.chat.completions.create(
                 model=actual_model,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.2,
+                temperature=temperature,
             )
             return response.choices[0].message.content
         except OpenAIAPIError as e:
@@ -70,7 +79,7 @@ Provide the answer clearly and concisely.
             response = ollama_client.chat.completions.create(
                 model=actual_model,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.2,
+                temperature=temperature,
             )
             return response.choices[0].message.content
         except OpenAIAPIError as e:
@@ -93,7 +102,7 @@ Provide the answer clearly and concisely.
             response = lm_client.chat.completions.create(
                 model=actual_model,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.2,
+                temperature=temperature,
             )
             return response.choices[0].message.content
         except OpenAIAPIError as e:
@@ -115,7 +124,7 @@ Provide the answer clearly and concisely.
             response = requests.post(
                 f"https://api-inference.huggingface.co/models/{llm_model.strip()}",
                 headers={"Authorization": f"Bearer {os.environ['HUGGINGFACE_API_KEY']}"},
-                json={"inputs": prompt, "parameters": {"max_new_tokens": 1024}},
+                json={"inputs": prompt, "parameters": {"max_new_tokens": max_tokens}},
             )
             response.raise_for_status()
             result = response.json()
@@ -144,7 +153,7 @@ Provide the answer clearly and concisely.
         openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
         try:
             response = openai_client.chat.completions.create(
-                model=llm_model, messages=[{"role": "user", "content": prompt}], temperature=0.2
+                model=llm_model, messages=[{"role": "user", "content": prompt}], temperature=temperature
             )
             return response.choices[0].message.content
         except OpenAIAPIError as e:
@@ -160,7 +169,7 @@ Provide the answer clearly and concisely.
         anthropic_client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
         try:
             response = anthropic_client.messages.create(
-                model=llm_model, max_tokens=1024, messages=[{"role": "user", "content": prompt}]
+                model=llm_model, max_tokens=max_tokens, messages=[{"role": "user", "content": prompt}]
             )
             return response.content[0].text
         except AnthropicAPIError as e:

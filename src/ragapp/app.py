@@ -50,38 +50,52 @@ if st.session_state.get("_quit_requested"):
     import streamlit.components.v1 as _c
     _c.html(_QUIT_HTML, height=0, width=0)
     import sys; sys.exit(0)
+
+def _key_status(env_key: str) -> tuple[str, str]:
+    """Return (emoji, label) for an API key's presence."""
+    if os.environ.get(env_key):
+        return "✅", f"Ready ({env_key})"
+    return "⚠️", f"Missing {env_key}"
 # ------------------------------------------------
 # Sidebar Configuration
 # ------------------------------------------------
 with st.sidebar:
     st.header("🛠️ Configuration")
     st.info("Environment variables (API keys) are automatically loaded from the `.env` file.")
-
     provider = st.radio(
         "LLM Provider",
         options=["OpenAI", "Anthropic", "Google Gemini", "Groq", "Ollama", "LM Studio", "HuggingFace"],
         index=0,
     )
+
+    # API key / server health status
+    _key_checks = {
+        "OpenAI": ("OPENAI_API_KEY", None),
+        "Anthropic": ("ANTHROPIC_API_KEY", None),
+        "Google Gemini": ("GOOGLE_API_KEY", None),
+        "Groq": ("GROQ_API_KEY", None),
+        "Ollama": (None, "ollama"),
+        "LM Studio": (None, "lmstudio"),
+        "HuggingFace": ("HUGGINGFACE_API_KEY", None),
+    }
+    key_var, local_type = _key_checks.get(provider, (None, None))
+    if local_type:
+        fetch_fn = {"ollama": fetch_ollama_models, "lmstudio": fetch_lm_studio_models}[local_type]
+        base_url_key = {"ollama": "OLLAMA_BASE_URL", "lmstudio": "LM_STUDIO_BASE_URL"}[local_type]
+        available = fetch_fn(os.environ.get(base_url_key, ""))
+        _has_server = bool(available)
+    else:
+        _has_server = True  # cloud providers don't need a local server
+
     if provider == "OpenAI":
         st.info("Requires `OPENAI_API_KEY`")
-        selected_model = st.selectbox(
-            "Select Model", ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"], index=0
-        )
-        st.success("✅ Ready (OpenAI)")
+        selected_model = st.selectbox("Select Model", ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"], index=0)
     elif provider == "Anthropic":
         st.info("Requires `ANTHROPIC_API_KEY`")
-        selected_model = st.selectbox(
-            "Select Model",
-            ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"],
-            index=2,
-        )
-        st.success("✅ Ready (Anthropic)")
+        selected_model = st.selectbox("Select Model", ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"], index=2)
     elif provider == "Google Gemini":
         st.info("Requires `GOOGLE_API_KEY`")
-        selected_model = st.selectbox(
-            "Select Model", ["gemini-pro", "gemini-pro-vision"], index=0
-        )
-        st.success("✅ Ready (Google Gemini)")
+        selected_model = st.selectbox("Select Model", ["gemini-pro", "gemini-pro-vision"], index=0)
     elif provider == "Groq":
         st.info("Requires `GROQ_API_KEY`")
         selected_model = st.selectbox(
@@ -94,7 +108,6 @@ with st.sidebar:
             ],
             index=0,
         )
-        st.success("✅ Ready (Groq)")
     elif provider == "Ollama":
         st.info(
             "Local AI server. Start Ollama and run `ollama pull <model>` first.\n\n"
@@ -107,10 +120,7 @@ with st.sidebar:
         else:
             st.warning(f"⚠️ Could not reach Ollama server at `{ollama_url}`. Is it running?")
             default_model = "ollama:llama3.1"
-        selected_model = st.selectbox(
-            "Select Model", available_models if available_models else [default_model], index=0
-        )
-        st.success("✅ Ready (Ollama)")
+        selected_model = st.selectbox("Select Model", available_models if available_models else [default_model], index=0)
     elif provider == "LM Studio":
         st.info(
             "Local AI server. Start a local model server in LM Studio first.\n\n"
@@ -123,10 +133,7 @@ with st.sidebar:
         else:
             st.warning(f"⚠️ Could not reach LM Studio server at `{lm_url}`. Is it running?")
             default_model = "lmstudio:llama-3.1-instruct"
-        selected_model = st.selectbox(
-            "Select Model", available_models if available_models else [default_model], index=0
-        )
-        st.success("✅ Ready (LM Studio)")
+        selected_model = st.selectbox("Select Model", available_models if available_models else [default_model], index=0)
     elif provider == "HuggingFace":
         st.info(
             "Requires `HUGGINGFACE_API_KEY`.\n\n"
@@ -142,7 +149,15 @@ with st.sidebar:
             ],
             index=0,
         )
-        st.success("✅ Ready (HuggingFace)")
+
+    # Dynamic status indicator + temperature control
+    if key_var and local_type is None:
+        _emoji, _label = _key_status(key_var)
+        st.success(f"{_emoji} {_label}") if _emoji == "✅" else st.warning(_label)
+    elif local_type and not _has_server:
+        st.warning("⚠️ Server unreachable")
+
+    st.slider("Temperature", 0.0, 1.0, settings.llm_temperature, step=0.05, key="_temp_slider")
 
     st.divider()
 
