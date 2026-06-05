@@ -1,7 +1,7 @@
 import os
 import re
-from openai import OpenAI
-from anthropic import Anthropic
+from openai import OpenAI, APIError as OpenAIAPIError
+from anthropic import Anthropic, APIError as AnthropicAPIError
 
 
 def get_llm_response(query_context: str, llm_model: str) -> str:
@@ -51,7 +51,7 @@ Provide the answer clearly and concisely.
                 temperature=0.2,
             )
             return response.choices[0].message.content
-        except Exception as e:
+        except OpenAIAPIError as e:
             return f"⚠️ Groq API Error: {e}"
 
     # ---------------------------------------------------------------
@@ -73,7 +73,7 @@ Provide the answer clearly and concisely.
                 temperature=0.2,
             )
             return response.choices[0].message.content
-        except Exception as e:
+        except OpenAIAPIError as e:
             return f"⚠️ Ollama API Error: {e}"
 
     # ---------------------------------------------------------------
@@ -96,7 +96,7 @@ Provide the answer clearly and concisely.
                 temperature=0.2,
             )
             return response.choices[0].message.content
-        except Exception as e:
+        except OpenAIAPIError as e:
             return f"⚠️ LM Studio API Error: {e}"
 
     # ---------------------------------------------------------------
@@ -131,7 +131,7 @@ Provide the answer clearly and concisely.
             if e.response is not None and e.response.status_code == 429:
                 return "⚠️ HuggingFace Inference API: rate limited. Try again later or use a self-hosted model."
             return f"⚠️ HuggingFace API Error: {e}"
-        except Exception as e:
+        except requests.exceptions.RequestException as e:
             return f"⚠️ HuggingFace API Error: {e}"
 
     # ---------------------------------------------------------------
@@ -147,7 +147,7 @@ Provide the answer clearly and concisely.
                 model=llm_model, messages=[{"role": "user", "content": prompt}], temperature=0.2
             )
             return response.choices[0].message.content
-        except Exception as e:
+        except OpenAIAPIError as e:
             return f"⚠️ OpenAI API Error: {e}"
 
     # ---------------------------------------------------------------
@@ -163,7 +163,7 @@ Provide the answer clearly and concisely.
                 model=llm_model, max_tokens=1024, messages=[{"role": "user", "content": prompt}]
             )
             return response.content[0].text
-        except Exception as e:
+        except AnthropicAPIError as e:
             return f"⚠️ Anthropic API Error: {e}"
 
     # ---------------------------------------------------------------

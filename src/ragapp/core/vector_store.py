@@ -57,18 +57,22 @@ class VectorStore:
         if self.collection.count() == 0:
             return []
 
-        results = self.collection.query(query_texts=[query_text], n_results=n_results)
-
-        output = []
-        for i in range(len(results["ids"][0])):
-            output.append(
-                {
-                    "id": results["ids"][0][i],
-                    "text": results["documents"][0][i],
-                    "metadata": results["metadatas"][0][i],
-                    "distance": results["distances"][0][i],
-                }
-            )
+        try:
+            results = self.collection.query(query_texts=[query_text], n_results=n_results)
+            output = []
+            for i in range(len(results["ids"][0])):
+                output.append(
+                    {
+                        "id": results["ids"][0][i],
+                        "text": results["documents"][0][i],
+                        "metadata": results["metadatas"][0][i],
+                        "distance": results["distances"][0][i],
+                    }
+                )
+            return output
+        except Exception:
+            # Collection may have been deleted between count() and query() check
+            return []
         return output
 
     def delete_collection(self) -> None:
