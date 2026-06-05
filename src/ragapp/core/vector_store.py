@@ -1,6 +1,9 @@
 import chromadb
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction, SentenceTransformerEmbeddingFunction
-from src.ragapp.config import settings
+try:
+    from src.ragapp.config import settings
+except ImportError:
+    from config import settings
 import os
 
 

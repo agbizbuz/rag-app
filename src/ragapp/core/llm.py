@@ -5,10 +5,11 @@ from anthropic import Anthropic, APIError as AnthropicAPIError
 
 
 def _get_settings():
-    from src.ragapp.config import settings
-
+    try:
+        from config import settings
+    except ImportError:
+        from src.ragapp.config import settings
     return settings
-
 def get_llm_response(query_context: str, llm_model: str) -> str:
     """
     Queries the selected LLM provider using the provided context and prompt.
