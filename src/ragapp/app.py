@@ -1,10 +1,13 @@
 import os
+
 import requests
 import streamlit as st
+from config import settings
 from core.llm import get_llm_response
 from core.parser import process_file
 from core.vector_store import VectorStore
-from config import settings
+
+
 def fetch_ollama_models(base_url: str) -> list[str]:
     """Fetch available models from an Ollama server."""
     try:
@@ -14,6 +17,8 @@ def fetch_ollama_models(base_url: str) -> list[str]:
         return [f"ollama:{m['name']}" for m in data.get("models", [])]
     except Exception:
         return []
+
+
 def fetch_lm_studio_models(base_url: str) -> list[str]:
     """Fetch available models from an LM Studio server."""
     try:
@@ -23,6 +28,7 @@ def fetch_lm_studio_models(base_url: str) -> list[str]:
         return [f"lmstudio:{m['id']}" for m in data.get("data", [])]
     except Exception:
         return []
+
 
 # Page configuration
 st.set_page_config(page_title="Local RAG Assistant", page_icon="📚", layout="wide")
@@ -48,14 +54,20 @@ try { window.open('about:blank', '_self').close(); } catch(e) {}
 """
 if st.session_state.get("_quit_requested"):
     import streamlit.components.v1 as _c
+
     _c.html(_QUIT_HTML, height=0, width=0)
-    import sys; sys.exit(0)
+    import sys
+
+    sys.exit(0)
+
 
 def _key_status(env_key: str) -> tuple[str, str]:
     """Return (emoji, label) for an API key's presence."""
     if os.environ.get(env_key):
         return "✅", f"Ready ({env_key})"
     return "⚠️", f"Missing {env_key}"
+
+
 # ------------------------------------------------
 # Sidebar Configuration
 # ------------------------------------------------
@@ -92,7 +104,9 @@ with st.sidebar:
         selected_model = st.selectbox("Select Model", ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"], index=0)
     elif provider == "Anthropic":
         st.info("Requires `ANTHROPIC_API_KEY`")
-        selected_model = st.selectbox("Select Model", ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"], index=2)
+        selected_model = st.selectbox(
+            "Select Model", ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"], index=2
+        )
     elif provider == "Google Gemini":
         st.info("Requires `GOOGLE_API_KEY`")
         selected_model = st.selectbox("Select Model", ["gemini-pro", "gemini-pro-vision"], index=0)
@@ -120,7 +134,9 @@ with st.sidebar:
         else:
             st.warning(f"⚠️ Could not reach Ollama server at `{ollama_url}`. Is it running?")
             default_model = "ollama:llama3.1"
-        selected_model = st.selectbox("Select Model", available_models if available_models else [default_model], index=0)
+        selected_model = st.selectbox(
+            "Select Model", available_models if available_models else [default_model], index=0
+        )
     elif provider == "LM Studio":
         st.info(
             "Local AI server. Start a local model server in LM Studio first.\n\n"
@@ -133,12 +149,11 @@ with st.sidebar:
         else:
             st.warning(f"⚠️ Could not reach LM Studio server at `{lm_url}`. Is it running?")
             default_model = "lmstudio:llama-3.1-instruct"
-        selected_model = st.selectbox("Select Model", available_models if available_models else [default_model], index=0)
-    elif provider == "HuggingFace":
-        st.info(
-            "Requires `HUGGINGFACE_API_KEY`.\n\n"
-            "Uses HuggingFace Inference API. Free tier may be rate-limited."
+        selected_model = st.selectbox(
+            "Select Model", available_models if available_models else [default_model], index=0
         )
+    elif provider == "HuggingFace":
+        st.info("Requires `HUGGINGFACE_API_KEY`.\n\nUses HuggingFace Inference API. Free tier may be rate-limited.")
         selected_model = st.selectbox(
             "Select Model",
             [

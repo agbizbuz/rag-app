@@ -1,7 +1,8 @@
 import uuid
+
 import pandas as pd
-from pypdf import PdfReader
 from docx import Document
+from pypdf import PdfReader
 
 
 def process_file(file) -> list[dict]:
@@ -24,7 +25,13 @@ def process_file(file) -> list[dict]:
             para_chunks = [p.strip() for p in text.split("\n\n") if p.strip()]
             if len(para_chunks) > 1:
                 for j, para in enumerate(para_chunks):
-                    chunks.append({"id": str(uuid.uuid4()), "text": para, "metadata": {"source": file_name, "page": i + 1, "paragraph": j}})
+                    chunks.append(
+                        {
+                            "id": str(uuid.uuid4()),
+                            "text": para,
+                            "metadata": {"source": file_name, "page": i + 1, "paragraph": j},
+                        }
+                    )
             else:
                 chunks.append({"id": str(uuid.uuid4()), "text": text, "metadata": {"source": file_name, "page": i + 1}})
 

@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock, patch
 
 
-
 class TestProviderRouting:
     """Verify that get_llm_response routes to the correct provider based on model prefix."""
 
@@ -29,6 +28,7 @@ class TestProviderRouting:
     def test_groq_missing_key(self, monkeypatch):
         """Without GROQ_API_KEY, should return error string."""
         from src.ragapp.core.llm import get_llm_response
+
         monkeypatch.delenv("GROQ_API_KEY", raising=False)
 
         result = get_llm_response("ctx", "groq:llama-3.1-8b-instant")
@@ -134,5 +134,6 @@ class TestProviderRouting:
     def test_default_temperature(self):
         """Default temperature should be 0.2."""
         from src.ragapp.core.llm import _get_settings
+
         s = _get_settings()
         assert s.llm_temperature == 0.2

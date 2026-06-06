@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from pydantic_settings import BaseSettings
-from pydantic import Field
 from dotenv import load_dotenv
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 # Resolve .env relative to this file's directory, so the app works
 # regardless of whether Streamlit is launched from project root or src/ragapp/.

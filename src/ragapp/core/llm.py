@@ -1,7 +1,10 @@
 import os
 import re
-from openai import OpenAI, APIError as OpenAIAPIError
-from anthropic import Anthropic, APIError as AnthropicAPIError
+
+from anthropic import Anthropic
+from anthropic import APIError as AnthropicAPIError
+from openai import APIError as OpenAIAPIError
+from openai import OpenAI
 
 
 def _get_settings():
@@ -10,6 +13,8 @@ def _get_settings():
     except ImportError:
         from src.ragapp.config import settings
     return settings
+
+
 def get_llm_response(query_context: str, llm_model: str) -> str:
     """
     Queries the selected LLM provider using the provided context and prompt.
@@ -53,14 +58,14 @@ Provide the answer clearly and concisely.
             api_key=os.environ["GROQ_API_KEY"],
             base_url="https://api.groq.com/openai/v1",
         )
-        actual_model = llm_model[len("groq:"):]
+        actual_model = llm_model[len("groq:") :]
         try:
             response = groq_client.chat.completions.create(
                 model=actual_model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
             )
-            return response.choices[0].message.content
+            return (response.choices[0].message.content) or ""
         except OpenAIAPIError as e:
             return f"⚠️ Groq API Error: {e}"
 
@@ -68,10 +73,8 @@ Provide the answer clearly and concisely.
     # 2. Ollama (OpenAI-compatible local server)
     # ---------------------------------------------------------------
     elif model_lower.startswith("ollama:"):
-        ollama_base_url = os.environ.get(
-            "OLLAMA_BASE_URL", "http://localhost:11434/v1"
-        )
-        actual_model = llm_model[len("ollama:"):]
+        ollama_base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+        actual_model = llm_model[len("ollama:") :]
         try:
             ollama_client = OpenAI(
                 api_key="ollama",
@@ -82,7 +85,7 @@ Provide the answer clearly and concisely.
                 messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
             )
-            return response.choices[0].message.content
+            return (response.choices[0].message.content) or ""
         except OpenAIAPIError as e:
             return f"⚠️ Ollama API Error: {e}"
 
@@ -92,9 +95,7 @@ Provide the answer clearly and concisely.
     elif model_lower.startswith("lmstudio:") or model_lower.startswith("lm-studio:"):
         prefix_len = len("lmstudio:") if model_lower.startswith("lmstudio:") else len("lm-studio:")
         actual_model = llm_model[prefix_len:]
-        lm_studio_base_url = os.environ.get(
-            "LM_STUDIO_BASE_URL", "http://localhost:1234/v1"
-        )
+        lm_studio_base_url = os.environ.get("LM_STUDIO_BASE_URL", "http://localhost:1234/v1")
         try:
             lm_client = OpenAI(
                 api_key="lm-studio",
@@ -105,7 +106,7 @@ Provide the answer clearly and concisely.
                 messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
             )
-            return response.choices[0].message.content
+            return (response.choices[0].message.content) or ""
         except OpenAIAPIError as e:
             return f"⚠️ LM Studio API Error: {e}"
 
@@ -156,7 +157,7 @@ Provide the answer clearly and concisely.
             response = openai_client.chat.completions.create(
                 model=llm_model, messages=[{"role": "user", "content": prompt}], temperature=temperature
             )
-            return response.choices[0].message.content
+            return (response.choices[0].message.content) or ""
         except OpenAIAPIError as e:
             return f"⚠️ OpenAI API Error: {e}"
 
@@ -172,10 +173,10 @@ Provide the answer clearly and concisely.
             response = anthropic_client.messages.create(
                 model=llm_model, max_tokens=max_tokens, messages=[{"role": "user", "content": prompt}]
             )
-            return response.content[0].text
+            content = response.content[0]
+            return getattr(content, "text", None) or ""
         except AnthropicAPIError as e:
             return f"⚠️ Anthropic API Error: {e}"
-
     # ---------------------------------------------------------------
     # 7. Google Gemini (existing)
     # ---------------------------------------------------------------

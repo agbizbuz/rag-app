@@ -91,6 +91,20 @@ streamlit run src/ragapp/app.py
 *   **"Missing API Key" error**: Ensure your `.env` file is in the project root (not `src/ragapp/`) and that you have restarted the Streamlit app after adding keys.
 *   **"Database is empty"**: Make sure you have processed files in the "Builder" tab before attempting to query.
 *   **Import Errors**: Ensure you ran `uv sync` in the project root directory before launching the app.
+## 🧹 Code Quality
+This project uses **ruff** for linting/formatting and **ty** for static type checking, enforced via **pre-commit** hooks.
+```bash
+# Lint (auto-fix what it can)
+uv run ruff check . --fix
+# Format
+uv run ruff format .
+# Type check
+uv run ty check . --ignore unresolved-import
+# Run all pre-commit hooks on every file
+.vvenv/bin/pre-commit clean && uv run pre-commit run --all-files
+# Run tests
+uv run pytest tests/ -q
+```
 
 ## 🍽️ License
 

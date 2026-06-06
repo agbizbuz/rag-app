@@ -21,6 +21,28 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+  "pre-commit>=4.6.0",
   "pytest>=8.0",
   "pytest-mock>=3.14",
+  "ruff>=0.9.0",
+  "ty>=0.0.1a25",
 ]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+[tool.ruff.lint.per-file-ignores]
+"tests/conftest.py" = ["E501"]
+"tests/test_parser.py" = ["E501", "F401"]
+"src/ragapp/app.py" = ["E501", "I001", "E702"]
+"src/ragapp/core/llm.py" = ["E501"]
+"src/ragapp/config.py" = ["E501"]
+"src/ragapp/core/parser.py" = ["E501"]
+"src/ragapp/core/vector_store.py" = ["E501"]

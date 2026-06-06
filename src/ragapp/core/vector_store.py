@@ -1,5 +1,8 @@
 import chromadb
-from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction, SentenceTransformerEmbeddingFunction
+from chromadb.utils.embedding_functions import (
+    OpenAIEmbeddingFunction,
+)
+
 try:
     from src.ragapp.config import settings
 except ImportError:
@@ -29,8 +32,17 @@ class VectorStore:
             )
         # If no key, ChromaDB uses its default (SentenceTransformer locally)
 
+        import typing
+
+        ef: chromadb.EmbeddingFunction[chromadb.Documents] | None = (
+            typing.cast("chromadb.EmbeddingFunction[chromadb.Documents]", embedding_function)
+            if embedding_function
+            else None
+        )
         return self.client.get_or_create_collection(
-            name=self.collection_name, embedding_function=embedding_function, metadata={"hnsw:space": "cosine"}
+            name=self.collection_name,
+            embedding_function=ef,  # ty: ignore[invalid-argument-type]
+            metadata={"hnsw:space": "cosine"},
         )
 
     def add_documents(self, documents: list[dict]) -> int:

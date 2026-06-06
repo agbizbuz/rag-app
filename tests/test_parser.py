@@ -2,13 +2,14 @@
 
 import io
 
-import pytest
 from src.ragapp.core.parser import process_file
 
 
 def _txt_bytes():
     """Return a fresh BytesIO with TXT content."""
-    f = io.BytesIO(b"This is a test document.\n\nIt has multiple paragraphs to simulate real text.\n\nThe chunker should split this into manageable pieces.")
+    f = io.BytesIO(
+        b"This is a test document.\n\nIt has multiple paragraphs to simulate real text.\n\nThe chunker should split this into manageable pieces."
+    )
     f.name = "test.txt"
     return f
 
@@ -53,7 +54,7 @@ def _docx_bytes():
             b'<Default Extension="xml" ContentType="application/xml"/>'
             b'<Override PartName="/word/document.xml" '
             b'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
-            b'</Types>',
+            b"</Types>",
         )
         zf.writestr(
             "_rels/.rels",
@@ -61,7 +62,7 @@ def _docx_bytes():
             b'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
             b'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" '
             b'Target="word/document.xml"/>'
-            b'</Relationships>',
+            b"</Relationships>",
         )
         zf.writestr(
             "word/_rels/document.xml.rels",
@@ -70,10 +71,10 @@ def _docx_bytes():
         doc = (
             b'<?xml version="1.0" encoding="UTF-8"?>'
             b'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
-            b'<w:body>'
-            b'<w:p><w:r><w:t>Hello from DOCX</w:t></w:r></w:p>'
-            b'<w:p><w:r><w:t>Second paragraph</w:t></w:r></w:p>'
-            b'</w:body></w:document>'
+            b"<w:body>"
+            b"<w:p><w:r><w:t>Hello from DOCX</w:t></w:r></w:p>"
+            b"<w:p><w:r><w:t>Second paragraph</w:t></w:r></w:p>"
+            b"</w:body></w:document>"
         )
         zf.writestr("word/document.xml", doc)
     buf.seek(0)
@@ -187,4 +188,3 @@ class TestTxtWordBoundaryChunking:
         chunks = process_file(f)
         for i, c in enumerate(chunks):
             assert c["metadata"]["chunk"] == i
-
