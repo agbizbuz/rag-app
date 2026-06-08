@@ -55,6 +55,8 @@ def _get_sorted_providers() -> list[tuple[str, object]]:
     return sorted(results, key=lambda x: x[0])
 
 
+
+
 def render_sidebar(vs: VectorStore) -> str:
     """Render sidebar. Returns the selected model string."""
 
@@ -64,17 +66,19 @@ def render_sidebar(vs: VectorStore) -> str:
         # Provider selection - dropdown to choose provider category
         provider_options = [(name, info) for name, info in _get_sorted_providers()]
         
-        if "_selected_provider_name" not in st.session_state:
-            st.session_state._selected_provider_name = "OpenAI"
+        if "_selected_provider_index" not in st.session_state:
+            st.session_state._selected_provider_index = 0
         
         selected_provider_name = st.selectbox(
             "Select Provider",
             [name for name, _ in provider_options],
-            index=next((i for i, (name, _) in enumerate(provider_options) 
-                      if name == st.session_state._selected_provider_name), 0),
+            index=st.session_state._selected_provider_index,
             key="_selected_provider_name"
         )
 
+        # Update index on selection (will persist to next render)
+        selected_idx = next((i for i, (name, _) in enumerate(provider_options) if name == selected_provider_name), 0)
+        
         # Find selected provider info
         selected_provider_info = next(info for name, info in provider_options if name == selected_provider_name)
 

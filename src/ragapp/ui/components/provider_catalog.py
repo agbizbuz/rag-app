@@ -84,16 +84,14 @@ PROVIDERS.append(
     )
 )
 
-# Use environment variable or default to fetch Ollama models dynamically
-_ollama_base_url = os.environ.get("OLLAMA_BASE_URL", "")
-
-
+# Always include Ollama with default URL for discovery
+OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL")
 PROVIDERS.append(
     ProviderInfo(
         name="Ollama",
         key_env=None,
         model_options=[],
-        discover_models=fetch_ollama_models if _ollama_base_url else None,
+        discover_models=fetch_ollama_models,
         base_url_key="OLLAMA_BASE_URL",
     )
 )
@@ -110,3 +108,4 @@ PROVIDERS.append(
         ],
     )
 )
+
