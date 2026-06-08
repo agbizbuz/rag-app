@@ -13,7 +13,7 @@ from ragapp.ui.components.provider_catalog import PROVIDERS
 
 
 def _get_provider_models(provider_info):
-    '''Return list of model identifiers for a provider with appropriate prefix.'''
+    """Return list of model identifiers for a provider with appropriate prefix."""
     if provider_info.discover_models and provider_info.base_url_key:
         discovered = _resolve_models(provider_info)
         if discovered:
@@ -41,34 +41,80 @@ def _get_provider_models(provider_info):
     elif provider_info.name == "HuggingFace":
         return [f"hf-{m}" for m in opts]  # Add hf- prefix for clarity
     return opts
+
+
+def _get_sorted_providers() -> list[tuple[str, object]]:
+    """Return sorted list of (display_name, provider_info) tuples."""
+    results = []
+    for info in PROVIDERS:
+        if info.discover_models and info.base_url_key:
+            # Dynamic discovery - always show even if server is down
+            results.append((info.name, info))
+        elif info.model_options:
+            results.append((info.name, info))
+    return sorted(results, key=lambda x: x[0])
+
+
 def render_sidebar(vs: VectorStore) -> str:
     """Render sidebar. Returns the selected model string."""
 
     with st.sidebar:
         st.header("Configuration")
 
+        # Provider selection - dropdown to choose provider category
+        provider_options = [(name, info) for name, info in _get_sorted_providers()]
+        
+        if "_selected_provider_name" not in st.session_state:
+            st.session_state._selected_provider_name = "OpenAI"
+        
+        selected_provider_name = st.selectbox(
+            "Select Provider",
+            [name for name, _ in provider_options],
+            index=next((i for i, (name, _) in enumerate(provider_options) 
+                      if name == st.session_state._selected_provider_name), 0),
+            key="_selected_provider_name"
+        )
 
-        # Model selection - connect to all providers' models with proper prefixes
-        all_model_options = []
+        # Find selected provider info
+        selected_provider_info = next(info for name, info in provider_options if name == selected_provider_name)
 
-        for info in PROVIDERS:
-            provider_models = _get_provider_models(info)
-            if provider_models:
-                all_model_options.extend(provider_models[:5])  # Limit per provider
+        # Model selection - shows models for the currently selected provider
+        provider_models = _get_provider_models(selected_provider_info)
+        
+        if not provider_models:
+            st.info("🔄 Discovering available models...")
+            # Force discovery by checking server health
+            if selected_provider_info.discover_models and selected_provider_info.base_url_key:
+                base_url = os.environ.get(selected_provider_info.base_url_key, "")
+                discovered = _resolve_models(selected_provider_info)
+                if discovered:
+                    provider_models = [f"{selected_provider_name}:{m}" for m in discovered]
+                else:
+                    st.warning("⚠️ Server appears offline. Check URL settings.")
+                    provider_models = []
         
         # Remove duplicates while preserving order
         seen = set()
         unique_options = []
-        for m in all_model_options:
+        for m in provider_models:
             if m not in seen:
                 seen.add(m)
                 unique_options.append(m)
         
-        all_model_options = unique_options
+        if unique_options:
+            selected_model = st.selectbox(
+                "Select Model", 
+                unique_options,
+                index=next((i for i, model in enumerate(unique_options) 
+                          if model == st.session_state.get("_selected_model")), 0),
+                key="_selected_model"
+            )
+        else:
+            # No models available - show placeholder with guidance
+            st.selectbox("Select Model", ["⚠️ Add API key or check server"], index=0)
+            selected_model = None
 
-        selected_model = st.selectbox(
-            "Select Model", all_model_options, index=0, key="_selected_model"
-        )
+        # Temperature - use default from settings as initial value
         current_temp = st.session_state.get("_temp_slider", None)
         if current_temp is None:
             current_temp = settings.llm_temperature
