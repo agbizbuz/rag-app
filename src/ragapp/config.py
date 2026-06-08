@@ -4,8 +4,10 @@ from dotenv import load_dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
-# Resolve .env relative to this file's directory, so the app works
-# regardless of whether Streamlit is launched from project root or src/ragapp/.
+# --------------------------------------------------------------------------- #
+# .env loading                                                                #
+# --------------------------------------------------------------------------- #
+
 _ENV_PATH = Path(__file__).resolve().parent / ".env"
 if _ENV_PATH.exists():
     load_dotenv(_ENV_PATH)
@@ -26,6 +28,8 @@ class Settings(BaseSettings):
     lm_studio_base_url: str = "http://localhost:1234/v1"
     llm_temperature: float = Field(default=0.2, validation_alias="LLM_TEMPERATURE")
     llm_max_tokens: int = Field(default=1024, validation_alias="LLM_MAX_TOKENS")
+    max_file_size_bytes: int = Field(default=50 * 1024 * 1024, validation_alias="MAX_FILE_SIZE")
+
     model_config = {"env_file": str(_ENV_PATH), "env_file_encoding": "utf-8"}
 
 

@@ -19,6 +19,9 @@ dependencies = [
   "tiktoken>=0.7.0",
 ]
 
+[project.scripts]
+rag-app = "streamlit.web.cli:main"
+
 [dependency-groups]
 dev = [
   "pre-commit>=4.6.0",

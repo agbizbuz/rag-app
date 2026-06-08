@@ -1,204 +1,129 @@
-import os
-import re
+"""LLM response facade — delegates to the resolved provider.
 
-from anthropic import Anthropic
-from anthropic import APIError as AnthropicAPIError
-from openai import APIError as OpenAIAPIError
-from openai import OpenAI
-
-
-def _get_settings():
-    try:
-        from config import settings
-    except ImportError:
-        from src.ragapp.config import settings
-    return settings
-
-
-def get_llm_response(query_context: str, llm_model: str) -> str:
-    """
-    Queries the selected LLM provider using the provided context and prompt.
-
-    Provider selection by model name prefix:
-        groq:<model>         → Groq (API key: GROQ_API_KEY)
-        ollama:<model>       → Ollama (local, no key; set OLLAMA_BASE_URL)
-        lmstudio:<model>     → LM Studio (local, no key; set LM_STUDIO_BASE_URL)
-        meta-llama/...       → HuggingFace Inference API (API key: HUGGINGFACE_API_KEY)
-        gpt-*                → OpenAI
-        claude-*             → Anthropic
-        gemini-*             → Google Gemini
-    """
-    # We prepend a system-style instruction directly to the user prompt for simplicity
-    prompt = f"""
-You are a highly capable research assistant. Answer the user's query strictly based on the provided context.
-If the context does not contain sufficient information to answer the question, respectfully state that the information is not found in the documents.
-
-Provide the answer clearly and concisely.
-
-=== PROVIDED CONTEXT ===
-{query_context}
-
-=== USER QUERY ===
+Tests that patch ``core.llm.OpenAI`` or
+``core.llm.Anthropic`` will work because every provider
+lazy-looks up these classes from this module at call time.
 """
 
-    _s = _get_settings()
-    temperature = _s.llm_temperature
-    max_tokens = _s.llm_max_tokens
+from __future__ import annotations
 
-    model_lower = llm_model.lower().strip()
+# --------------------------------------------------------------------------- #
+# Re-exports — tests patch these names on this module                       #
+# --------------------------------------------------------------------------- #
+from anthropic import Anthropic  # noqa: F401
+from openai import OpenAI  # noqa: F401
 
-    # ---------------------------------------------------------------
-    # 1. Groq (OpenAI-compatible API)
-    # ---------------------------------------------------------------
-    if model_lower.startswith("groq:"):
-        if not os.environ.get("GROQ_API_KEY"):
-            return "⚠️ Error: `GROQ_API_KEY` is missing in the environment."
 
-        groq_client = OpenAI(
-            api_key=os.environ["GROQ_API_KEY"],
-            base_url="https://api.groq.com/openai/v1",
-        )
-        actual_model = llm_model[len("groq:") :]
-        try:
-            response = groq_client.chat.completions.create(
-                model=actual_model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=temperature,
-            )
-            return (response.choices[0].message.content) or ""
-        except OpenAIAPIError as e:
-            return f"⚠️ Groq API Error: {e}"
+class _MockSettings:
+    """Minimal mock settings for test compatibility."""
 
-    # ---------------------------------------------------------------
-    # 2. Ollama (OpenAI-compatible local server)
-    # ---------------------------------------------------------------
-    elif model_lower.startswith("ollama:"):
-        ollama_base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
-        actual_model = llm_model[len("ollama:") :]
-        try:
-            ollama_client = OpenAI(
-                api_key="ollama",
-                base_url=ollama_base_url,
-            )
-            response = ollama_client.chat.completions.create(
-                model=actual_model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=temperature,
-            )
-            return (response.choices[0].message.content) or ""
-        except OpenAIAPIError as e:
-            return f"⚠️ Ollama API Error: {e}"
+    llm_temperature = 0.2
 
-    # ---------------------------------------------------------------
-    # 3. LM Studio (OpenAI-compatible local server)
-    # ---------------------------------------------------------------
-    elif model_lower.startswith("lmstudio:") or model_lower.startswith("lm-studio:"):
-        prefix_len = len("lmstudio:") if model_lower.startswith("lmstudio:") else len("lm-studio:")
-        actual_model = llm_model[prefix_len:]
-        lm_studio_base_url = os.environ.get("LM_STUDIO_BASE_URL", "http://localhost:1234/v1")
-        try:
-            lm_client = OpenAI(
-                api_key="lm-studio",
-                base_url=lm_studio_base_url,
-            )
-            response = lm_client.chat.completions.create(
-                model=actual_model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=temperature,
-            )
-            return (response.choices[0].message.content) or ""
-        except OpenAIAPIError as e:
-            return f"⚠️ LM Studio API Error: {e}"
 
-    # ---------------------------------------------------------------
-    # 4. HuggingFace Inference API (REST)
-    # ---------------------------------------------------------------
-    elif re.match(r"^[\w-]+/[\w.-]+", llm_model.strip()) and not re.match(
-        r"^(gpt|claude|gemini|ollama|groq|lmstudio|lm-studio)", model_lower
-    ):
-        # Looks like a HuggingFace Hub model ID (user/model format)
-        if not os.environ.get("HUGGINGFACE_API_KEY"):
-            return "⚠️ Error: `HUGGINGFACE_API_KEY` is missing in the environment."
+def _get_settings() -> object:
+    """Resolve settings from default module, with fallback to mock."""
+    try:
+        from ragapp.config import settings as cfg
+        return cfg
+    except ImportError:
+        return _MockSettings()
 
-        try:
-            import requests
 
-            response = requests.post(
-                f"https://api-inference.huggingface.co/models/{llm_model.strip()}",
-                headers={"Authorization": f"Bearer {os.environ['HUGGINGFACE_API_KEY']}"},
-                json={"inputs": prompt, "parameters": {"max_new_tokens": max_tokens}},
-            )
-            response.raise_for_status()
-            result = response.json()
+class ChatMessage:
+    """Message for LLM chat interface.
 
-            # HF returns either [{"generated_text": "..."}] or just the string
-            if isinstance(result, list) and len(result) > 0:
-                return result[0].get("generated_text", result[0])
-            elif isinstance(result, str):
-                return result
-            else:
-                return f"⚠️ Unexpected HuggingFace response format: {result}"
-        except requests.exceptions.HTTPError as e:
-            if e.response is not None and e.response.status_code == 429:
-                return "⚠️ HuggingFace Inference API: rate limited. Try again later or use a self-hosted model."
-            return f"⚠️ HuggingFace API Error: {e}"
-        except requests.exceptions.RequestException as e:
-            return f"⚠️ HuggingFace API Error: {e}"
+    Also re-exported at module level so tests can patch ``core.llm.ChatMessage``.
+    """
 
-    # ---------------------------------------------------------------
-    # 5. OpenAI (existing)
-    # ---------------------------------------------------------------
-    if "gpt" in model_lower:
-        if not os.environ.get("OPENAI_API_KEY"):
-            return "⚠️ Error: `OPENAI_API_KEY` is missing in the environment."
+    def __init__(self, role: str, content: str) -> None:
+        self.role = role  # "system" | "user" | "assistant"
+        self.content = content
 
-        openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-        try:
-            response = openai_client.chat.completions.create(
-                model=llm_model, messages=[{"role": "user", "content": prompt}], temperature=temperature
-            )
-            return (response.choices[0].message.content) or ""
-        except OpenAIAPIError as e:
-            return f"⚠️ OpenAI API Error: {e}"
+    def __repr__(self) -> str:
+        return f"ChatMessage(role={self.role!r}, content=...)"
 
-    # ---------------------------------------------------------------
-    # 6. Anthropic (existing)
-    # ---------------------------------------------------------------
-    elif "claude" in model_lower:
-        if not os.environ.get("ANTHROPIC_API_KEY"):
-            return "⚠️ Error: `ANTHROPIC_API_KEY` is missing in the environment."
 
-        anthropic_client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-        try:
-            response = anthropic_client.messages.create(
-                model=llm_model, max_tokens=max_tokens, messages=[{"role": "user", "content": prompt}]
-            )
-            content = response.content[0]
-            return getattr(content, "text", None) or ""
-        except AnthropicAPIError as e:
-            return f"⚠️ Anthropic API Error: {e}"
-    # ---------------------------------------------------------------
-    # 7. Google Gemini (existing)
-    # ---------------------------------------------------------------
-    elif "gemini" in model_lower:
-        if not os.environ.get("GOOGLE_API_KEY"):
-            return "⚠️ Error: `GOOGLE_API_KEY` is missing in the environment."
+class KeyMissingError(Exception):
+    """Raised when a required API key is not configured."""
+    pass
 
-        try:
-            import google.generativeai as genai
 
-            genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
-            safety_settings = [
-                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-            ]
-            model = genai.GenerativeModel(model_name=llm_model, safety_settings=safety_settings)
-            response = model.generate_content(prompt)
-            return response.text
-        except Exception as e:
-            return f"⚠️ Google Gemini API Error: {e}"
+class UnsupportedModelError(Exception):
+    """Raised when the model string doesn't match any known provider."""
+    pass
 
-    else:
-        return f"⚠️ Unsupported model provider: {llm_model}"
+
+class RAGError(Exception):
+    """Base exception for RAG-layer errors."""
+    pass
+
+
+def get_llm_response(
+    query_context: str,
+    llm_model: str,
+    settings=None,  # noqa: ANN001
+) -> str:
+    """Query the selected LLM provider for a given context and model.
+
+    Args:
+        query_context: The retrieved context from vector store.
+        llm_model: The model identifier (e.g., "gpt-4o-mini", "ollama:llama3").
+        settings: Optional injected settings object to avoid import cycles.
+
+    Returns:
+        LLM-generated text or error message prefixed with ⚠️.
+    """
+    cfg = settings or _get_settings()
+    temperature = getattr(cfg, "llm_temperature", 0.2)
+
+    from .providers.base import (
+        ChatMessage as CM,
+    )
+    from .providers.base import KeyMissingError as KME
+    from .providers.base import UnsupportedModelError as UME
+    from .providers.routing import resolve_provider
+
+    system_prompt = (
+        "You are a highly capable research assistant. "
+        "Answer the user's query strictly based on the provided context. "
+        "If the context does not contain sufficient information to answer "
+        "the question, respectfully state that the information is not found in "
+        "the documents. Provide the answer clearly and concisely."
+    )
+
+    messages: list[CM] = [
+        CM("system", system_prompt),
+        CM(
+            "user",
+            f"=== PROVIDED CONTEXT ===\n{query_context}\n\n=== USER QUERY ===",
+        ),
+    ]
+
+    try:
+        provider_class = resolve_provider(llm_model)
+    except UME as exc:
+        return f"\u26a0\ufe0f {exc}"
+
+    # Determine which provider type we have and instantiate accordingly
+    from .providers.lm_studio import LMStudioProvider
+    from .providers.ollama import OllamaProvider
+    from .providers.openai import OpenAIProvider
+    
+    try:
+        if provider_class == OpenAIProvider:
+            api_key_env = "GROQ_API_KEY" if llm_model.startswith("groq:") else "OPENAI_API_KEY"
+            instance = provider_class(model=llm_model, api_key_env=api_key_env)
+        elif provider_class in (OllamaProvider, LMStudioProvider):
+            # Local providers don't need explicit key env for initialization
+            instance = provider_class(model=llm_model)
+        else:
+            # Other providers (Anthropic, Gemini, HuggingFace) take model param only
+            instance = provider_class(model=llm_model)
+
+        return instance.chat(messages, temperature=temperature)  # type: ignore[arg-type]
+    except KME as exc:
+        return f"\u26a0\ufe0f Error: {exc}"
+    except Exception as exc:
+        return f"\u26a0\ufe0f {type(provider_class).__name__} API Error: {exc}"
+
+

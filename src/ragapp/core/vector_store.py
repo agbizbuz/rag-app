@@ -1,94 +1,129 @@
-import chromadb
-from chromadb.utils.embedding_functions import (
-    OpenAIEmbeddingFunction,
-)
+"""ChromaDB persistence layer — vector store operations only."""
 
-try:
-    from src.ragapp.config import settings
-except ImportError:
-    from config import settings
-import os
+from __future__ import annotations
+
+from typing import Callable, Optional
+
+import chromadb
+from ragapp.config import settings as _default_settings
+
+# Type alias for embedding function creator callable
+EmbeddingCreator = Callable[[], Optional[object]]
 
 
 class VectorStore:
+    """Persistent ChromaDB client and collection wrapper.
+
+    All dependencies are injected to avoid cross-directory imports.
     """
-    Initializes a persistent ChromaDB client and collection.
-    The underlying data persists to disk (defined in CHROMA_DB_PATH).
-    """
 
-    def __init__(self):
-        self.db_path = settings.db_path
-        self.collection_name = settings.collection_name
+    def __init__(
+        self,
+        db_path: str | None = None,
+        collection_name: str | None = None,
+        embedding_creator: Optional[EmbeddingCreator] = None,
+        settings=None,  # noqa: ANN001
+    ) -> None:
+        cfg = settings or _default_settings
+        self.db_path = db_path or cfg.db_path  # type: ignore[union-attr]
+        self.collection_name = collection_name or cfg.collection_name  # type: ignore[union-attr]
+        self._embedding_creator = embedding_creator
 
-        self.client = chromadb.PersistentClient(path=self.db_path)
-        self.collection = self._get_or_create_collection()
+        self._client = chromadb.PersistentClient(path=self.db_path)
+        self._collection: chromadb.Collection | None = None
 
-    def _get_or_create_collection(self):
-        """Create or retrieve the collection, prioritizing OpenAI embedders if a key exists."""
-        embedding_function = None
-        if os.environ.get("OPENAI_API_KEY"):
-            embedding_function = OpenAIEmbeddingFunction(
-                api_key=os.environ.get("OPENAI_API_KEY"), model_name="text-embedding-3-small"
+    @property
+    def collection(self) -> chromadb.Collection:
+        if self._collection is None:
+            ef = self._get_embedding_function()
+            self._collection = self._client.get_or_create_collection(
+                name=self.collection_name,
+                embedding_function=ef,  # type: ignore[arg-type]
+                metadata={"hnsw:space": "cosine"},
             )
-        # If no key, ChromaDB uses its default (SentenceTransformer locally)
+        return self._collection
 
-        import typing
+    def _get_embedding_function(self) -> Optional[object]:
+        """Get or create the embedding function via injected creator."""
+        if self._embedding_creator is not None:
+            return self._embedding_creator()
+        
+        from .embedding_function import create_embedding_function as default_ef
+        return default_ef()
 
-        ef: chromadb.EmbeddingFunction[chromadb.Documents] | None = (
-            typing.cast("chromadb.EmbeddingFunction[chromadb.Documents]", embedding_function)
-            if embedding_function
-            else None
-        )
-        return self.client.get_or_create_collection(
-            name=self.collection_name,
-            embedding_function=ef,  # ty: ignore[invalid-argument-type]
-            metadata={"hnsw:space": "cosine"},
-        )
+    def _ensure_collection(self) -> None:
+        """Re-fetch collection if it may have been deleted externally."""
 
-    def add_documents(self, documents: list[dict]) -> int:
+        _ = self.collection  # triggers lazy init via property accessor
+
+    def add_documents(self, chunks: list[dict]) -> int:
+        """Add document chunks to the collection.
+
+        Args:
+            chunks: List of document chunk dicts with keys 'id', 'text', 'metadata'.
+
+        Returns:
+            Number of documents added.
         """
-        Upserts a list of documents into the vector store.
-        documents: List of dicts with keys 'id', 'text', and optional 'metadata'.
-        """
-        if self.collection.count() == 0:
-            # Ensure the collection is properly built if it wasn't populated previously
-            self.collection = self._get_or_create_collection()
+        self._ensure_collection()
+        
+        if not chunks:
+            return 0
 
-        self.collection.add(
-            ids=[doc["id"] for doc in documents],
-            documents=[doc["text"] for doc in documents],
-            metadatas=[doc.get("metadata", {}) for doc in documents],
+        ids = [chunk["id"] for chunk in chunks]
+        documents = [chunk["text"] for chunk in chunks]
+        metadatas = [chunk["metadata"] for chunk in chunks]
+
+        self._collection.add(
+            ids=ids,
+            embeddings=None,  # Use server-side embedding if configured
+            documents=documents,
+            metadatas=metadatas,
         )
-        return len(documents)
 
-    def get_collection_size(self) -> int:
-        return self.collection.count()
+        return len(ids)
 
     def query(self, query_text: str, n_results: int = 3) -> list[dict]:
+        """Query the collection for relevant document chunks.
+
+        Args:
+            query_text: The query string to search for.
+            n_results: Number of results to return (default: 3).
+
+        Returns:
+            List of result dicts with keys 'id', 'text', 'metadata', 'distance'.
         """
-        Performs a semantic search.
-        Returns a list of dicts: { 'id', 'text', 'metadata', 'distance' }
-        """
-        if self.collection.count() == 0:
+        self._ensure_collection()
+        
+        results = self._collection.query(
+            query_texts=[query_text],
+            n_results=n_results,
+            include=["documents", "metadatas", "distances"],  # type: ignore
+        )
+
+        if not results["ids"]:
             return []
 
-        try:
-            results = self.collection.query(query_texts=[query_text], n_results=n_results)
-            output = []
-            for i in range(len(results["ids"][0])):
-                output.append(
-                    {
-                        "id": results["ids"][0][i],
-                        "text": results["documents"][0][i],
-                        "metadata": results["metadatas"][0][i],
-                        "distance": results["distances"][0][i],
-                    }
-                )
-            return output
-        except Exception:
-            # Collection may have been deleted between count() and query() check
-            return []
-        return output
+        all_results = []
+        for i in range(len(results["ids"])):
+            query_id = results["ids"][i]
+            for j, doc_id in enumerate(query_id):
+                all_results.append({
+                    "id": doc_id,
+                    "text": results["documents"][i][j],  # type: ignore[index]
+                    "metadata": results["metadatas"][i][j] if results["metadatas"] else {},  # type: ignore[index]
+                    "distance": results["distances"][i][j],  # type: ignore[index]
+                })
+
+        return all_results
+
+    def get_collection_size(self) -> int:
+        """Return the number of documents in the collection."""
+        self._ensure_collection()
+        return self._collection.count()  # type: ignore[no-any-return]
 
     def delete_collection(self) -> None:
-        self.client.delete_collection(self.collection_name)
+        """Delete the current collection (destructive)."""
+        self._client.delete_collection(self.collection_name)
+        self._collection = None  # invalidate lazy cache
+

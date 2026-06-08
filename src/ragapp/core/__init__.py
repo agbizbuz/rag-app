@@ -1,7 +1,3 @@
-"""Public API for the core RAG modules."""
+# Package marker for core subpackage
+# config.py exists at src/ragapp/config.py, not in this directory
 
-from .llm import get_llm_response
-from .parser import process_file
-from .vector_store import VectorStore
-
-__all__ = ["get_llm_response", "process_file", "VectorStore"]

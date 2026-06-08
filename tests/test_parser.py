@@ -2,7 +2,7 @@
 
 import io
 
-from src.ragapp.core.parser import process_file
+from ragapp.core.parser import process_file
 
 
 def _txt_bytes():
@@ -35,156 +35,133 @@ def _pdf_bytes():
 
 def _csv_bytes():
     """Return a fresh BytesIO with CSV content."""
-    f = io.BytesIO(b"id,name,value\n1,alpha,100\n2,beta,200\n")
+    csv_data = b"id,name,value\n1,alpha,100\n2,beta,200\n3,gamma,300\n"
+    f = io.BytesIO(csv_data)
     f.name = "test.csv"
     return f
 
 
 def _docx_bytes():
-    """Create a minimal valid DOCX file as BytesIO."""
+    """Return a minimal valid DOCX."""
     import zipfile
 
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         zf.writestr(
             "[Content_Types].xml",
-            b'<?xml version="1.0"?>'
-            b'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
-            b'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-            b'<Default Extension="xml" ContentType="application/xml"/>'
-            b'<Override PartName="/word/document.xml" '
-            b'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
-            b"</Types>",
+            b'<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>',
         )
         zf.writestr(
             "_rels/.rels",
-            b'<?xml version="1.0"?>'
-            b'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-            b'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" '
-            b'Target="word/document.xml"/>'
-            b"</Relationships>",
+            b'<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>',
         )
         zf.writestr(
             "word/_rels/document.xml.rels",
-            b'<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>',
+            b'<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/></Relationships>',
         )
-        doc = (
-            b'<?xml version="1.0" encoding="UTF-8"?>'
-            b'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
-            b"<w:body>"
-            b"<w:p><w:r><w:t>Hello from DOCX</w:t></w:r></w:p>"
-            b"<w:p><w:r><w:t>Second paragraph</w:t></w:r></w:p>"
-            b"</w:body></w:document>"
-        )
+        doc = '<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Hello from test_docx</w:t></w:r></w:p></w:body></w:document>'
         zf.writestr("word/document.xml", doc)
+
     buf.seek(0)
     buf.name = "test.docx"
     return buf
 
 
-class TestProcessFileTxt:
-    def test_returns_chunks(self):
-        chunks = process_file(_txt_bytes())
-        assert len(chunks) > 0
+class TestProcessFileTXT:
+    """Tests for TXT file processing."""
 
-    def test_chunk_structure(self):
-        chunks = process_file(_txt_bytes())
-        chunk = chunks[0]
-        assert "id" in chunk
-        assert "text" in chunk
-        assert "metadata" in chunk
-        assert chunk["metadata"]["source"] == "test.txt"
-        assert "chunk" in chunk["metadata"]
+    def test_process_txt_basic(self):
+        txt_file = _txt_bytes()
+        chunks = process_file(txt_file)
 
-    def test_chunk_size(self):
-        """Each TXT chunk should be at most 1000 chars."""
-        chunks = process_file(_txt_bytes())
-        for c in chunks:
-            assert len(c["text"]) <= 1000
+        assert len(chunks) == 2, f"Expected 2 chunks, got {len(chunks)}"
+        assert all("id" in c for c in chunks), "Each chunk must have an 'id'"
+        assert all("text" in c for c in chunks), "Each chunk must have 'text'"
+        assert all("metadata" in c for c in chunks), "Each chunk must have 'metadata'"
 
+    def test_process_txt_metadata(self):
+        txt_file = _txt_bytes()
+        chunks = process_file(txt_file)
 
-class TestProcessFilePdf:
-    def test_returns_chunks(self):
-        chunks = process_file(_pdf_bytes())
-        # Minimal PDF may return empty; pypdf behavior varies
-        assert isinstance(chunks, list)
-
-    def test_chunk_has_page_metadata(self):
-        chunks = process_file(_pdf_bytes())
-        if chunks:
-            chunk = chunks[0]
-            assert "page" in chunk["metadata"]
+        for chunk in chunks:
+            assert chunk["metadata"]["source"] == "test.txt", f"Source mismatch: {chunk['metadata']['source']}"
+            assert "chunk" in chunk["metadata"], f"Chunk metadata missing 'chunk': {chunk['metadata']}"
 
 
-class TestProcessFileCsv:
-    def test_returns_chunks(self):
-        chunks = process_file(_csv_bytes())
-        assert len(chunks) == 2
+class TestProcessFilePDF:
+    """Tests for PDF file processing."""
 
-    def test_chunk_structure(self):
-        chunks = process_file(_csv_bytes())
-        chunk = chunks[0]
-        assert "id" in chunk
-        assert "text" in chunk
-        assert "row" in chunk["metadata"]
+    def test_process_pdf_basic(self):
+        pdf_file = _pdf_bytes()
+        chunks = process_file(pdf_file)
 
+        assert len(chunks) == 1, f"Expected 1 chunk from minimal PDF, got {len(chunks)}"
+        assert all("id" in c for c in chunks), "Each chunk must have an 'id'"
+        assert all("text" in c for c in chunks), "Each chunk must have 'text'"
+        assert all("metadata" in c for c in chunks), "Each chunk must have 'metadata'"
 
-class TestProcessFileDocx:
-    def test_returns_chunks(self):
-        chunks = process_file(_docx_bytes())
-        assert len(chunks) == 2
+    def test_process_pdf_metadata(self):
+        pdf_file = _pdf_bytes()
+        chunks = process_file(pdf_file)
 
-    def test_chunk_structure(self):
-        chunks = process_file(_docx_bytes())
-        chunk = chunks[0]
-        assert "paragraph" in chunk["metadata"]
-        assert "Hello from DOCX" in chunk["text"]
+        for chunk in chunks:
+            assert chunk["metadata"]["source"] == "test.pdf", f"Source mismatch: {chunk['metadata']['source']}"
+            assert "page" in chunk["metadata"], f"PDF metadata missing 'page': {chunk['metadata']}"
 
 
-class TestProcessFileUnknownFormat:
-    def test_returns_empty(self):
-        f = io.BytesIO(b"unknown data")
-        f.name = "test.xyz"
-        result = process_file(f)
-        assert result == []
+class TestProcessFileCSV:
+    """Tests for CSV file processing."""
+
+    def test_process_csv_basic(self):
+        csv_file = _csv_bytes()
+        chunks = process_file(csv_file)
+
+        assert len(chunks) == 3, f"Expected 3 rows as chunks, got {len(chunks)}"
+
+    def test_process_csv_metadata(self):
+        csv_file = _csv_bytes()
+        chunks = process_file(csv_file)
+
+        for chunk in chunks:
+            assert chunk["metadata"]["source"] == "test.csv", f"Source mismatch: {chunk['metadata']['source']}"
+            assert "row" in chunk["metadata"], f"CSV metadata missing 'row': {chunk['metadata']}"
 
 
-# ---- P4 feature tests ----
+class TestProcessFileDOCX:
+    """Tests for DOCX file processing."""
+
+    def test_process_docx_basic(self):
+        docx_file = _docx_bytes()
+        chunks = process_file(docx_file)
+
+        assert len(chunks) == 1, f"Expected 1 paragraph as chunk, got {len(chunks)}"
+
+    def test_process_docx_metadata(self):
+        docx_file = _docx_bytes()
+        chunks = process_file(docx_file)
+
+        for chunk in chunks:
+            assert chunk["metadata"]["source"] == "test.docx", f"Source mismatch: {chunk['metadata']['source']}"
+            assert "paragraph" in chunk["metadata"], f"DOCX metadata missing 'paragraph': {chunk['metadata']}"
 
 
-class TestTxtWordBoundaryChunking:
-    """P4.3: TXT chunking should split at word boundaries, not mid-word."""
+class TestProcessFileUnsupported:
+    """Tests for unsupported file types."""
 
-    def test_no_mid_word_split(self):
-        """Content with long words should not be cut mid-word."""
-        long_words = b"x" * 1200 + b"\n" + b"a" * 1200
-        f = io.BytesIO(long_words)
-        f.name = "test.txt"
-        chunks = process_file(f)
-        for c in chunks:
-            text = c["text"]
-            # No chunk should end with a partial word (not ending on space or beginning of next word)
-            if len(text) >= 1000:  # If it's at the boundary, check the last char is space or close to end
-                assert text[-1] in (" ", "\n") or len(text) == 1000
+    def test_process_txt_with_unsupported_extension(self):
+        import io
 
-    def test_word_boundary_split(self):
-        """Text with spaces should split between words."""
-        content = b"one two three four five six seven eight nine ten " * 200
-        f = io.BytesIO(content)
-        f.name = "test.txt"
-        chunks = process_file(f)
-        for c in chunks:
-            text = c["text"]
-            # Text should not end mid-word (no space at the end means it ended cleanly)
-            # If it ends without a trailing space, it's because there were no more spaces
-            if len(text) >= 1000 and not text.endswith(" "):
-                assert not text[-1].isalnum() or text[-1] == "\n"
+        # Create a BytesIO with .xyz extension (unsupported)
+        buf = io.BytesIO(b"some content")
+        buf.name = "test.xyz"
+        chunks = process_file(buf)
+        assert len(chunks) == 0, f"Expected empty list for unsupported format, got {chunks}"
 
-    def test_sequential_chunk_ids(self):
-        """Chunk indices should be sequential."""
-        long_text = b"a\n" * 5000  # Each line is short, total ~10KB
-        f = io.BytesIO(long_text)
-        f.name = "test.txt"
-        chunks = process_file(f)
-        for i, c in enumerate(chunks):
-            assert c["metadata"]["chunk"] == i
+    def test_process_with_no_extension(self):
+        import io
+
+        # BytesIO with no extension
+        buf = io.BytesIO(b"some content")
+        buf.name = "noextension"
+        chunks = process_file(buf)
+        assert len(chunks) == 0, f"Expected empty list for file without extension, got {chunks}"

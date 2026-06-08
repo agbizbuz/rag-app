@@ -37,9 +37,9 @@ This is a Streamlit-based Retrieval-Augmented Generation (RAG) application that 
 **Common diagnostics:**
 ```bash
 # Check environment
-uv run python -c "from src.ragapp.config import settings; print(settings)"
-uv run python -c "from src.ragapp.core.vector_store import VectorStore; vs = VectorStore(); print(f'Count: {vs.get_collection_size()}')"
-uv run python -c "from src.ragapp.core.llm import get_llm_response; print(get_llm_response('test', 'gpt-4o-mini'))"
+uv run python -c "from config import settings; print(settings)"
+uv run python -c "from core.vector_store import VectorStore; vs = VectorStore(); print(f'Count: {vs.get_collection_size()}')"
+uv run python -c "from core.llm import get_llm_response; print(get_llm_response('test', 'gpt-4o-mini'))"
 ```
 
 ### `query_rag` (skill://query_rag)
@@ -59,7 +59,7 @@ uv run python -c "from src.ragapp.core.llm import get_llm_response; print(get_ll
 
 **Usage pattern:**
 ```python
-from src.ragapp.core.vector_store import VectorStore
+from core.vector_store import VectorStore
 vs = VectorStore()
 results = vs.query("your question here", n_results=5)
 for r in results:
@@ -80,7 +80,7 @@ for r in results:
 - Testing edge cases (empty files, large files)
 **Testing command:**
 ```python
-from src.ragapp.core.parser import process_file
+from core.parser import process_file
 import io
 chunks = process_file(io.BytesIO(b"test content"))
 print(f"TXT chunks: {len(chunks)}")
@@ -118,7 +118,7 @@ print(f"TXT chunks: {len(chunks)}")
 - Investigating storage paths
 **Commands:**
 ```python
-from src.ragapp.core.vector_store import VectorStore
+from core.vector_store import VectorStore
 vs = VectorStore()
 print(f"Documents: {vs.get_collection_size()}")
 print(f"DB path: {vs.db_path}")

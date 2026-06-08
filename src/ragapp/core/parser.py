@@ -1,76 +1,48 @@
-import uuid
+"""File routing — dispatches uploaded files to the correct parser."""
 
-import pandas as pd
-from docx import Document
-from pypdf import PdfReader
+from __future__ import annotations
+
+from .parsers.base import Chunk
+from .parsers.csv_parser import CsvParser
+from .parsers.docx_parser import DocxParser
+from .parsers.pdf_parser import PdfParser
+from .parsers.txt_parser import TxtParser
+
+_EXTENSION_MAP: dict[str, type] = {}
+for _cls in (CsvParser, DocxParser, PdfParser, TxtParser):
+    for _ext in _cls.supported_extensions:
+        _EXTENSION_MAP[_ext] = _cls
 
 
 def process_file(file) -> list[dict]:
+    """Route an uploaded file to the correct parser and return chunks.
+
+    Returns an empty list when the file format is not supported.
+
+    Each chunk is a ``{"id", "text", "metadata"}`` dict, matching the legacy API.
     """
-    Parse an uploaded file into standardized document chunks.
-    Returns a list of dictionaries: { 'id': str, 'text': str, 'metadata': dict }
-    """
-    chunks = []
-    file_name = file.name
-    file_ext = file_name.split(".")[-1].lower()
+    fname = getattr(file, "name", "")
+    if "." in fname:
+        ext = fname.rsplit(".", 1)[-1].lower()
+    else:
+        ext = ""
 
-    # --- PDF Parsing ---
-    if file_ext == "pdf":
-        reader = PdfReader(file)
-        for i, page in enumerate(reader.pages):
-            text = page.extract_text()
-            if not (text and text.strip()):
-                continue
-            # Split long pages into paragraph-level chunks for better embedding quality
-            para_chunks = [p.strip() for p in text.split("\n\n") if p.strip()]
-            if len(para_chunks) > 1:
-                for j, para in enumerate(para_chunks):
-                    chunks.append(
-                        {
-                            "id": str(uuid.uuid4()),
-                            "text": para,
-                            "metadata": {"source": file_name, "page": i + 1, "paragraph": j},
-                        }
-                    )
-            else:
-                chunks.append({"id": str(uuid.uuid4()), "text": text, "metadata": {"source": file_name, "page": i + 1}})
+    parser_cls = _EXTENSION_MAP.get(ext)
+    if not parser_cls:
+        return []
 
-    # --- TXT Parsing ---
-    elif file_ext == "txt":
-        content = file.read().decode("utf-8")
-        chunk_size = 1000
-        start = 0
-        while start < len(content):
-            end = min(start + chunk_size, len(content))
-            if end < len(content):
-                # Find the last space within this window to avoid splitting words
-                split_at = content.rfind(" ", start, end)
-                if split_at > start:
-                    end = split_at
-            chunks.append(
-                {
-                    "id": str(uuid.uuid4()),
-                    "text": content[start:end].strip(),
-                    "metadata": {"source": file_name, "chunk": len(chunks)},
-                }
-            )
-            start = end
+    instance = parser_cls()
+    raw_chunks: list[Chunk] = instance.parse(file)
 
-    # --- CSV Parsing ---
-    elif file_ext == "csv":
-        df = pd.read_csv(file)
-        for idx, row in df.iterrows():
-            text = " | ".join([str(val) for val in row.values])
-            chunks.append({"id": str(uuid.uuid4()), "text": text, "metadata": {"source": file_name, "row": idx}})
+    import uuid
 
-    # --- DOCX Parsing ---
-    elif file_ext == "docx":
-        doc = Document(file)
-        for i, para in enumerate(doc.paragraphs):
-            text = para.text
-            if text and text.strip():
-                chunks.append(
-                    {"id": str(uuid.uuid4()), "text": text, "metadata": {"source": file_name, "paragraph": i}}
-                )
-
-    return chunks
+    result: list[dict] = []
+    for chunk in raw_chunks:
+        result.append(
+            {
+                "id": str(uuid.uuid4()),
+                "text": chunk.text,
+                "metadata": dict(chunk.metadata),
+            }
+        )
+    return result

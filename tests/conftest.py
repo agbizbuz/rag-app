@@ -1,9 +1,17 @@
 """Shared fixtures for all tests."""
 
 import io
+import os
+import sys
+from pathlib import Path
 
 import pytest
 
+# Add src to path so ragapp.core.* modules can be imported as top-level module
+SRC_PATH = Path(__file__).parent.parent / "src"
+if str(SRC_PATH) not in sys.path:
+    # Prepend for priority
+    sys.path.insert(0, str(SRC_PATH))
 
 @pytest.fixture(autouse=True)
 def _clear_env_keys(monkeypatch):
@@ -79,3 +87,10 @@ def docx_bytes():
         zf.writestr("word/document.xml", doc)
     buf.seek(0)
     return buf
+
+SRC_RAGAPP_PATH = SRC_PATH / "ragapp"
+# Ensure .env file exists for tests with valid settings
+ENV_FILE = SRC_RAGAPP_PATH / ".env"
+if not ENV_FILE.exists():
+    # Write a minimal env file for tests that need settings
+    ENV_FILE.write_text("CHROMA_DB_PATH=/tmp/test_chroma_db\nCOLLECTION_NAME=test_collection\nDEFAULT_LLM=gpt-4o-mini\nLLM_TEMPERATURE=0.2\nLLM_MAX_TOKENS=1024\n")
