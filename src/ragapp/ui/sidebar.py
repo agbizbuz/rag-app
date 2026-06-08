@@ -205,9 +205,7 @@ def _check_server_health(base_url, discover_func):  # noqa: ANN001
 def _quit_session() -> None:
     st.session_state._quit_requested = True
 
-    from ragapp.ui import components as _c  # noqa: F401
-
     # Trigger a refresh that closes the browser window/tab by executing JS
     body = "<script>window.close();</script>"
-    _c.html(f"<script>try{{window.open('about:blank','_self').close()}}catch(e){{}}</script>{body}", height=0, width=0)
+    st.html(f"<script>try{{window.open('about:blank','_self').close()}}catch(e){{}}</script>{body}", height=0, width=0)
 

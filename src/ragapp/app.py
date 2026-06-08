@@ -13,6 +13,10 @@ st.set_page_config(
 )
 
 
+# Main title banner (restored from pre-refactor version)
+st.title("📚 Local Research RAG")
+st.caption("A persistent, local, and secure Question Answering system powered by ChromaDB.")
+
 # Lazy init the vector store once per session
 if "vector_store" not in st.session_state:
     from core.vector_store import VectorStore
