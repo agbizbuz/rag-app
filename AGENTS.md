@@ -1,5 +1,35 @@
 # AGENTS.md - Agent Guide for RAG App
 
+## SOLID Design Principles
+
+This RAG application follows **SOLID** design principles for maintainable, extensible architecture:
+
+- **Single Responsibility Principle (SRP)**: Each class/module has one job — e.g., `VectorStore` only manages ChromaDB, parsers only handle file formats
+- **Open/Closed Principle (OCP)**: Extensible without modification via registry pattern. New providers/parsers added by creating a new file and registering — zero changes to existing code  
+- **Liskov Substitution Principle (LSP)**: All providers implement `ProviderProtocol`; all parsers implement `ParserProtocol`. Any provider can substitute another at runtime
+- **Interface Segregation Principle (ISP)**: Clients depend only on needed methods. Separate protocols for chat vs embedding, parsing vs chunking
+- **Dependency Inversion Principle (DIP)**: High-level modules (`llm.py`, `parser.py`) depend on abstractions (protocols), not concrete implementations
+
+### Architecture Patterns Used
+
+1. **Strategy Pattern**: Provider and Parser registries allow runtime selection of implementations based on model ID or file extension  
+2. **Dependency Injection**: Settings injected into constructors; embedding creator injected into VectorStore for testability  
+3. **Registry/Plugin Pattern**: New providers or parsers follow OCP — just create a new file with the appropriate protocol, add registration code
+
+### Adding a New LLM Provider
+
+1. Create `src/ragapp/core/providers/<name>.py` with class implementing `ProviderProtocol.chat()`
+2. Register in `core/providers/__init__.py`: `register("prefix-", MyProvider)`
+3. Add model options to `ui/components/provider_catalog.py` for UI dropdown population
+
+### Adding a New Document Parser
+
+1. Create `src/ragapp/core/parsers/<name>_parser.py` with class implementing `ParserProtocol.parse()`
+2. Register in `core/parsers/__init__.py`: `@register("ext")` decorator on the parser class  
+3. No changes to existing parsers or dispatcher required (OCP)
+
+See [SOLID_REFACTORING_PLAN.md](SOLID_REFACTORING_PLAN.md) for detailed refactoring rationale and implementation notes.
+
 ## Project Overview
 
 This is a Streamlit-based Retrieval-Augmented Generation (RAG) application that allows users to:

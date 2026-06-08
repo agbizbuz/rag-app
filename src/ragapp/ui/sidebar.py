@@ -12,22 +12,63 @@ from ragapp.core.vector_store import VectorStore
 from ragapp.ui.components.provider_catalog import PROVIDERS
 
 
+def _get_provider_models(provider_info):
+    '''Return list of model identifiers for a provider with appropriate prefix.'''
+    if provider_info.discover_models and provider_info.base_url_key:
+        discovered = _resolve_models(provider_info)
+        if discovered:
+            return [f"{provider_info.name}:{m}" for m in discovered]
+        return []
+    
+    opts = provider_info.model_options.copy() if provider_info.model_options else []
+    
+    # Apply prefixes matching providers/__init__.py registration patterns
+    if provider_info.name == "Groq":
+        return opts  # Already prefixed with groq:
+    elif provider_info.name.startswith("LM Studio"):
+        return [f"lm-studio:{m}" for m in opts] if opts else []
+    elif provider_info.name == "Ollama":
+        return [f"ollama:{m}" for m in opts] if opts else []
+    elif provider_info.name.startswith("Google Gemini"):
+        # Just use the model name directly - it routes via 'gemini' prefix
+        # gemini-pro -> gemini-pro (matches 'gemini' registration)
+        return opts  # Already correct format
+    elif provider_info.name == "Anthropic":
+        # model_options like claude-3-haiku don't need extra prefix
+        return opts  
+    elif provider_info.name == "OpenAI":
+        return opts  # Default (empty prefix)
+    elif provider_info.name == "HuggingFace":
+        return [f"hf-{m}" for m in opts]  # Add hf- prefix for clarity
+    return opts
 def render_sidebar(vs: VectorStore) -> str:
     """Render sidebar. Returns the selected model string."""
 
     with st.sidebar:
         st.header("Configuration")
 
-        # Model selection
-        model_options = [p.name for p in PROVIDERS] + ["gpt-4o-mini", "claude-3-haiku-20240307"]
-        if settings.default_llm not in model_options:
-            model_options.append(settings.default_llm)
+
+        # Model selection - connect to all providers' models with proper prefixes
+        all_model_options = []
+
+        for info in PROVIDERS:
+            provider_models = _get_provider_models(info)
+            if provider_models:
+                all_model_options.extend(provider_models[:5])  # Limit per provider
+        
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_options = []
+        for m in all_model_options:
+            if m not in seen:
+                seen.add(m)
+                unique_options.append(m)
+        
+        all_model_options = unique_options
 
         selected_model = st.selectbox(
-            "Select Model", model_options, index=0, key="_selected_model"
+            "Select Model", all_model_options, index=0, key="_selected_model"
         )
-
-        # Temperature - use default from settings as initial value
         current_temp = st.session_state.get("_temp_slider", None)
         if current_temp is None:
             current_temp = settings.llm_temperature
