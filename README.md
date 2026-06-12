@@ -39,9 +39,10 @@ rag-app/
 2.  **`uv`** (Python package manager) installed. *[Install uv]*
 
 ### Installation
-Sync dependencies using `uv`:
+Sync dependencies using `uv` and install the app as package in editable mode:
 ```bash
 uv sync
+uv pip install -e .
 ```
 
 ### 1. Configure API Keys
@@ -61,7 +62,7 @@ HUGGINGFACE_API_KEY=hf_your-token-here
 ### 2. Launch the App
 Run the Streamlit interface:
 ```bash
-streamlit run src/ragapp/app.py
+uv run streamlit run src/ragapp/app.py
 ```
 
 1.  **Select a Provider**: In the sidebar, choose your LLM provider (OpenAI, Anthropic, Gemini, Groq, Ollama, LM Studio, or HuggingFace) and select a model.
