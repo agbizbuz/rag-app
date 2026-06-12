@@ -17,7 +17,7 @@ def _get_provider_models(provider_info):
     if provider_info.discover_models and provider_info.base_url_key:
         discovered = _resolve_models(provider_info)
         if discovered:
-            return [f"{provider_info.name}:{m}" for m in discovered]
+            return discovered
         return []
     
     opts = provider_info.model_options.copy() if provider_info.model_options else []
@@ -146,7 +146,7 @@ def render_sidebar(vs: VectorStore) -> str:
         if st.button("Quit App", type="primary"):
             _quit_session()
 
-    return selected_model  # type: ignore[return-value]
+    return selected_provider_name + ":" + selected_model  # type: ignore[return-value]
 
 
 def render_key_status(info) -> None:

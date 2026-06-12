@@ -56,7 +56,7 @@ def fetch_ollama_models(base_url: str) -> list[str]:
     try:
         resp = requests.get(f"{base_url}/api/tags", timeout=3)
         resp.raise_for_status()
-        return [f"ollama:{m['name']}" for m in resp.json().get("models", [])]
+        return [f"{m['name']}" for m in resp.json().get("models", [])]
     except Exception:
         return []
 

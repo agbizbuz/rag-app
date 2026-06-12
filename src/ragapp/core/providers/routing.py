@@ -32,7 +32,7 @@ class _Registry:
         """
         # Try exact prefix matches first (most specific)
         for prefix, provider_class in self._registry:
-            if model_id.startswith(prefix):
+            if model_id.lower().startswith(prefix.lower()):
                 return provider_class
 
         raise ValueError(f"No provider registered for model: {model_id}")

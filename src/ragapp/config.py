@@ -8,9 +8,7 @@ from pydantic_settings import BaseSettings
 # .env loading                                                                #
 # --------------------------------------------------------------------------- #
 
-_ENV_PATH = Path(__file__).resolve().parent / ".env"
-if _ENV_PATH.exists():
-    load_dotenv(_ENV_PATH)
+load_dotenv()
 
 
 class Settings(BaseSettings):
@@ -24,13 +22,13 @@ class Settings(BaseSettings):
 
     groq_api_key: str = ""
     huggingface_api_key: str = ""
-    ollama_base_url: str = "http://localhost:11434/v1"
-    lm_studio_base_url: str = "http://localhost:1234/v1"
+    ollama_base_url: str = "http://localhost:11434"
+    lm_studio_base_url: str = "http://localhost:1234"
     llm_temperature: float = Field(default=0.2, validation_alias="LLM_TEMPERATURE")
     llm_max_tokens: int = Field(default=1024, validation_alias="LLM_MAX_TOKENS")
     max_file_size_bytes: int = Field(default=50 * 1024 * 1024, validation_alias="MAX_FILE_SIZE")
 
-    model_config = {"env_file": str(_ENV_PATH), "env_file_encoding": "utf-8"}
+    # model_config = {"env_file": str(_ENV_PATH), "env_file_encoding": "utf-8"}
 
 
 settings = Settings()

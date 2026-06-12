@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import os
+import re
+
+strip_pattern = re.compile("ollama:", re.IGNORECASE)
 
 
 def _get_openai_client():
@@ -31,9 +34,12 @@ class OllamaProvider:
     name = "Ollama"
 
     def __init__(self, model: str) -> None:
-        self._model = model
-        self._base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
-
+        self._model = strip_pattern.sub('', model)
+        base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+        if not base_url.endswith("/v1"):
+            base_url = base_url + "/v1"
+        self._base_url = base_url
+        
     def chat(self, messages, temperature=0.0):  # noqa: ANN001
         OAI = _get_openai_client()
         client = OAI(api_key="ollama", base_url=self._base_url)
