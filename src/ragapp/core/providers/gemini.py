@@ -6,8 +6,10 @@ from __future__ import annotations
 class GeminiProvider:
     name = "Google Gemini"
 
-    def __init__(self, model: str) -> None:
+    def __init__(self, model: str, temperature=0.2, max_tokens=1024) -> None:
         self._model = model
+        self._temperature = temperature
+        self._max_tokens = max_tokens
 
     def chat(self, messages, temperature=0.0):  # noqa: ANN001
         import os

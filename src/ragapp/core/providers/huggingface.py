@@ -6,10 +6,12 @@ from __future__ import annotations
 class HuggingFaceProvider:
     name = "HuggingFace"
 
-    def __init__(self, model: str) -> None:
+    def __init__(self, model: str, temperature: float = 0.0, max_tokens: int = 1024) -> None:
         self._model = model
+        self._temperature = temperature
+        self._max_tokens = max_tokens
 
-    def chat(self, messages, temperature=0.0):  # noqa: ANN001
+    def chat(self, messages):
         import os
 
         from .base import KeyMissingError as KME
@@ -21,13 +23,12 @@ class HuggingFaceProvider:
         import requests
 
         combined = "\n\n".join(m.content for m in messages if m.role != "system")
-        settings = _get_settings()
         resp = requests.post(
             f"https://api-inference.huggingface.co/models/{self._model}",
             headers={"Authorization": f"Bearer {key}"},
             json={
                 "inputs": combined,
-                "parameters": {"max_new_tokens": settings.llm_max_tokens},  # type: ignore[union-attr]
+                "parameters": {"max_new_tokens": self._max_tokens},
             },
         )
         resp.raise_for_status()
@@ -40,13 +41,3 @@ class HuggingFaceProvider:
         else:
             raise RuntimeError(f"Unexpected HuggingFace response format: {result}")
 
-
-def _get_settings() -> object:
-    """Resolve settings with fallback paths."""
-    try:
-        from config import settings as s
-        return s
-    except ImportError:
-        pass
-    from config import settings as s
-    return s

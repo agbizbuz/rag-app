@@ -41,10 +41,12 @@ class OpenAIProvider:
 
     name = "OpenAI"
 
-    def __init__(self, model: str, api_key_env: str = "OPENAI_API_KEY", base_url=None):  # noqa: ANN001
+    def __init__(self, model: str, api_key_env: str = "OPENAI_API_KEY", base_url=None, temperature=0.2, max_tokens=1024):  # noqa: ANN001
         self._model = model
         self._api_key_env = api_key_env
         self._base_url = base_url
+        self._temperature = temperature
+        self._max_tokens = max_tokens
 
     def chat(self, messages, temperature=0.0):  # noqa: ANN001
         import os

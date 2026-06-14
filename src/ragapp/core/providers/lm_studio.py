@@ -30,10 +30,9 @@ def _get_openai_client():
 class LMStudioProvider:
     name = "LM Studio"
 
-    def __init__(self, model: str) -> None:
+    def __init__(self, model: str, temperature=0.2, max_tokens=1024) -> None:
         self._model = model
         self._base_url = os.environ.get("LM_STUDIO_BASE_URL", "http://localhost:1234/v1")
-
     def chat(self, messages, temperature=0.0):  # noqa: ANN001
         OAI = _get_openai_client()
         client = OAI(api_key="lm-studio", base_url=self._base_url)

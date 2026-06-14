@@ -6,8 +6,7 @@ import os
 
 import streamlit as st
 
-# Absolute imports for root-level packages (requires PYTHONPATH=src)
-from ragapp.config import settings
+from ragapp.config_provider import ConfigProvider
 from ragapp.core.vector_store import VectorStore
 from ragapp.ui.components.provider_catalog import PROVIDERS
 
@@ -19,9 +18,9 @@ def _get_provider_models(provider_info):
         if discovered:
             return discovered
         return []
-    
+
     opts = provider_info.model_options.copy() if provider_info.model_options else []
-    
+
     # Apply prefixes matching providers/__init__.py registration patterns
     if provider_info.name == "Groq":
         return opts  # Already prefixed with groq:
@@ -35,7 +34,7 @@ def _get_provider_models(provider_info):
         return opts  # Already correct format
     elif provider_info.name == "Anthropic":
         # model_options like claude-3-haiku don't need extra prefix
-        return opts  
+        return opts
     elif provider_info.name == "OpenAI":
         return opts  # Default (empty prefix)
     elif provider_info.name == "HuggingFace":
@@ -55,20 +54,19 @@ def _get_sorted_providers() -> list[tuple[str, object]]:
     return sorted(results, key=lambda x: x[0])
 
 
-
-
-def render_sidebar(vs: VectorStore) -> str:
+def render_sidebar(vs: VectorStore, config: ConfigProvider) -> str:
     """Render sidebar. Returns the selected model string."""
 
     with st.sidebar:
         st.header("Configuration")
 
         # Provider selection - dropdown to choose provider category
-        provider_options = [(name, info) for name, info in _get_sorted_providers()]
-        
+        provider_options = [(name, info)
+                            for name, info in _get_sorted_providers()]
+
         if "_selected_provider_index" not in st.session_state:
             st.session_state._selected_provider_index = 0
-        
+
         selected_provider_name = st.selectbox(
             "Select Provider",
             [name for name, _ in provider_options],
@@ -77,26 +75,31 @@ def render_sidebar(vs: VectorStore) -> str:
         )
 
         # Update index on selection (will persist to next render)
-        selected_idx = next((i for i, (name, _) in enumerate(provider_options) if name == selected_provider_name), 0)
-        
+        selected_idx = next((i for i, (name, _) in enumerate(
+            provider_options) if name == selected_provider_name), 0)
+
         # Find selected provider info
-        selected_provider_info = next(info for name, info in provider_options if name == selected_provider_name)
+        selected_provider_info = next(
+            info for name, info in provider_options if name == selected_provider_name)
 
         # Model selection - shows models for the currently selected provider
         provider_models = _get_provider_models(selected_provider_info)
-        
+
         if not provider_models:
             st.info("🔄 Discovering available models...")
             # Force discovery by checking server health
             if selected_provider_info.discover_models and selected_provider_info.base_url_key:
-                base_url = os.environ.get(selected_provider_info.base_url_key, "")
+                base_url = os.environ.get(
+                    selected_provider_info.base_url_key, "")
                 discovered = _resolve_models(selected_provider_info)
                 if discovered:
-                    provider_models = [f"{selected_provider_name}:{m}" for m in discovered]
+                    provider_models = [
+                        f"{selected_provider_name}:{m}" for m in discovered]
                 else:
-                    st.warning("⚠️ Server appears offline. Check URL settings.")
+                    st.warning(
+                        "⚠️ Server appears offline. Check URL settings.")
                     provider_models = []
-        
+
         # Remove duplicates while preserving order
         seen = set()
         unique_options = []
@@ -104,24 +107,25 @@ def render_sidebar(vs: VectorStore) -> str:
             if m not in seen:
                 seen.add(m)
                 unique_options.append(m)
-        
+
         if unique_options:
             selected_model = st.selectbox(
-                "Select Model", 
+                "Select Model",
                 unique_options,
-                index=next((i for i, model in enumerate(unique_options) 
-                          if model == st.session_state.get("_selected_model")), 0),
+                index=next((i for i, model in enumerate(unique_options)
+                            if model == st.session_state.get("_selected_model")), 0),
                 key="_selected_model"
             )
         else:
             # No models available - show placeholder with guidance
-            st.selectbox("Select Model", ["⚠️ Add API key or check server"], index=0)
+            st.selectbox("Select Model", [
+                         "⚠️ Add API key or check server"], index=0)
             selected_model = None
 
         # Temperature - use default from settings as initial value
         current_temp = st.session_state.get("_temp_slider", None)
         if current_temp is None:
-            current_temp = settings.llm_temperature
+            current_temp = config.llm_temperature
 
         st.slider(
             "Temperature",
@@ -146,12 +150,13 @@ def render_sidebar(vs: VectorStore) -> str:
         if st.button("Quit App", type="primary"):
             _quit_session()
 
-    return selected_provider_name + ":" + selected_model  # type: ignore[return-value]
+    # type: ignore[return-value]
+    return selected_provider_name + ":" + selected_model
 
 
 def render_key_status(info) -> None:
     """Show a key / server health indicator for the selected provider."""
-    
+
     if hasattr(info, 'key_env') and info.key_env:
         has_key = bool(os.environ.get(info.key_env))
         label = f"**{info.name} API Key:**"
@@ -207,5 +212,5 @@ def _quit_session() -> None:
 
     # Trigger a refresh that closes the browser window/tab by executing JS
     body = "<script>window.close();</script>"
-    st.html(f"<script>try{{window.open('about:blank','_self').close()}}catch(e){{}}</script>{body}", height=0, width=0)
-
+    st.html(
+        f"<script>try{{window.open('about:blank','_self').close()}}catch(e){{}}</script>{body}", height=0, width=0)

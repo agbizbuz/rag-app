@@ -37,10 +37,12 @@ def _get_anthropic_client_class():
 class AnthropicProvider:
     name = "Anthropic"
 
-    def __init__(self, model: str) -> None:
+    def __init__(self, model: str, temperature: float = 0.2, max_tokens: int = 1024) -> None:
         self._model = model
+        self._temperature = temperature
+        self._max_tokens = max_tokens
 
-    def chat(self, messages, temperature=0.0):  # noqa: ANN001
+    def chat(self, messages, **kwargs):
         import os
 
         from .base import KeyMissingError as KME
@@ -56,27 +58,17 @@ class AnthropicProvider:
         chat_msgs = []
         for m in messages:
             if m.role == "system":
-                system_prompt = m.content  # type: ignore[assignment]
+                system_prompt = m.content
             else:
                 chat_msgs.append({"role": m.role, "content": m.content})
 
-        settings = _get_settings()
-        kwargs: dict = {"model": self._model, "messages": chat_msgs}
-        kwargs["max_tokens"] = settings.llm_max_tokens  # type: ignore[union-attr]
+        kwargs_dict = {"model": self._model, "messages": chat_msgs}
+        kwargs_dict["max_tokens"] = self._max_tokens
         if system_prompt:
-            kwargs["system"] = system_prompt  # type: ignore[arg-type]
+            kwargs_dict["system"] = system_prompt
 
-        resp = client.messages.create(**kwargs)
+        resp = client.messages.create(**kwargs_dict)
         content_block = resp.content[0]
         return getattr(content_block, "text", None) or ""
 
 
-def _get_settings() -> object:
-    """Resolve settings with fallback paths."""
-    try:
-        from config import settings as s
-        return s
-    except ImportError:
-        pass
-    from config import settings as s
-    return s

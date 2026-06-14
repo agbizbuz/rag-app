@@ -15,7 +15,8 @@ def render_query_tab(vs: VectorStore, llm_model: str) -> None:
     if vs.get_collection_size() == 0:
         st.warning("\U0001F6A8 Database is empty.")
         st.info("Navigate to the **Builder** tab to ingest your documents first.")
-        st.page_link("https://google.com", label="Google Search", use_container_width=True)
+        st.page_link("https://google.com", label="Google Search",
+                     use_container_width=True)
         return
 
     st.header("Ask Your Documents")
@@ -34,12 +35,13 @@ def render_query_tab(vs: VectorStore, llm_model: str) -> None:
             results = vs.query(user_query, n_results=3)
 
             if not results:
-                st.info("No relevant documents found in the database matching your query.")
+                st.info(
+                    "No relevant documents found in the database matching your query.")
                 return
 
             # 2. Display LLM answer
             context_str = "\n\n---\n\n".join(r["text"] for r in results)
-            answer = get_llm_response(context_str, llm_model)
+            answer = get_llm_response(context_str, user_query, llm_model)
 
             st.subheader("\U0001F916 AI Response")
             st.write(answer)
@@ -52,8 +54,8 @@ def render_query_tab(vs: VectorStore, llm_model: str) -> None:
                     source = res["metadata"].get("source", "N/A")
                     page_or_chunk = (
                         res["metadata"].get("page",
-                            res["metadata"].get("chunk",
-                                res["metadata"].get("paragraph", "N/A")))
+                                            res["metadata"].get("chunk",
+                                                                res["metadata"].get("paragraph", "N/A")))
                     )
-                    st.caption(f"Source: {source} | Page/Chunk: {page_or_chunk}")
-
+                    st.caption(
+                        f"Source: {source} | Page/Chunk: {page_or_chunk}")

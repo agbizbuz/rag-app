@@ -14,21 +14,6 @@ from anthropic import Anthropic  # noqa: F401
 from openai import OpenAI  # noqa: F401
 
 
-class _MockSettings:
-    """Minimal mock settings for test compatibility."""
-
-    llm_temperature = 0.2
-
-
-def _get_settings() -> object:
-    """Resolve settings from default module, with fallback to mock."""
-    try:
-        from ragapp.config import settings as cfg
-        return cfg
-    except ImportError:
-        return _MockSettings()
-
-
 class ChatMessage:
     """Message for LLM chat interface.
 
@@ -60,27 +45,31 @@ class RAGError(Exception):
 
 def get_llm_response(
     query_context: str,
+    user_query: str,
     llm_model: str,
-    settings=None,  # noqa: ANN001
+    config_provider=None,  # noqa: ANN001
 ) -> str:
     """Query the selected LLM provider for a given context and model.
 
     Args:
         query_context: The retrieved context from vector store.
         llm_model: The model identifier (e.g., "gpt-4o-mini", "ollama:llama3").
-        settings: Optional injected settings object to avoid import cycles.
+        config_provider: Optional injected ConfigProvider to avoid import cycles.
 
     Returns:
         LLM-generated text or error message prefixed with ⚠️.
     """
-    cfg = settings or _get_settings()
-    temperature = getattr(cfg, "llm_temperature", 0.2)
+    from ragapp.config_provider import get_config as _get_cfg
+    cfg = config_provider or _get_cfg()
+    temperature = cfg.llm_temperature  # type: ignore[union-attr]
+    max_tokens = cfg.llm_max_tokens  # type: ignore[union-attr]
 
-    from .providers.base import (
-        ChatMessage as CM,
-    )
+    from .providers.base import ChatMessage as CM
     from .providers.base import KeyMissingError as KME
     from .providers.base import UnsupportedModelError as UME
+    from .providers.lm_studio import LMStudioProvider
+    from .providers.ollama import OllamaProvider
+    from .providers.openai import OpenAIProvider
     from .providers.routing import resolve_provider
 
     system_prompt = (
@@ -95,7 +84,8 @@ def get_llm_response(
         CM("system", system_prompt),
         CM(
             "user",
-            f"=== PROVIDED CONTEXT ===\n{query_context}\n\n=== USER QUERY ===",
+            f"=== PROVIDED CONTEXT ===\n{
+                query_context}\n\n=== USER QUERY ===\n{user_query}\n\n",
         ),
     ]
 
@@ -105,25 +95,28 @@ def get_llm_response(
         return f"\u26a0\ufe0f {exc}"
 
     # Determine which provider type we have and instantiate accordingly
-    from .providers.lm_studio import LMStudioProvider
-    from .providers.ollama import OllamaProvider
-    from .providers.openai import OpenAIProvider
-    
     try:
         if provider_class == OpenAIProvider:
-            api_key_env = "GROQ_API_KEY" if llm_model.startswith("groq:") else "OPENAI_API_KEY"
-            instance = provider_class(model=llm_model, api_key_env=api_key_env)
+            api_key_env = "GROQ_API_KEY" if llm_model.startswith(
+                "groq:") else "OPENAI_API_KEY"
+            import os
+            print(f"DEBUG: model={llm_model}, OPENAI_API_KEY={
+                  os.environ.get("OPENAI_API_KEY", "NOT SET")}")
+            instance = provider_class(
+                model=llm_model, temperature=temperature, max_tokens=max_tokens, api_key_env=api_key_env)
+            return instance.chat(messages)
         elif provider_class in (OllamaProvider, LMStudioProvider):
             # Local providers don't need explicit key env for initialization
-            instance = provider_class(model=llm_model)
+            instance = provider_class(
+                model=llm_model, temperature=temperature, max_tokens=max_tokens)
+            return instance.chat(messages)
         else:
             # Other providers (Anthropic, Gemini, HuggingFace) take model param only
-            instance = provider_class(model=llm_model)
+            instance = provider_class(
+                model=llm_model, temperature=temperature, max_tokens=max_tokens)
+            return instance.chat(messages)
 
-        return instance.chat(messages, temperature=temperature)  # type: ignore[arg-type]
     except KME as exc:
         return f"\u26a0\ufe0f Error: {exc}"
     except Exception as exc:
         return f"\u26a0\ufe0f {type(provider_class).__name__} API Error: {exc}"
-
-

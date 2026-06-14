@@ -1,0 +1,105 @@
+"""Configuration provider for explicit dependency injection."""
+
+from __future__ import annotations
+
+from typing import Optional
+
+
+class _MockSettings:
+    """Minimal mock settings for test compatibility."""
+
+    llm_temperature = 0.2
+    db_path = "./chroma_db"
+    collection_name = "my_rag_collection"
+    default_llm = "gpt-4o-mini"
+    llm_max_tokens = 1024
+
+
+class ConfigProvider:
+    """Wrapper around Settings for explicit dependency injection.
+
+    Exposes configuration via typed methods/properties to eliminate direct global access.
+    Falls back to _MockSettings when actual Settings are unavailable (testing).
+    """
+
+    def __init__(self, settings=None):  # noqa: ANN001
+        """Initialize with optional Settings instance.
+
+        Args:
+            settings: Optional Settings instance from ragapp.config. Defaults to mock.
+        """
+        if settings is not None:
+            self._settings = settings
+        else:
+            try:
+                from ragapp.config import Settings
+
+                self._settings = Settings()
+            except ImportError:
+                self._settings = _MockSettings()
+
+    @property
+    def llm_temperature(self) -> float:
+        """Return the configured temperature (default 0.2)."""
+        return getattr(self._settings, "llm_temperature", 0.2)  # type: ignore[union-attr]
+
+    @property
+    def db_path(self) -> str:
+        """Return the ChromaDB persistence path."""
+        return getattr(self._settings, "db_path", "./chroma_db")  # type: ignore[union-attr]
+
+    @property
+    def collection_name(self) -> str:
+        """Return the vector store collection name."""
+        return getattr(self._settings, "collection_name", "my_rag_collection")  # type: ignore[union-attr]
+
+    @property
+    def default_llm(self) -> str:
+        """Return the default model identifier."""
+        return getattr(self._settings, "default_llm", "gpt-4o-mini")  # type: ignore[union-attr]
+
+    @property
+    def llm_max_tokens(self) -> int:
+        """Return max tokens for LLM responses."""
+        return getattr(self._settings, "llm_max_tokens", 1024)  # type: ignore[union-attr]
+
+    def get_openai_key(self) -> Optional[str]:
+        """Return OpenAI API key if set."""
+        import os
+
+        return os.environ.get("OPENAI_API_KEY")
+
+    def get_anthropic_key(self) -> Optional[str]:
+        """Return Anthropic API key if set."""
+        import os
+
+        return os.environ.get("ANTHROPIC_API_KEY")
+
+    def get_gemini_key(self) -> Optional[str]:
+        """Return Google Gemini API key if set."""
+        import os
+
+        return os.environ.get("GOOGLE_API_KEY")
+
+    def get_groq_key(self) -> Optional[str]:
+        """Return Groq API key if set."""
+        import os
+
+        return os.environ.get("GROQ_API_KEY")
+
+
+# Singleton instance for use as a module-level utility (optional global fallback)
+_config_provider_instance: Optional[ConfigProvider] = None
+
+
+def get_config() -> ConfigProvider:
+    """Return the singleton ConfigProvider instance.
+
+    Creates on first call if needed. For tests, you can override with:
+        from config import Settings
+        config_provider_instance = ConfigProvider(Settings())
+    """
+    global _config_provider_instance
+    if _config_provider_instance is None:
+        _config_provider_instance = ConfigProvider()
+    return _config_provider_instance

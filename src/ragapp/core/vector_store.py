@@ -5,7 +5,23 @@ from __future__ import annotations
 from typing import Callable, Optional
 
 import chromadb
-from ragapp.config import settings as _default_settings
+from ragapp.config_provider import ConfigProvider, get_config
+
+
+class _MockConfigProvider:
+    """Minimal mock for test compatibility.
+
+    Provides a fallback when actual ConfigProvider is unavailable.
+    """
+
+    @property
+    def db_path(self) -> str:
+        return "./chroma_db"
+
+    @property
+    def collection_name(self) -> str:
+        return "my_rag_collection"
+
 
 # Type alias for embedding function creator callable
 EmbeddingCreator = Callable[[], Optional[object]]
@@ -22,15 +38,16 @@ class VectorStore:
         db_path: str | None = None,
         collection_name: str | None = None,
         embedding_creator: Optional[EmbeddingCreator] = None,
-        settings=None,  # noqa: ANN001
+        config_provider=None,  # noqa: ANN001
     ) -> None:
-        cfg = settings or _default_settings
-        self.db_path = db_path or cfg.db_path  # type: ignore[union-attr]
-        self.collection_name = collection_name or cfg.collection_name  # type: ignore[union-attr]
-        self._embedding_creator = embedding_creator
+        cfg = config_provider or _MockConfigProvider()
+        self.db_path = db_path or cfg.db_path
+        self.collection_name = collection_name or cfg.collection_name
 
         self._client = chromadb.PersistentClient(path=self.db_path)
         self._collection: chromadb.Collection | None = None
+
+        self._embedding_creator = embedding_creator
 
     @property
     def collection(self) -> chromadb.Collection:
@@ -47,7 +64,7 @@ class VectorStore:
         """Get or create the embedding function via injected creator."""
         if self._embedding_creator is not None:
             return self._embedding_creator()
-        
+
         from .embedding_function import create_embedding_function as default_ef
         return default_ef()
 
@@ -66,7 +83,7 @@ class VectorStore:
             Number of documents added.
         """
         self._ensure_collection()
-        
+
         if not chunks:
             return 0
 
@@ -94,11 +111,11 @@ class VectorStore:
             List of result dicts with keys 'id', 'text', 'metadata', 'distance'.
         """
         self._ensure_collection()
-        
+
         results = self._collection.query(
             query_texts=[query_text],
             n_results=n_results,
-            include=["documents", "metadatas", "distances"],  # type: ignore
+            # include=["documents", "metadatas", "distances"],  # type: ignore
         )
 
         if not results["ids"]:
@@ -111,8 +128,10 @@ class VectorStore:
                 all_results.append({
                     "id": doc_id,
                     "text": results["documents"][i][j],  # type: ignore[index]
-                    "metadata": results["metadatas"][i][j] if results["metadatas"] else {},  # type: ignore[index]
-                    "distance": results["distances"][i][j],  # type: ignore[index]
+                    # type: ignore[index]
+                    "metadata": results["metadatas"][i][j] if results["metadatas"] else {},
+                    # type: ignore[index]
+                    "distance": results["distances"][i][j],
                 })
 
         return all_results
@@ -126,4 +145,3 @@ class VectorStore:
         """Delete the current collection (destructive)."""
         self._client.delete_collection(self.collection_name)
         self._collection = None  # invalidate lazy cache
-

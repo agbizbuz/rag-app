@@ -33,7 +33,7 @@ def _get_openai_client():
 class OllamaProvider:
     name = "Ollama"
 
-    def __init__(self, model: str) -> None:
+    def __init__(self, model: str, temperature=0.2, max_tokens=1024) -> None:
         self._model = strip_pattern.sub('', model)
         base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
         if not base_url.endswith("/v1"):
