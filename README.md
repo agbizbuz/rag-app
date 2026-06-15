@@ -6,106 +6,162 @@ This application allows you to ingest local documents (PDF, DOCX, TXT, CSV) into
 
 ## ✨ Key Features
 
-*   **🔒 100% Secure & Private**: All documents and API keys remain on your local machine. No data leaves your device unless explicitly sent to an LLM API.
-*   **💾 Persistent Vector Database**: Powered by ChromaDB; your indexed documents survive app restarts.
-*   **🤖 Provider Agnostic**: Switch seamlessly between **OpenAI**, **Anthropic (Claude)**, **Google Gemini**, **Groq**, **Ollama** (local), **LM Studio** (local), and **HuggingFace** within the UI.
-*   **💻 Zero-Frontend Code**: Built entirely in Python using Streamlit for rapid, clean UI development.
-*   **📄 Multi-Format Parsing**: Automatically chunks and processes PDFs, DOCX files, CSVs, and TXT files.
+*   **🔒 100% Secure & Private**: All documents and API keys remain on your local machine.
+*   **💾 Persistent Vector Database**: Powered by ChromaDB; indexed documents survive app restarts.
+*   **🤖 Provider Agnostic**: Switch seamlessly between OpenAI, Anthropic (Claude), Google Gemini, Groq, Ollama, LM Studio, and HuggingFace — via a registry pattern that makes adding providers trivial.
+*   **📄 Multi-Format Parsing**: PDFs, DOCX files, CSVs, and TXT files are automatically chunked and embedded.
+*   **✅ 94% Test Coverage**: Core modules fully tested across 140+ unit tests with `pytest`.
 
 ## 🏗️ Project Structure
 
 ```text
 rag-app/
-├── src/ragapp/                     # 📁 RAG Application source
-│   ├── app.py                      # 🖥️ Main Streamlit Web Interface
-│   ├── config.py                   # ⚙️ Settings and .env loader
-│   ├── .env.example                # 🔑 Template for API keys
-│   └── core/                       # 🧠 Core Application Logic
-│       ├── __init__.py
-│       ├── parser.py               # File parsing and chunking
-│       ├── llm.py                  # LLM API abstraction
-│       └── vector_store.py         # ChromaDB interaction
-├── AGENTS.md                       # 📖 Agent/LLM usage guide
-├── chroma_db/                      # 🗄️ Persistent Storage (auto-created)
-├── pyproject.toml                  # 📦 Project dependencies
-├── README.md                       # 📄 This file
-└── uploads/                        # 📂 Temporary file storage (auto-created)
+├── src/ragapp/                     # RAG Application source
+│   ├── app.py                      # Main Streamlit entry point (Builder + Query tabs)
+│   ├── config_provider.py          # Singleton config manager with .env loading
+│   ├── config.py                   # Pydantic settings model
+│   ├── .env.example                # Template for API keys
+│   │
+│   ├── core/                       # Core business logic (SOLID, protocol-based)
+│   │   ├── __init__.py
+│   │   ├── llm.py                  # LLM response dispatcher (provider routing)
+│   │   ├── parser.py               # File parsing dispatcher (extension → parser)
+│   │   ├── vector_store.py         # ChromaDB wrapper (CRUD, query, embedding)
+│   │   ├── embedding_function.py   # Embedding factory (OpenAI / SentenceTransformer)
+│   │   │
+│   │   ├── parsers/                # Document parsers — registry pattern (OCP)
+│   │   │   ├── __init__.py         # ParserRegistry with @register decorator
+│   │   │   ├── base.py             # BaseParser, Chunk dataclass, ParserProtocol
+│   │   │   ├── pdf_parser.py       # pypdf-based PDF parser
+│   │   │   ├── txt_parser.py       # Word-boundary TXT chunker
+│   │   │   ├── csv_parser.py       # Pandas-powered CSV parser
+│   │   │   └── docx_parser.py      # python-docx with table markdown + list formatting
+│   │   │
+│   │   └── providers/              # LLM providers — registry pattern (OCP)
+│   │       ├── __init__.py         # ProviderRegistry with register()
+│   │       ├── base.py             # ProviderProtocol, ChatMessage, KeyMissingError
+│   │       ├── routing.py          # resolve_prefix() model-to-provider mapper
+│   │       ├── openai.py           # OpenAI (and Groq-compatible) provider
+│   │       ├── anthropic.py        # Anthropic Claude provider
+│   │       ├── gemini.py           # Google Gemini provider
+│   │       ├── ollama.py           # Local Ollama provider with model stripping
+│   │       ├── lm_studio.py        # Local LM Studio provider
+│   │       └── huggingface.py      # HuggingFace Inference API provider
+│   │
+│   └── ui/                         # Streamlit UI components (Strategy pattern)
+│       ├── builder_tab.py          # Document upload & ingestion tab
+│       ├── query_tab.py            # Chat / query tab with retrieval + LLM response
+│       ├── sidebar.py              # Sidebar: provider selection, model picker
+│       └── components/
+│           └── provider_catalog.py # Model options for all providers
+│
+├── tests/                          # 16 test files · 140 tests · 94% coverage
+│   ├── conftest.py                 # Shared fixtures (file bytes, env clearing)
+│   ├── test_config_provider.py     # Settings + ConfigProvider singletons
+│   ├── test_llm.py                 # get_llm_response routing to all providers
+│   ├── test_vector_store.py        # ChromaDB CRUD operations
+│   ├── test_parser.py              # process_file for all 4 formats + edge cases
+│   ├── test_*.py                   # Per-provider and per-parsing-module tests
+│   └── test_ui_tabs.py             # UI logic with stubbed Streamlit
+│
+├── chroma_db/                      # Persistent ChromaDB storage (auto-created)
+├── pyproject.toml                  # Dependencies, coverage config, pytest settings
+├── AGENTS.md                       # Developer guide (SOLID rationale, skills)
+├── README.md                       # This file
+└── htmlcov/                        # Coverage HTML report (generated by pytest)
 ```
 
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 1.  **Python 3.10+** installed on your system.
-2.  **`uv`** (Python package manager) installed. *[Install uv]*
+2.  **`uv`** package manager. *[Install uv](https://docs.astral.sh/uv/getting-started/installation/)*
 
 ### Installation
-Sync dependencies using `uv` and install the app as package in editable mode:
+
 ```bash
+cd rag-app
 uv sync
 uv pip install -e .
 ```
 
 ### 1. Configure API Keys
-Create a `.env` file and add your API keys. You don't need all of them unless you plan to use those specific providers.
+
+Copy the template and edit with your keys:
+
 ```bash
-cp src/ragapp/.env.example .env
-```
-Open `.env` in a text editor and paste your keys (you only need the ones for providers you plan to use):
-```dotenv
-OPENAI_API_KEY=pk-your-openai-key
-ANTHROPIC_API_KEY=anthropic-api-key-placeholder
-GOOGLE_API_KEY=your-google-gemini-key
-GROQ_API_KEY=gsk-your-groq-key-here
-HUGGINGFACE_API_KEY=hf_your-token-here
+cp src/ragapp/.env.example src/ragapp/.env
+# Edit src/ragapp/.env — only set the keys for providers you plan to use
 ```
 
+Available settings in `.env`:
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `OPENAI_API_KEY` | GPT model access | *(empty)* |
+| `ANTHROPIC_API_KEY` | Claude model access | *(empty)* |
+| `GOOGLE_API_KEY` | Gemini model access | *(empty)* |
+| `GROQ_API_KEY` | Groq API access | *(empty)* |
+| `HUGGINGFACE_API_KEY` | HuggingFace Inference API | *(empty)* |
+| `CHROMA_DB_PATH` | ChromaDB storage directory | `./chroma_db` |
+| `COLLECTION_NAME` | Internal collection name | `my_rag_collection` |
+| `DEFAULT_LLM` | Default model on startup | `gpt-4o-mini` |
+| `LLM_TEMPERATURE` | Default temperature (0.0–1.0) | `0.2` |
+| `LLM_MAX_TOKENS` | Default response token limit | `1024` |
+| `OLLAMA_BASE_URL` | Ollama server URL | `http://localhost:11434` |
+| `LM_STUDIO_BASE_URL` | LM Studio server URL | `http://localhost:1234` |
+
 ### 2. Launch the App
-Run the Streamlit interface:
+
 ```bash
 uv run streamlit run src/ragapp/app.py
 ```
 
-1.  **Select a Provider**: In the sidebar, choose your LLM provider (OpenAI, Anthropic, Gemini, Groq, Ollama, LM Studio, or HuggingFace) and select a model.
-2.  **Build Your Database**: Go to the **"Builder (Create DB)"** tab. Upload your documents (PDF, DOCX, TXT, CSV). Click **"Process & Ingest Documents"**. 
-    *   *Note: The database is persistent. As long as you use the same `CHROMA_DB_PATH`, your data will be there next time you launch the app.*
-3.  **Ask Questions**: Switch to the **"Query (Chat)"** tab. Type your question, and the app will retrieve relevant chunks from your uploaded documents and provide an AI-synthesized answer based on the context.
+1.  **Select a Provider**: In the sidebar, choose your LLM provider and select a model.
+    *   Ollama and LM Studio auto-discover available models at startup.
+2.  **Build Your Database**: Go to the **"Builder (Create DB)"** tab. Upload documents (PDF, DOCX, TXT, CSV) and click **"Process & Ingest"**.
+3.  **Ask Questions**: Switch to the **"Query (Chat)"** tab. The app retrieves relevant chunks via cosine similarity in ChromaDB and synthesizes an LLM answer with full context.
 
-## ⚙️ Configuration
+## 🧪 Testing & Code Quality
 
-| Variable | Description | Default |
-| :--- | :--- | :--- |
-| `OPENAI_API_KEY` | Your OpenAI API key | empty |
-| `ANTHROPIC_API_KEY` | Your Anthropic API key | empty |
-| `GOOGLE_API_KEY` | Your Google Gemini API key | empty |
-| `GROQ_API_KEY` | Your Groq API key | empty |
-| `HUGGINGFACE_API_KEY` | Your HuggingFace Inference API key | empty |
-| `OLLAMA_BASE_URL` | Ollama server URL | `http://localhost:11434/v1` |
-| `LM_STUDIO_BASE_URL` | LM Studio server URL | `http://localhost:1234/v1` |
-| `CHROMA_DB_PATH` | Path to the persistent ChromaDB storage | `./chroma_db` |
-| `COLLECTION_NAME` | Name of the internal document collection | `my_rag_collection` |
-| `DEFAULT_LLM` | Default model to initialize with | `gpt-4o-mini` |
-| `LLM_TEMPERATURE` | Default generation temperature (0.0–1.0) | `0.2` |
-| `LLM_MAX_TOKENS` | Default max tokens for responses | `1024` |
+Run the test suite with coverage:
 
-## 🐛 Troubleshooting
-
-*   **"Missing API Key" error**: Ensure your `.env` file is in the project root (not `src/ragapp/`) and that you have restarted the Streamlit app after adding keys.
-*   **"Database is empty"**: Make sure you have processed files in the "Builder" tab before attempting to query.
-*   **Import Errors**: Ensure you ran `uv sync` in the project root directory before launching the app.
-## 🧹 Code Quality
-This project uses **ruff** for linting/formatting and **ty** for static type checking, enforced via **pre-commit** hooks.
 ```bash
-# Lint (auto-fix what it can)
-uv run ruff check . --fix
-# Format
-uv run ruff format .
-# Type check
-uv run ty check . --ignore unresolved-import
-# Run all pre-commit hooks on every file
-.vvenv/bin/pre-commit clean && uv run pre-commit run --all-files
-# Run tests
-uv run pytest tests/ -q
+uv run pytest                          # tests + coverage report
+uv run pytest --no-cov -v              # verbose output only
+uv run pytest tests/test_parser.py -v  # single file
+open htmlcov/index.html                # open HTML coverage report
 ```
+
+| Module | Coverage |
+|---|---|
+| `config.py` | 100% |
+| `core/parser.py` | 100% |
+| `core/parsers/base.py` | 100% |
+| `core/providers/routing.py` | 100% |
+| `core/vector_store.py` | 97% |
+| `config_provider.py` | 96% |
+| `parsers/*` | 92–100% |
+| `providers/openai.py` | 89% |
+| **TOTAL** | **94%** |
+
+Linting and formatting:
+
+```bash
+uv run ruff check . --fix     # lint
+uv run ruff format .          # format
+```
+
+## 🏛️ Architecture Notes
+
+The core layers follow SOLID principles via registry patterns:
+
+*   **Parser Registry** (`core/parsers/__init__`): New file formats are added by creating a parser class and decorating it with `@register("ext")`. Zero changes to existing code.
+*   **Provider Registry** (`core/providers/__init__`): New LLM backends are registered with `register("prefix-", ProviderClass)`. Providers implement `ProviderProtocol.chat()`.
+*   **Strategy Pattern**: The UI components (`builder_tab`, `query_tab`, `sidebar`) delegate to the vector store and LLM dispatcher, keeping Streamlit concerns separate from business logic.
+
+See [AGENTS.md](AGENTS.md) for detailed design rationale and extension guides.
 
 ## 🍽️ License
 
