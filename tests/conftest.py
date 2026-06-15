@@ -81,7 +81,7 @@ def docx_bytes():
         # Minimal word/_rels/document.xml.rels
         zf.writestr(
             "word/_rels/document.xml.rels",
-            b'<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/></Relationships>',
+            b'<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>',
         )
         # Minimal document.xml with one paragraph
         doc = '<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Hello from test_docx</w:t></w:r></w:p></w:body></w:document>'
