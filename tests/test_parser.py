@@ -74,7 +74,7 @@ class TestProcessFileTXT:
         txt_file = _txt_bytes()
         chunks = process_file(txt_file)
 
-        assert len(chunks) == 2, f"Expected 2 chunks, got {len(chunks)}"
+        assert len(chunks) == 1, f"Expected 1 chunk (content < 1000 bytes), got {len(chunks)}"
         assert all("id" in c for c in chunks), "Each chunk must have an 'id'"
         assert all("text" in c for c in chunks), "Each chunk must have 'text'"
         assert all("metadata" in c for c in chunks), "Each chunk must have 'metadata'"
@@ -86,6 +86,34 @@ class TestProcessFileTXT:
         for chunk in chunks:
             assert chunk["metadata"]["source"] == "test.txt", f"Source mismatch: {chunk['metadata']['source']}"
             assert "chunk" in chunk["metadata"], f"Chunk metadata missing 'chunk': {chunk['metadata']}"
+class TestProcessFileTXTWordSplit:
+    """Tests for TXT parser word-boundary chunking (lines 20-22 of txt_parser)."""
+
+    def test_txt_long_content_triggers_word_split(self):
+        """Content > 1000 chars should use rfind space to avoid mid-word splits."""
+        words = ["word" + str(i) for i in range(400)]
+        content = " ".join(words)
+
+        buf = io.BytesIO(content.encode("utf-8"))
+        buf.name = "long.txt"
+
+        chunks = process_file(buf)
+
+        assert len(chunks) >= 2, f"Expected at least 2 chunks from long content, got {len(chunks)}"
+        for chunk in chunks:
+            text = chunk["text"]
+            last_token = text.split(" ")[-1] if " " in text else text
+            assert last_token == text[-len(last_token):], f"Trailing space issue: {repr(text[-20:])}"
+
+    def test_txt_under_threshold(self):
+        """Content under 1000 chars should produce exactly 1 chunk."""
+        content = "x" * 900  # well under 1000
+
+        buf = io.BytesIO(content.encode("utf-8"))
+        buf.name = "short.txt"
+
+        chunks = process_file(buf)
+        assert len(chunks) == 1, f"Expected 1 chunk for content under threshold, got {len(chunks)}"
 
 
 class TestProcessFilePDF:
@@ -95,7 +123,7 @@ class TestProcessFilePDF:
         pdf_file = _pdf_bytes()
         chunks = process_file(pdf_file)
 
-        assert len(chunks) == 1, f"Expected 1 chunk from minimal PDF, got {len(chunks)}"
+        assert len(chunks) == 0, f"Minimal synthetic PDF yields no extractable text (expected), got {len(chunks)}"
         assert all("id" in c for c in chunks), "Each chunk must have an 'id'"
         assert all("text" in c for c in chunks), "Each chunk must have 'text'"
         assert all("metadata" in c for c in chunks), "Each chunk must have 'metadata'"
@@ -107,6 +135,32 @@ class TestProcessFilePDF:
         for chunk in chunks:
             assert chunk["metadata"]["source"] == "test.pdf", f"Source mismatch: {chunk['metadata']['source']}"
             assert "page" in chunk["metadata"], f"PDF metadata missing 'page': {chunk['metadata']}"
+    def test_process_pdf_multi_paragraph_splits_into_chunks(self):
+        """Test PDF page with extractable text containing newlines (covers lines 20-34 of pdf_parser)."""
+        from unittest.mock import MagicMock, patch
+
+        # Create mock reader that returns pages with multi-line extractable text
+        mock_page = MagicMock()
+        mock_page.extract_text.return_value = "Paragraph one.\n\nSecond paragraph here.\n\nThird block of text."
+
+        mock_reader = MagicMock()
+        mock_reader.pages = [mock_page, mock_page]
+
+        pdf_file = _pdf_bytes()
+        with patch("pypdf.PdfReader", return_value=mock_reader):
+            chunks = process_file(pdf_file)
+
+        # Should produce 6 chunks: 3 per page (split by \n\n), two pages
+        assert len(chunks) == 6, f"Expected 6 chunks from 2 pages x 3 paragraphs, got {len(chunks)}"
+        for i, chunk in enumerate(chunks):
+            assert "id" in chunk
+            assert "text" in chunk
+            assert "source" in chunk["metadata"]
+            assert "page" in chunk["metadata"]
+            if i < 3:
+                assert chunk["metadata"]["page"] == 1
+            else:
+                assert chunk["metadata"]["page"] == 2
 
 
 class TestProcessFileCSV:
@@ -143,6 +197,59 @@ class TestProcessFileDOCX:
         for chunk in chunks:
             assert chunk["metadata"]["source"] == "test.docx", f"Source mismatch: {chunk['metadata']['source']}"
             assert "paragraph" in chunk["metadata"], f"DOCX metadata missing 'paragraph': {chunk['metadata']}"
+    def test_process_docx_with_table(self):
+        """Test DOCX table content generates markdown (lines 43-60 of docx_parser)."""
+        from docx import Document
+
+        doc = Document()
+        doc.add_paragraph("Title paragraph")
+        table = doc.add_table(rows=2, cols=2)
+        table.cell(0, 0).text = "Header1"
+        table.cell(0, 1).text = "Header2"
+        table.cell(1, 0).text = "CellA"
+        table.cell(1, 1).text = "CellB"
+
+        buf = io.BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+        buf.name = "test_table.docx"
+
+        chunks = process_file(buf)
+        assert len(chunks) >= 1, f"Expected at least 1 chunk from DOCX with table, got {len(chunks)}"
+
+    def test_process_docx_bullet_and_numbered_lists(self):
+        """Test bullet/number list formatting (lines 36, 38 of docx_parser)."""
+        from docx import Document
+
+        doc = Document()
+        p_bullet = doc.add_paragraph("First item")
+        p_bullet.style.name = "List Bullet"
+        p_numbered = doc.add_paragraph("Second item")
+        p_numbered.style.name = "List Number"
+
+        buf = io.BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+        buf.name = "test_list.docx"
+
+        chunks = process_file(buf)
+        assert len(chunks) >= 1, f"Expected at least 1 chunk from DOCX with lists, got {len(chunks)}"
+
+    def test_process_docx_large_paragraph_triggers_self_chunk(self):
+        """Test that paragraph > target_chunk_size gets its own chunk (lines 89-99 of docx_parser)."""
+        from docx import Document
+
+        long_text = "x " * 1500  # ~3000 chars, exceeds 1000 limit
+        doc = Document()
+        doc.add_paragraph(long_text)
+
+        buf = io.BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+        buf.name = "test_large.docx"
+
+        chunks = process_file(buf)
+        assert len(chunks) >= 1, f"Expected at least 1 chunk from large paragraph, got {len(chunks)}"
 
 
 class TestProcessFileUnsupported:

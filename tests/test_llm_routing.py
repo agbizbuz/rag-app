@@ -22,7 +22,7 @@ class TestProviderRouting:
         from ragapp.core.llm import get_llm_response
 
         monkeypatch.delenv("GROQ_API_KEY", raising=False)
-        result = get_llm_response("ctx", "groq:llama-3.1-8b-instant")
+        result = get_llm_response("ctx", "groq:llama-3.1-8b-instant", "groq:llama-3.1-8b-instant")
         assert "\u26a0\ufe0f" in result and "GROQ_API_KEY" in result
 
     def test_ollama_routing(self, monkeypatch):

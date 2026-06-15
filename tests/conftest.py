@@ -16,13 +16,14 @@ if str(SRC_PATH) not in sys.path:
 @pytest.fixture(autouse=True)
 def _clear_env_keys(monkeypatch):
     """Ensure no real API keys leak into test environment."""
-    import os; print(f"DEBUG fixture: Before cleanup - OPENAI_API_KEY={os.environ.get('OPENAI_API_KEY', 'NOT SET')}")
     for key in (
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY",
         "GOOGLE_API_KEY",
         "GROQ_API_KEY",
         "HUGGINGFACE_API_KEY",
+        "LM_STUDIO_BASE_URL",
+        "OLLAMA_BASE_URL",
     ):
         monkeypatch.delenv(key, raising=False)
 

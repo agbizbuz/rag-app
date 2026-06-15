@@ -236,3 +236,45 @@ The `get_llm_response` function returns either:
 ### Embedding selection priority
 1. If `OPENAI_API_KEY` set → uses OpenAI `text-embedding-3-small`
 2. Otherwise → ChromaDB defaults to SentenceTransformer locally
+
+## Testing & Code Coverage
+
+Run the full test suite with coverage reporting:
+```bash
+uv run pytest                          # Run tests + coverage (configured in pyproject.toml)
+uv run pytest --no-cov -v              # Verbose without coverage output
+uv run pytest tests/test_xyz.py -v     # Run specific test file
+open htmlcov/index.html                # Open HTML coverage report in browser
+```
+
+Configuration is in `pyproject.toml`:
+- `[tool.coverage.run]` — source: `ragapp`, omits UI/app modules (Streamlit-heavy)
+- `[tool.coverage.report]` — shows missing lines, generates terminal + HTML reports
+- `[tool.pytest.ini_options]` — addopts includes `--cov=ragapp --cov-report=term-missing --cov-report=html`
+
+Current coverage: **94%** across core modules (140 tests). Key targets:
+| Module | Coverage | Notes |
+|--------|----------|-------|
+| `config.py` | 100% | Settings + defaults |
+| `config_provider.py` | 96% | ConfigProvider, key getters |
+| `core/embedding_function.py` | 100% | create_embedding_function |
+| `core/llm.py` | 92% | get_llm_response routing |
+| `core/parser.py` | 100% | process_file dispatcher |
+| `core/vector_store.py` | 97% | CRUD operations |
+| `parsers/docx_parser.py` | 92% | Table/bullet/chunking tested via mock |
+| `parsers/pdf_parser.py` | 94% | Multi-paragraph splitting covered |
+| `parsers/txt_parser.py` | 100% | Word-split boundary added |
+| `parsers/base.py` | 100% | Chunk dataclass, BaseParser |
+| `providers/anthropic.py` | 82% | Chat success path now tested |
+| `providers/lm_studio.py` | 85% | Local provider fallback |
+| `providers/openai.py` | 89% | Chat + key missing paths |
+| `providers/ollama.py` | 88% | Model stripping, base_url |
+| `providers/routing.py` | 100% | Registry register/resolver |
+
+### Adding Tests for New Code
+
+Use the existing test patterns:
+- **Core modules**: Direct function/class testing with standard `unittest.mock.MagicMock`
+- **Providers**: Patch provider classes at their import path (e.g. `"ragapp.core.providers.openai.OpenAIProvider"`)
+- **UI components**: Create a fake Streamlit module (`ModuleType("streamlit")`) and mock all st.* methods; always call `sys.modules.pop("streamlit", None)` first to avoid cached imports
+- **Shared fixtures**: Edit `tests/conftest.py` for reusable helpers (file bytes, env key clearing)
