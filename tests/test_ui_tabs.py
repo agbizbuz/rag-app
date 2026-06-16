@@ -85,6 +85,7 @@ class TestQueryTabLogic:
         st.divider = MagicMock()
         st.expander = MagicMock(context_enter=MagicMock(return_value=MagicMock()), context_exit=MagicMock())
         st.caption = MagicMock()
+        st.download_button = MagicMock()
         sys.modules["streamlit"] = st
 
         mock_llm_mod = ModuleType("ragapp.core.llm")
