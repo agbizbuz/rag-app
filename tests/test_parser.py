@@ -136,7 +136,7 @@ class TestProcessFilePDF:
             assert chunk["metadata"]["source"] == "test.pdf", f"Source mismatch: {chunk['metadata']['source']}"
             assert "page" in chunk["metadata"], f"PDF metadata missing 'page': {chunk['metadata']}"
     def test_process_pdf_multi_paragraph_splits_into_chunks(self):
-        """Test PDF page with extractable text containing newlines (covers lines 20-34 of pdf_parser)."""
+        """Test PDF page with extractable text containing newlines (covers paragraph splitting)."""
         from unittest.mock import MagicMock, patch
 
         # Create mock reader that returns pages with multi-line extractable text
@@ -150,17 +150,107 @@ class TestProcessFilePDF:
         with patch("pypdf.PdfReader", return_value=mock_reader):
             chunks = process_file(pdf_file)
 
-        # Should produce 6 chunks: 3 per page (split by \n\n), two pages
-        assert len(chunks) == 6, f"Expected 6 chunks from 2 pages x 3 paragraphs, got {len(chunks)}"
-        for i, chunk in enumerate(chunks):
-            assert "id" in chunk
-            assert "text" in chunk
-            assert "source" in chunk["metadata"]
-            assert "page" in chunk["metadata"]
-            if i < 3:
-                assert chunk["metadata"]["page"] == 1
-            else:
-                assert chunk["metadata"]["page"] == 2
+        # 6 small paragraphs (total ~120 chars) are merged into 1 chunk
+        assert len(chunks) == 1, f"Expected 1 merged chunk from small paragraphs, got {len(chunks)}"
+        assert "Paragraph one." in chunks[0]["text"]
+        assert "Third block of text." in chunks[0]["text"]
+        # Merged metadata should list all page and paragraph indices
+        assert chunks[0]["metadata"]["page"] == [1, 1, 1, 2, 2, 2]
+        assert chunks[0]["metadata"]["paragraph"] == [0, 1, 2, 0, 1, 2]
+
+    def test_process_pdf_corrupt_file_returns_empty(self):
+        """Corrupt / invalid PDF should return [] instead of crashing."""
+        buf = io.BytesIO(b"this is not a valid PDF at all")
+        buf.name = "corrupt.pdf"
+
+        chunks = process_file(buf)
+        assert chunks == [], f"Expected empty list for corrupt PDF, got {len(chunks)} chunks"
+
+    def test_process_pdf_empty_pages_skipped(self):
+        """Pages with only whitespace should be skipped."""
+        from unittest.mock import MagicMock, patch
+
+        empty_page = MagicMock()
+        empty_page.extract_text.return_value = "   \n\n   "
+
+        text_page = MagicMock()
+        text_page.extract_text.return_value = "Real content here."
+
+        mock_reader = MagicMock()
+        mock_reader.pages = [empty_page, text_page]
+
+        buf = _pdf_bytes()
+        with patch("pypdf.PdfReader", return_value=mock_reader):
+            chunks = process_file(buf)
+
+        assert len(chunks) == 1, f"Expected 1 chunk (empty page skipped), got {len(chunks)}"
+        assert chunks[0]["text"] == "Real content here."
+        assert chunks[0]["metadata"]["page"] == 2
+
+    def test_process_pdf_small_paragraphs_merged(self):
+        """Multiple small paragraphs should be merged into one chunk when under target_chunk_size."""
+        from unittest.mock import MagicMock, patch
+
+        mock_page = MagicMock()
+        # Three short paragraphs — total well under 1000 chars
+        mock_page.extract_text.return_value = "Short A.\n\nShort B.\n\nShort C."
+
+        mock_reader = MagicMock()
+        mock_reader.pages = [mock_page]
+
+        buf = _pdf_bytes()
+        with patch("pypdf.PdfReader", return_value=mock_reader):
+            chunks = process_file(buf)
+
+        # All three paragraphs should be merged into a single chunk
+        assert len(chunks) == 1, f"Expected 1 merged chunk, got {len(chunks)}"
+        assert "Short A." in chunks[0]["text"]
+        assert "Short B." in chunks[0]["text"]
+        assert "Short C." in chunks[0]["text"]
+
+    def test_process_pdf_large_page_gets_own_chunk(self):
+        """A page with >1000 chars and no paragraph breaks should be word-boundary sub-chunked."""
+        from unittest.mock import MagicMock, patch
+
+        long_text = " ".join(["word" + str(i) for i in range(400)])  # ~2400 chars
+        mock_page = MagicMock()
+        mock_page.extract_text.return_value = long_text
+
+        mock_reader = MagicMock()
+        mock_reader.pages = [mock_page]
+
+        buf = _pdf_bytes()
+        with patch("pypdf.PdfReader", return_value=mock_reader):
+            chunks = process_file(buf)
+
+        assert len(chunks) >= 2, f"Expected >=2 sub-chunks from oversized page, got {len(chunks)}"
+        # Each sub-chunk should end at a word boundary (no partial words)
+        for chunk in chunks:
+            text = chunk["text"]
+            assert not text.endswith(" "), f"Chunk should be stripped: {repr(text[-20:])}"
+            assert "sub_chunk" in chunk["metadata"], f"Oversized chunks should have 'sub_chunk' metadata"
+
+    def test_process_pdf_metadata_consistency(self):
+        """Every chunk should always have both 'page' and 'paragraph' in metadata."""
+        from unittest.mock import MagicMock, patch
+
+        # Single paragraph on page (previously the else branch omitted 'paragraph')
+        single_page = MagicMock()
+        single_page.extract_text.return_value = "Only one paragraph on this page."
+
+        multi_page = MagicMock()
+        multi_page.extract_text.return_value = "Para one.\n\nPara two."
+
+        mock_reader = MagicMock()
+        mock_reader.pages = [single_page, multi_page]
+
+        buf = _pdf_bytes()
+        with patch("pypdf.PdfReader", return_value=mock_reader):
+            chunks = process_file(buf)
+
+        for chunk in chunks:
+            assert "page" in chunk["metadata"], f"Missing 'page' in metadata: {chunk['metadata']}"
+            assert "paragraph" in chunk["metadata"], f"Missing 'paragraph' in metadata: {chunk['metadata']}"
 
 
 class TestProcessFileCSV:
