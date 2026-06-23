@@ -47,6 +47,11 @@ class TestSettings:
         assert s.llm_temperature == 0.2
         assert s.llm_max_tokens == 1024
         assert s.max_file_size_bytes == 50 * 1024 * 1024
+        assert s.chunk_size == 1000
+        assert s.n_results == 3
+        assert "research assistant" in s.system_prompt
+        assert s.embedding_model == "text-embedding-3-small"
+        assert s.discovery_timeout == 3
 
     def test_settings_from_env(self, monkeypatch):
         _clear_all_keys(monkeypatch)

@@ -136,6 +136,47 @@ def render_sidebar(vs: VectorStore, config: ConfigProvider) -> str:
             key="_temp_slider",
         )
 
+        # Advanced Settings — collapsible to keep default view clean
+        with st.expander("⚙️ Advanced Settings"):
+            # Chunk Size
+            current_chunk = st.session_state.get("_chunk_size", None)
+            if current_chunk is None:
+                current_chunk = config.chunk_size
+
+            st.number_input(
+                "Chunk Size (characters)",
+                min_value=200,
+                max_value=5000,
+                value=current_chunk,
+                step=100,
+                key="_chunk_size",
+                help="Target size for document chunks during ingestion. "
+                     "Smaller = more precise retrieval, larger = more context per chunk.",
+            )
+
+            # Retrieved Results (n_results)
+            current_n = st.session_state.get("_n_results", None)
+            if current_n is None:
+                current_n = config.n_results
+
+            st.slider(
+                "Retrieved Results",
+                min_value=1,
+                max_value=20,
+                value=current_n,
+                key="_n_results",
+                help="Number of document chunks retrieved per query.",
+            )
+
+            # Embedding Model (read-only display, env-only config)
+            st.text_input(
+                "Embedding Model",
+                value=config.embedding_model,
+                disabled=True,
+                help="⚠️ Set via EMBEDDING_MODEL env var. "
+                     "Changing requires re-indexing all documents.",
+            )
+
         st.divider()
 
         # Database status + controls

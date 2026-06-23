@@ -91,7 +91,8 @@ def render_query_tab(vs: VectorStore, llm_model: str) -> None:
     if st.button("Search & Answer", type="primary"):
         with st.spinner("Retrieving relevant context and generating response..."):
             # 1. RAG: Get relevant chunks
-            results = vs.query(user_query, n_results=3)
+            n_results = st.session_state.get("_n_results", 3)
+            results = vs.query(user_query, n_results=n_results)
 
             if not results:
                 st.info(

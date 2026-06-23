@@ -53,8 +53,10 @@ def fetch_ollama_models(base_url: str) -> list[str]:
     """Fetch available models from an Ollama server."""
     import requests
 
+    from ragapp.config_provider import get_config
+
     try:
-        resp = requests.get(f"{base_url}/api/tags", timeout=3)
+        resp = requests.get(f"{base_url}/api/tags", timeout=get_config().discovery_timeout)
         resp.raise_for_status()
         return [f"{m['name']}" for m in resp.json().get("models", [])]
     except Exception:
@@ -65,8 +67,10 @@ def fetch_lm_studio_models(base_url: str) -> list[str]:
     """Fetch available models from an LM Studio server."""
     import requests
 
+    from ragapp.config_provider import get_config
+
     try:
-        resp = requests.get(f"{base_url}/v1/models", timeout=3)
+        resp = requests.get(f"{base_url}/v1/models", timeout=get_config().discovery_timeout)
         resp.raise_for_status()
         return [f"lmstudio:{m['id']}" for m in resp.json().get("data", [])]
     except Exception:

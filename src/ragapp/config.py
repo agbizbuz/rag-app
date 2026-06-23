@@ -28,6 +28,24 @@ class Settings(BaseSettings):
     llm_max_tokens: int = Field(default=1024, validation_alias="LLM_MAX_TOKENS")
     max_file_size_bytes: int = Field(default=50 * 1024 * 1024, validation_alias="MAX_FILE_SIZE")
 
+    chunk_size: int = Field(default=1000, validation_alias="CHUNK_SIZE")
+    n_results: int = Field(default=3, validation_alias="N_RESULTS")
+    system_prompt: str = Field(
+        default=(
+            "You are a highly capable research assistant. "
+            "Answer the user's query strictly based on the provided context. "
+            "If the context does not contain sufficient information to answer "
+            "the question, respectfully state that the information is not found in "
+            "the documents. Provide the answer clearly and concisely."
+        ),
+        validation_alias="SYSTEM_PROMPT",
+    )
+    embedding_model: str = Field(
+        default="text-embedding-3-small",
+        validation_alias="EMBEDDING_MODEL",
+    )
+    discovery_timeout: int = Field(default=3, validation_alias="DISCOVERY_TIMEOUT")
+
     # model_config = {"env_file": str(_ENV_PATH), "env_file_encoding": "utf-8"}
 
 

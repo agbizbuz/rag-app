@@ -13,6 +13,17 @@ class _MockSettings:
     collection_name = "my_rag_collection"
     default_llm = "gpt-4o-mini"
     llm_max_tokens = 1024
+    chunk_size = 1000
+    n_results = 3
+    system_prompt = (
+        "You are a highly capable research assistant. "
+        "Answer the user's query strictly based on the provided context. "
+        "If the context does not contain sufficient information to answer "
+        "the question, respectfully state that the information is not found in "
+        "the documents. Provide the answer clearly and concisely."
+    )
+    embedding_model = "text-embedding-3-small"
+    discovery_timeout = 3
 
 
 class ConfigProvider:
@@ -62,6 +73,38 @@ class ConfigProvider:
     def llm_max_tokens(self) -> int:
         """Return max tokens for LLM responses."""
         return getattr(self._settings, "llm_max_tokens", 1024)  # type: ignore[union-attr]
+
+    @property
+    def chunk_size(self) -> int:
+        """Return target chunk size in characters for document parsing."""
+        return getattr(self._settings, "chunk_size", 1000)  # type: ignore[union-attr]
+
+    @property
+    def n_results(self) -> int:
+        """Return default number of results for vector search queries."""
+        return getattr(self._settings, "n_results", 3)  # type: ignore[union-attr]
+
+    @property
+    def system_prompt(self) -> str:
+        """Return the system prompt for LLM conversations."""
+        _default = (
+            "You are a highly capable research assistant. "
+            "Answer the user's query strictly based on the provided context. "
+            "If the context does not contain sufficient information to answer "
+            "the question, respectfully state that the information is not found in "
+            "the documents. Provide the answer clearly and concisely."
+        )
+        return getattr(self._settings, "system_prompt", _default)  # type: ignore[union-attr]
+
+    @property
+    def embedding_model(self) -> str:
+        """Return the OpenAI embedding model name."""
+        return getattr(self._settings, "embedding_model", "text-embedding-3-small")  # type: ignore[union-attr]
+
+    @property
+    def discovery_timeout(self) -> int:
+        """Return HTTP timeout in seconds for model discovery calls."""
+        return getattr(self._settings, "discovery_timeout", 3)  # type: ignore[union-attr]
 
     def get_openai_key(self) -> Optional[str]:
         """Return OpenAI API key if set."""

@@ -72,13 +72,7 @@ def get_llm_response(
     from .providers.openai import OpenAIProvider
     from .providers.routing import resolve_provider
 
-    system_prompt = (
-        "You are a highly capable research assistant. "
-        "Answer the user's query strictly based on the provided context. "
-        "If the context does not contain sufficient information to answer "
-        "the question, respectfully state that the information is not found in "
-        "the documents. Provide the answer clearly and concisely."
-    )
+    system_prompt = cfg.system_prompt  # type: ignore[union-attr]
 
     messages: list[CM] = [
         CM("system", system_prompt),

@@ -31,7 +31,12 @@ def process_file(file) -> list[dict]:
     if not parser_cls:
         return []
 
-    instance = parser_cls()
+    # CsvParser doesn't use chunk_size (one row = one chunk)
+    if parser_cls == CsvParser:
+        instance = parser_cls()
+    else:
+        from ragapp.config_provider import get_config
+        instance = parser_cls(chunk_size=get_config().chunk_size)
     raw_chunks: list[Chunk] = instance.parse(file)
 
     import uuid

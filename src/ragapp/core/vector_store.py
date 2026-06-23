@@ -22,6 +22,10 @@ class _MockConfigProvider:
     def collection_name(self) -> str:
         return "my_rag_collection"
 
+    @property
+    def n_results(self) -> int:
+        return 3
+
 
 # Type alias for embedding function creator callable
 EmbeddingCreator = Callable[[], Optional[object]]
@@ -41,6 +45,7 @@ class VectorStore:
         config_provider=None,  # noqa: ANN001
     ) -> None:
         cfg = config_provider or _MockConfigProvider()
+        self._config = cfg
         self.db_path = db_path or cfg.db_path
         self.collection_name = collection_name or cfg.collection_name
 
@@ -100,16 +105,19 @@ class VectorStore:
 
         return len(ids)
 
-    def query(self, query_text: str, n_results: int = 3) -> list[dict]:
+    def query(self, query_text: str, n_results: int | None = None) -> list[dict]:
         """Query the collection for relevant document chunks.
 
         Args:
             query_text: The query string to search for.
-            n_results: Number of results to return (default: 3).
+            n_results: Number of results to return. Defaults to config value.
 
         Returns:
             List of result dicts with keys 'id', 'text', 'metadata', 'distance'.
         """
+        if n_results is None:
+            n_results = self._config.n_results
+
         self._ensure_collection()
 
         results = self._collection.query(
