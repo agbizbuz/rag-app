@@ -6,11 +6,11 @@ This application allows you to ingest local documents (PDF, DOCX, TXT, CSV) into
 
 ## ✨ Key Features
 
-*   **🔒 100% Secure & Private**: All documents and API keys remain on your local machine.
-*   **💾 Persistent Vector Database**: Powered by ChromaDB; indexed documents survive app restarts.
-*   **🤖 Provider Agnostic**: Switch seamlessly between OpenAI, Anthropic (Claude), Google Gemini, Groq, Ollama, LM Studio, and HuggingFace — via a registry pattern that makes adding providers trivial.
-*   **📄 Multi-Format Parsing**: PDFs, DOCX files, CSVs, and TXT files are automatically chunked and embedded.
-*   **✅ 94% Test Coverage**: Core modules fully tested across 140+ unit tests with `pytest`.
+- **🔒 100% Secure & Private**: All documents and API keys remain on your local machine.
+- **💾 Persistent Vector Database**: Powered by ChromaDB; indexed documents survive app restarts.
+- **🤖 Provider Agnostic**: Switch seamlessly between OpenAI, Anthropic (Claude), Google Gemini, Groq, Ollama, LM Studio, and HuggingFace — via a registry pattern that makes adding providers trivial.
+- **📄 Multi-Format Parsing**: PDFs, DOCX files, CSVs, and TXT files are automatically chunked and embedded.
+- **✅ 94% Test Coverage**: Core modules fully tested across 140+ unit tests with `pytest`.
 
 ## 🏗️ Project Structure
 
@@ -75,8 +75,8 @@ rag-app/
 
 ### Prerequisites
 
-1.  **Python 3.10+** installed on your system.
-2.  **`uv`** package manager. *[Install uv](https://docs.astral.sh/uv/getting-started/installation/)*
+1. **Python 3.10+** installed on your system.
+2. **`uv`** package manager. _[Install uv](https://docs.astral.sh/uv/getting-started/installation/)_
 
 ### Installation
 
@@ -97,20 +97,20 @@ cp src/ragapp/.env.example src/ragapp/.env
 
 Available settings in `.env`:
 
-| Variable | Purpose | Default |
-|---|---|---|
-| `OPENAI_API_KEY` | GPT model access | *(empty)* |
-| `ANTHROPIC_API_KEY` | Claude model access | *(empty)* |
-| `GOOGLE_API_KEY` | Gemini model access | *(empty)* |
-| `GROQ_API_KEY` | Groq API access | *(empty)* |
-| `HUGGINGFACE_API_KEY` | HuggingFace Inference API | *(empty)* |
-| `CHROMA_DB_PATH` | ChromaDB storage directory | `./chroma_db` |
-| `COLLECTION_NAME` | Internal collection name | `my_rag_collection` |
-| `DEFAULT_LLM` | Default model on startup | `gpt-4o-mini` |
-| `LLM_TEMPERATURE` | Default temperature (0.0–1.0) | `0.2` |
-| `LLM_MAX_TOKENS` | Default response token limit | `1024` |
-| `OLLAMA_BASE_URL` | Ollama server URL | `http://localhost:11434` |
-| `LM_STUDIO_BASE_URL` | LM Studio server URL | `http://localhost:1234` |
+| Variable              | Purpose                       | Default                  |
+| --------------------- | ----------------------------- | ------------------------ |
+| `OPENAI_API_KEY`      | GPT model access              | _(empty)_                |
+| `ANTHROPIC_API_KEY`   | Claude model access           | _(empty)_                |
+| `GOOGLE_API_KEY`      | Gemini model access           | _(empty)_                |
+| `GROQ_API_KEY`        | Groq API access               | _(empty)_                |
+| `HUGGINGFACE_API_KEY` | HuggingFace Inference API     | _(empty)_                |
+| `CHROMA_DB_PATH`      | ChromaDB storage directory    | `./chroma_db`            |
+| `COLLECTION_NAME`     | Internal collection name      | `my_rag_collection`      |
+| `DEFAULT_LLM`         | Default model on startup      | `gpt-4o-mini`            |
+| `LLM_TEMPERATURE`     | Default temperature (0.0–1.0) | `0.2`                    |
+| `LLM_MAX_TOKENS`      | Default response token limit  | `1024`                   |
+| `OLLAMA_BASE_URL`     | Ollama server URL             | `http://localhost:11434` |
+| `LM_STUDIO_BASE_URL`  | LM Studio server URL          | `http://localhost:1234`  |
 
 ### 2. Launch the App
 
@@ -118,10 +118,25 @@ Available settings in `.env`:
 uv run streamlit run src/ragapp/app.py
 ```
 
-1.  **Select a Provider**: In the sidebar, choose your LLM provider and select a model.
-    *   Ollama and LM Studio auto-discover available models at startup.
-2.  **Build Your Database**: Go to the **"Builder (Create DB)"** tab. Upload documents (PDF, DOCX, TXT, CSV) and click **"Process & Ingest"**.
-3.  **Ask Questions**: Switch to the **"Query (Chat)"** tab. The app retrieves relevant chunks via cosine similarity in ChromaDB and synthesizes an LLM answer with full context.
+1. **Select a Provider**: In the sidebar, choose your LLM provider and select a model.
+   - Ollama and LM Studio auto-discover available models at startup.
+2. **Build Your Database**: Go to the **"Builder (Create DB)"** tab. Upload documents (PDF, DOCX, TXT, CSV) and click **"Process & Ingest"**.
+3. **Ask Questions**: Switch to the **"Query (Chat)"** tab. The app retrieves relevant chunks via cosine similarity in ChromaDB and synthesizes an LLM answer with full context.
+
+### 🐳 Run with Docker
+
+The repository includes a multi-stage Docker setup for isolated development, testing, and production.
+
+```bash
+# Start the live-development environment (with hot reloading) at http://localhost:8501
+docker compose up app
+
+# Run the automated pytest suite using the containerized environment
+docker compose run --rm test
+
+# Validate the production-like image build and behavior
+docker compose up prod
+```
 
 ## 🧪 Testing & Code Quality
 
@@ -134,17 +149,17 @@ uv run pytest tests/test_parser.py -v  # single file
 open htmlcov/index.html                # open HTML coverage report
 ```
 
-| Module | Coverage |
-|---|---|
-| `config.py` | 100% |
-| `core/parser.py` | 100% |
-| `core/parsers/base.py` | 100% |
-| `core/providers/routing.py` | 100% |
-| `core/vector_store.py` | 97% |
-| `config_provider.py` | 96% |
-| `parsers/*` | 92–100% |
-| `providers/openai.py` | 89% |
-| **TOTAL** | **94%** |
+| Module                      | Coverage |
+| --------------------------- | -------- |
+| `config.py`                 | 100%     |
+| `core/parser.py`            | 100%     |
+| `core/parsers/base.py`      | 100%     |
+| `core/providers/routing.py` | 100%     |
+| `core/vector_store.py`      | 97%      |
+| `config_provider.py`        | 96%      |
+| `parsers/*`                 | 92–100%  |
+| `providers/openai.py`       | 89%      |
+| **TOTAL**                   | **94%**  |
 
 Linting and formatting:
 
@@ -157,9 +172,9 @@ uv run ruff format .          # format
 
 The core layers follow SOLID principles via registry patterns:
 
-*   **Parser Registry** (`core/parsers/__init__`): New file formats are added by creating a parser class and decorating it with `@register("ext")`. Zero changes to existing code.
-*   **Provider Registry** (`core/providers/__init__`): New LLM backends are registered with `register("prefix-", ProviderClass)`. Providers implement `ProviderProtocol.chat()`.
-*   **Strategy Pattern**: The UI components (`builder_tab`, `query_tab`, `sidebar`) delegate to the vector store and LLM dispatcher, keeping Streamlit concerns separate from business logic.
+- **Parser Registry** (`core/parsers/__init__`): New file formats are added by creating a parser class and decorating it with `@register("ext")`. Zero changes to existing code.
+- **Provider Registry** (`core/providers/__init__`): New LLM backends are registered with `register("prefix-", ProviderClass)`. Providers implement `ProviderProtocol.chat()`.
+- **Strategy Pattern**: The UI components (`builder_tab`, `query_tab`, `sidebar`) delegate to the vector store and LLM dispatcher, keeping Streamlit concerns separate from business logic.
 
 See [AGENTS.md](AGENTS.md) for detailed design rationale and extension guides.
 

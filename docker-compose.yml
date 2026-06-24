@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Development service with live reloading via volume mount
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    environment:
+      - CHROMA_DB_PATH=/app/chroma_db
+    env_file:
+      - .env
+
+  # Test service to run the test suite
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    volumes:
+      - .:/app
+    command: uv run pytest
+    env_file:
+      - .env
+
+  # Production-like service to test the prod image
+  prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+    ports:
+      - "8502:8501"
+    volumes:
+      # Named volume for persistence instead of bind mount for prod
+      - prod_chroma_db:/app/chroma_db
+    environment:
+      - CHROMA_DB_PATH=/app/chroma_db
+    env_file:
+      - .env
+
+volumes:
+  prod_chroma_db:
