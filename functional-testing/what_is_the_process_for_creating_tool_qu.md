@@ -1,6 +1,6 @@
 # RAG Query Export
 
-**Date:** 2026-06-16 16:25:16  
+**Date:** 2026-06-16 16:25:16\
 **Model:** `Ollama:ministral-3:14b`
 
 ---
@@ -35,6 +35,7 @@ Based on the provided context, **ISO/DIS 26262** outlines a structured tool qual
 For detailed methodology, refer to **ISO/DIS 26262-8** and its appendices. The process emphasizes traceability, evidence-based validation, and alignment with safety requirements.
 
 ---
+
 *Note*: The context does not specify step-by-step procedural details beyond these work products; further guidance would require the full standard or supplementary guidelines.
 
 ---
@@ -46,12 +47,12 @@ For detailed methodology, refer to **ISO/DIS 26262-8** and its appendices. The p
 - **File:** ISO-26262 Tool-Qualification-Process.pdf
 - **Page / Chunk:** 10
 
-practitioners with the necessary guidance to successfully utilize these tools in  
-projects that need to comply with the requirements of ISO 26262. Until common best practices 
-have been established, the chosen qualification approach could be used as a reference for other 
-tool qualifications. 
-4 Summary and Conclusions  
-With the advent of  ISO 26262 automotive practitioners need  to figure out how implement the 
+practitioners with the necessary guidance to successfully utilize these tools in\
+projects that need to comply with the requirements of ISO 26262. Until common best practices
+have been established, the chosen qualification approach could be used as a reference for other
+tool qualifications.
+4 Summary and Conclusions\
+With the advent of ISO 26262 automotive practitioners need to figure out how implement the
 tool qualification requirements of this standard in practice.
 
 ### Source 2
@@ -59,22 +60,22 @@ tool qualification requirements of this standard in practice.
 - **File:** ISO-26262 Tool-Qualification-Process.pdf
 - **Page / Chunk:** 5
 
-the selecti on of the appropriate tool 
-qualification methods. Tool qualification can be carried out for individual tools as well as for 
-tool chains or sets of tools. 
-The ISO/DIS 26262 tool qualification process requires the creation of the following tool 
-qualification work products (ISO/DIS 26262-8, 11.5; see the appendix for a summary): 
- Software Tool Qualification Plan 
- Software Tool Documentation 
- Software Tool Classification Analysis 
- Software Tool Qualification Report 
-2.3 Software Tool Qualification Plan (STQP) 
-The software tool qualification plan is a planning document created in an early phase of the 
-development of the safety-related system.  
-Besides stating the applicant, and the application under consideration, i t identifies the tool and 
-tool version to be qualified, the intended  configuration and operational environment. In this 
-sense, the STQP shares conceptual similarities with tool qualification plans used in DO -178B 
-projects. 
+the selecti on of the appropriate tool
+qualification methods. Tool qualification can be carried out for individual tools as well as for
+tool chains or sets of tools.
+The ISO/DIS 26262 tool qualification process requires the creation of the following tool
+qualification work products (ISO/DIS 26262-8, 11.5; see the appendix for a summary):
+ Software Tool Qualification Plan
+ Software Tool Documentation
+ Software Tool Classification Analysis
+ Software Tool Qualification Report
+2.3 Software Tool Qualification Plan (STQP)
+The software tool qualification plan is a planning document created in an early phase of the
+development of the safety-related system.\
+Besides stating the applicant, and the application under consideration, i t identifies the tool and
+tool version to be qualified, the intended configuration and operational environment. In this
+sense, the STQP shares conceptual similarities with tool qualification plans used in DO -178B
+projects.
 The tool
 
 ### Source 3
@@ -82,17 +83,17 @@ The tool
 - **File:** ISO-26262 Tool-Qualification-Process.pdf
 - **Page / Chunk:** 1
 
-26262 in practice. 
-1 Tool Certification / Qualification Approaches in Standards  and 
-Guidelines 
-This section is intended to provide an overview about the requirements in popular safety 
-standards and guidelines pertaining  to qualifying or certifying software tools. The following 
-discussion should provide the context for a more detailed discussion of the ISO/DIS 26262 tool 
-qualification approach in sections 2 and 3. 
-So far, there is no single approach for tool qualification or certification across standards. 
-Rather, d ifferent standards attach different levels of importance to tool certification / 
-qualification and suggest different approaches to gain confidence in the tools used.  
-Typically, tool users are responsible in the end  for the certifying or qualifying the software 
-tools they are using. Tool vendors can support these efforts by providing certification or 
-qualification kits that ease the certification or qualification efforts on the user‘s side.  
+26262 in practice.
+1 Tool Certification / Qualification Approaches in Standards and
+Guidelines
+This section is intended to provide an overview about the requirements in popular safety
+standards and guidelines pertaining to qualifying or certifying software tools. The following
+discussion should provide the context for a more detailed discussion of the ISO/DIS 26262 tool
+qualification approach in sections 2 and 3.
+So far, there is no single approach for tool qualification or certification across standards.
+Rather, d ifferent standards attach different levels of importance to tool certification /
+qualification and suggest different approaches to gain confidence in the tools used.\
+Typically, tool users are responsible in the end for the certifying or qualifying the software
+tools they are using. Tool vendors can support these efforts by providing certification or
+qualification kits that ease the certification or qualification efforts on the user‘s side.\
 The safety
