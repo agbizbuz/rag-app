@@ -29,6 +29,7 @@ class TestBuilderTab:
         sys.modules["streamlit"] = st
 
         from ragapp.ui.builder_tab import render_builder
+
         render_builder(mock_vs)
         st.error.assert_called()
 
@@ -47,6 +48,7 @@ class TestQueryTabLogic:
         sys.modules["streamlit"] = st
 
         from ragapp.ui.query_tab import render_query_tab
+
         mock_vs = MagicMock()
         mock_vs.get_collection_size.return_value = 0
         render_query_tab(mock_vs, "gpt-4o-mini")
@@ -63,9 +65,15 @@ class TestQueryTabLogic:
         st.spinner = MagicMock(context_enter=MagicMock(return_value=MagicMock()), context_exit=MagicMock())
         st.header = MagicMock()
         st.info = MagicMock()
+        st.session_state = {
+            "_selected_provider_index": 0,
+            "_selected_model": "gpt-4o-mini",
+            "_temp_slider": None,
+        }
         sys.modules["streamlit"] = st
 
         from ragapp.ui.query_tab import render_query_tab
+
         render_query_tab(mock_vs, "gpt-4o-mini")
         assert mock_vs.query.call_count == 1
 
@@ -86,6 +94,11 @@ class TestQueryTabLogic:
         st.expander = MagicMock(context_enter=MagicMock(return_value=MagicMock()), context_exit=MagicMock())
         st.caption = MagicMock()
         st.download_button = MagicMock()
+        st.session_state = {
+            "_selected_provider_index": 0,
+            "_selected_model": "gpt-4o-mini",
+            "_temp_slider": None,
+        }
         sys.modules["streamlit"] = st
 
         mock_llm_mod = ModuleType("ragapp.core.llm")
@@ -93,6 +106,7 @@ class TestQueryTabLogic:
         sys.modules["ragapp.core.llm"] = mock_llm_mod
 
         from ragapp.ui.query_tab import render_query_tab
+
         render_query_tab(mock_vs, "gpt-4o-mini")
 
         assert mock_vs.query.called

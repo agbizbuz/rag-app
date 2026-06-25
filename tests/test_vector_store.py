@@ -11,12 +11,11 @@ class TestVectorStore:
         """Create a VectorStore with mocked ChromaDB internals."""
         mock_client = MagicMock()
         mock_collection = MagicMock()
-        type(mock_client).get_or_create_collection = MagicMock(
-            return_value=mock_collection
-        )
+        type(mock_client).get_or_create_collection = MagicMock(return_value=mock_collection)
         mock_cfg = MagicMock()
         mock_cfg.db_path = "./chroma_db"
         mock_cfg.collection_name = "test_collection"
+        mock_cfg.n_results = 3
 
         from ragapp.core.vector_store import VectorStore
 
@@ -29,9 +28,7 @@ class TestVectorStore:
     def test_init_default_config(self):
         from ragapp.core.vector_store import VectorStore
 
-        with patch(
-            "ragapp.core.vector_store.chromadb.PersistentClient"
-        ) as MockClient:
+        with patch("ragapp.core.vector_store.chromadb.PersistentClient") as MockClient:
             MockClient.return_value = MagicMock()
             vs = VectorStore()
             assert isinstance(vs, VectorStore)
@@ -39,9 +36,7 @@ class TestVectorStore:
     def test_init_with_custom_config(self):
         from ragapp.core.vector_store import VectorStore
 
-        with patch(
-            "ragapp.core.vector_store.chromadb.PersistentClient"
-        ):
+        with patch("ragapp.core.vector_store.chromadb.PersistentClient"):
             cfg = MagicMock()
             cfg.db_path = "/custom/path"
             cfg.collection_name = "custom_name"
@@ -114,9 +109,7 @@ class TestVectorStore:
 
     def test_collection_property_lazy_init(self):
         """Test that collection property triggers lazy init."""
-        with patch(
-            "ragapp.core.vector_store.chromadb.PersistentClient"
-        ) as MockClient:
+        with patch("ragapp.core.vector_store.chromadb.PersistentClient") as MockClient:
             mock_inst = MagicMock()
             MockClient.return_value = mock_inst
 
@@ -158,18 +151,14 @@ class TestVectorStoreEmbeddingFunction:
     def test_no_openai_key_returns_none(self, monkeypatch):
         """Without OPENAI_API_KEY, create_embedding_function returns None."""
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-        with patch(
-            "ragapp.core.vector_store.chromadb.PersistentClient"
-        ):
+        with patch("ragapp.core.vector_store.chromadb.PersistentClient"):
             from ragapp.core.embedding_function import create_embedding_function
 
             assert create_embedding_function() is None
 
     def test_embedding_creator_injected(self):
         """Test that an injected embedding creator is used."""
-        with patch(
-            "ragapp.core.vector_store.chromadb.PersistentClient"
-        ):
+        with patch("ragapp.core.vector_store.chromadb.PersistentClient"):
             from ragapp.core.vector_store import VectorStore
 
             mock_ef = MagicMock()
@@ -180,7 +169,5 @@ class TestVectorStoreEmbeddingFunction:
             def creator():
                 return mock_ef
 
-            vs = VectorStore(
-                config_provider=mock_cfg, embedding_creator=creator
-            )
+            vs = VectorStore(config_provider=mock_cfg, embedding_creator=creator)
             assert vs._embedding_creator is not None
