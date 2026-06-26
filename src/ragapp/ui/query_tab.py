@@ -9,7 +9,7 @@ import streamlit as st
 
 # Absolute imports (requires PYTHONPATH=src)
 from ragapp.core.llm import get_llm_response  # noqa: F401
-from ragapp.core.vector_store import VectorStore
+from ragapp.core.retriever import RAGRetriever
 
 
 def _build_export_markdown(
@@ -68,10 +68,10 @@ def _safe_filename(query: str, max_len: int = 40) -> str:
     return slug[:max_len] if slug else "rag_export"
 
 
-def render_query_tab(vs: VectorStore, llm_model: str) -> None:
+def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
     """Render the Query tab with RAG execution."""
 
-    if vs.get_collection_size() == 0:
+    if retriever.vector_store.get_collection_size() == 0:
         st.warning("\U0001F6A8 Database is empty.")
         st.info("Navigate to the **Builder** tab to ingest your documents first.")
         st.page_link("https://google.com", label="Google Search",
@@ -92,7 +92,7 @@ def render_query_tab(vs: VectorStore, llm_model: str) -> None:
         with st.spinner("Retrieving relevant context and generating response..."):
             # 1. RAG: Get relevant chunks
             n_results = st.session_state.get("_n_results", 3)
-            results = vs.query(user_query, n_results=n_results)
+            results = retriever.retrieve(user_query, n_results=n_results)
 
             if not results:
                 st.info(
@@ -100,7 +100,7 @@ def render_query_tab(vs: VectorStore, llm_model: str) -> None:
                 return
 
             # 2. Display LLM answer
-            context_str = "\n\n---\n\n".join(r["text"] for r in results)
+            context_str = retriever.format_context(results)
             answer = get_llm_response(context_str, user_query, llm_model)
 
             st.subheader("\U0001F916 AI Response")

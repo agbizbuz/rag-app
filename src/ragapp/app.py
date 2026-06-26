@@ -21,10 +21,22 @@ st.title("📚 Local Research RAG")
 st.caption(
     "A persistent, local, and secure Question Answering system powered by ChromaDB.")
 
-# Lazy init the vector store once per session
+# Lazy init components once per session
 if "vector_store" not in st.session_state:
+    from ragapp.core.embedding_manager import EmbeddingManager
     _config = get_config()
-    st.session_state.vector_store = VectorStore(config_provider=_config)
+    st.session_state.embedding_manager = EmbeddingManager(config_provider=_config)
+    st.session_state.vector_store = VectorStore(
+        config_provider=_config,
+        embedding_manager=st.session_state.embedding_manager,
+    )
+
+if "retriever" not in st.session_state:
+    from ragapp.core.retriever import RAGRetriever
+    st.session_state.retriever = RAGRetriever(
+        vector_store=st.session_state.vector_store,
+        config_provider=get_config(),
+    )
 
 
 def _main(config: ConfigProvider | None = None) -> None:
@@ -33,6 +45,7 @@ def _main(config: ConfigProvider | None = None) -> None:
         sys.exit(0)
 
     vs = st.session_state.vector_store
+    retriever = st.session_state.retriever
     cfg = config or _get_config()
     selected_model = st.session_state.get("_selected_model", cfg.default_llm)
 
@@ -49,10 +62,8 @@ def _main(config: ConfigProvider | None = None) -> None:
         _ = render_builder(vs)  # noqa: F841
 
     with tab2:
-        # current_model = st.session_state.get("_selected_model", cfg.default_llm)
         from ragapp.ui.query_tab import render_query_tab as _render_query_tab
-        # _render_query_tab(vs, current_model)  # noqa: F841
-        _render_query_tab(vs, selected_model)  # noqa: F841
+        _render_query_tab(retriever, selected_model)  # noqa: F841
 
 
 _main()

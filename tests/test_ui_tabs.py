@@ -51,7 +51,10 @@ class TestQueryTabLogic:
 
         mock_vs = MagicMock()
         mock_vs.get_collection_size.return_value = 0
-        render_query_tab(mock_vs, "gpt-4o-mini")
+        mock_retriever = MagicMock()
+        mock_retriever.vector_store = mock_vs
+
+        render_query_tab(mock_retriever, "gpt-4o-mini")
         assert st.warning.call_count >= 1
 
     def test_query_not_called_when_no_results(self):
@@ -59,7 +62,10 @@ class TestQueryTabLogic:
         st = ModuleType("streamlit")
         mock_vs = MagicMock()
         mock_vs.get_collection_size.return_value = 5
-        mock_vs.query = MagicMock(return_value=[])
+        mock_retriever = MagicMock()
+        mock_retriever.vector_store = mock_vs
+        mock_retriever.retrieve = MagicMock(return_value=[])
+
         st.text_input = MagicMock(return_value="test")
         st.button = MagicMock(return_value=True)
         st.spinner = MagicMock(context_enter=MagicMock(return_value=MagicMock()), context_exit=MagicMock())
@@ -74,8 +80,8 @@ class TestQueryTabLogic:
 
         from ragapp.ui.query_tab import render_query_tab
 
-        render_query_tab(mock_vs, "gpt-4o-mini")
-        assert mock_vs.query.call_count == 1
+        render_query_tab(mock_retriever, "gpt-4o-mini")
+        assert mock_retriever.retrieve.call_count == 1
 
     def test_context_retrieved(self):
         _unstub_streamlit()
@@ -83,7 +89,11 @@ class TestQueryTabLogic:
         mock_vs = MagicMock()
         mock_vs.get_collection_size.return_value = 5
         mock_results = [{"text": "Context A", "metadata": {"source": "a.txt", "page": 1}}]
-        mock_vs.query = MagicMock(return_value=mock_results)
+        mock_retriever = MagicMock()
+        mock_retriever.vector_store = mock_vs
+        mock_retriever.retrieve = MagicMock(return_value=mock_results)
+        mock_retriever.format_context = MagicMock(return_value="Context A")
+
         st.text_input = MagicMock(return_value="What is this?")
         st.button = MagicMock(return_value=True)
         st.spinner = MagicMock(context_enter=MagicMock(return_value=MagicMock()), context_exit=MagicMock())
@@ -107,6 +117,6 @@ class TestQueryTabLogic:
 
         from ragapp.ui.query_tab import render_query_tab
 
-        render_query_tab(mock_vs, "gpt-4o-mini")
+        render_query_tab(mock_retriever, "gpt-4o-mini")
 
-        assert mock_vs.query.called
+        assert mock_retriever.retrieve.called

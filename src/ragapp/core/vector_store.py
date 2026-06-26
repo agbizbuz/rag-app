@@ -42,6 +42,7 @@ class VectorStore:
         db_path: str | None = None,
         collection_name: str | None = None,
         embedding_creator: Optional[EmbeddingCreator] = None,
+        embedding_manager: Optional[EmbeddingManager] = None,
         config_provider=None,  # noqa: ANN001
     ) -> None:
         cfg = config_provider or _MockConfigProvider()
@@ -53,6 +54,10 @@ class VectorStore:
         self._collection: chromadb.Collection | None = None
 
         self._embedding_creator = embedding_creator
+
+        from .embedding_manager import EmbeddingManager
+
+        self._embedding_manager = embedding_manager or EmbeddingManager(config_provider=cfg)
 
     @property
     def collection(self) -> chromadb.Collection:
@@ -66,12 +71,11 @@ class VectorStore:
         return self._collection
 
     def _get_embedding_function(self) -> Optional[object]:
-        """Get or create the embedding function via injected creator."""
+        """Get or create the embedding function via injected manager or creator."""
         if self._embedding_creator is not None:
             return self._embedding_creator()
 
-        from .embedding_function import create_embedding_function as default_ef
-        return default_ef()
+        return self._embedding_manager.get_embedding_function()
 
     def _ensure_collection(self) -> None:
         """Re-fetch collection if it may have been deleted externally."""
