@@ -24,6 +24,7 @@ class _MockSettings:
     )
     embedding_model = "text-embedding-3-small"
     discovery_timeout = 3
+    retrieval_mode = "hybrid"
 
 
 class ConfigProvider:
@@ -49,10 +50,23 @@ class ConfigProvider:
             except ImportError:
                 self._settings = _MockSettings()
 
+    def _get_session_value(self, key: str, default: any) -> any:
+        """Safely fetch a value from Streamlit's session state if running."""
+        try:
+            import streamlit as st
+            if st.runtime.exists() and key in st.session_state:
+                val = st.session_state[key]
+                if val is not None:
+                    return val
+        except Exception:
+            pass
+        return default
+
     @property
     def llm_temperature(self) -> float:
         """Return the configured temperature (default 0.2)."""
-        return getattr(self._settings, "llm_temperature", 0.2)  # type: ignore[union-attr]
+        val = getattr(self._settings, "llm_temperature", 0.2)  # type: ignore[union-attr]
+        return self._get_session_value("_temp_slider", val)
 
     @property
     def db_path(self) -> str:
@@ -77,12 +91,14 @@ class ConfigProvider:
     @property
     def chunk_size(self) -> int:
         """Return target chunk size in characters for document parsing."""
-        return getattr(self._settings, "chunk_size", 1000)  # type: ignore[union-attr]
+        val = getattr(self._settings, "chunk_size", 1000)  # type: ignore[union-attr]
+        return self._get_session_value("_chunk_size", val)
 
     @property
     def n_results(self) -> int:
         """Return default number of results for vector search queries."""
-        return getattr(self._settings, "n_results", 3)  # type: ignore[union-attr]
+        val = getattr(self._settings, "n_results", 3)  # type: ignore[union-attr]
+        return self._get_session_value("_n_results", val)
 
     @property
     def system_prompt(self) -> str:
@@ -105,6 +121,12 @@ class ConfigProvider:
     def discovery_timeout(self) -> int:
         """Return HTTP timeout in seconds for model discovery calls."""
         return getattr(self._settings, "discovery_timeout", 3)  # type: ignore[union-attr]
+
+    @property
+    def retrieval_mode(self) -> str:
+        """Return the configured retrieval mode ('semantic', 'keyword', or 'hybrid')."""
+        val = getattr(self._settings, "retrieval_mode", "hybrid")  # type: ignore[union-attr]
+        return self._get_session_value("_retrieval_mode", val)
 
     def get_openai_key(self) -> Optional[str]:
         """Return OpenAI API key if set."""

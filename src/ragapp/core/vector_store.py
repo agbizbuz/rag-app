@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Callable, Optional
+from typing import TYPE_CHECKING, Callable, Optional
 
 import chromadb
-from ragapp.config_provider import ConfigProvider, get_config
+
+if TYPE_CHECKING:
+    from .embedding_manager import EmbeddingManager
 
 
 class _MockConfigProvider:
@@ -152,6 +154,27 @@ class VectorStore:
         """Return the number of documents in the collection."""
         self._ensure_collection()
         return self._collection.count()  # type: ignore[no-any-return]
+
+    def get_all_documents(self) -> list[dict]:
+        """Return all documents in the collection (for keyword search indexing).
+
+        Returns:
+            List of dicts with keys 'id', 'text', 'metadata'.
+        """
+        self._ensure_collection()
+        result = self._collection.get(include=["documents", "metadatas"])  # type: ignore[arg-type]
+
+        if not result["ids"]:
+            return []
+
+        documents: list[dict] = []
+        for i, doc_id in enumerate(result["ids"]):
+            documents.append({
+                "id": doc_id,
+                "text": result["documents"][i] if result["documents"] else "",  # type: ignore[index]
+                "metadata": result["metadatas"][i] if result["metadatas"] else {},  # type: ignore[index]
+            })
+        return documents
 
     def delete_collection(self) -> None:
         """Delete the current collection (destructive)."""

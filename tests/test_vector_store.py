@@ -107,6 +107,32 @@ class TestVectorStore:
         vs._client.delete_collection.assert_called_once_with("test_collection")
         assert vs._collection is None  # invalidated
 
+    def test_get_all_documents(self):
+        vs, _, mock_collection = self._make_vs()
+        mock_collection.get.return_value = {
+            "ids": ["doc1", "doc2"],
+            "documents": ["doc1 text", "doc2 text"],
+            "metadatas": [{"src": "a"}, {"src": "b"}],
+        }
+
+        docs = vs.get_all_documents()
+        assert len(docs) == 2
+        assert docs[0]["id"] == "doc1"
+        assert docs[0]["text"] == "doc1 text"
+        assert docs[0]["metadata"]["src"] == "a"
+        mock_collection.get.assert_called_once_with(include=["documents", "metadatas"])
+
+    def test_get_all_documents_empty(self):
+        vs, _, mock_collection = self._make_vs()
+        mock_collection.get.return_value = {
+            "ids": [],
+            "documents": [],
+            "metadatas": [],
+        }
+
+        docs = vs.get_all_documents()
+        assert docs == []
+
     def test_collection_property_lazy_init(self):
         """Test that collection property triggers lazy init."""
         with patch("ragapp.core.vector_store.chromadb.PersistentClient") as MockClient:

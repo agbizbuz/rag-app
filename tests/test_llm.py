@@ -114,9 +114,29 @@ class TestGetLlmResponse:
             result = get_llm_response("ctx", "query", "xyz-model")
             assert "\u26a0\ufe0f" in result
 
+    def test_uniform_instantiation(self, monkeypatch):
+        """All providers are instantiated with (model, temperature, max_tokens)."""
+        mock_cls, mock_instance = self._make_mock()
+
+        with patch(
+            "ragapp.core.providers.routing.resolve_provider", return_value=mock_cls
+        ):
+            from ragapp.core.llm import get_llm_response
+
+            get_llm_response("ctx", "query", "gpt-4o-mini")
+
+            # Verify uniform constructor call
+            mock_cls.assert_called_once()
+            call_kwargs = mock_cls.call_args
+            assert call_kwargs.kwargs["model"] == "gpt-4o-mini"
+            assert "temperature" in call_kwargs.kwargs
+            assert "max_tokens" in call_kwargs.kwargs
+            # No api_key_env should be passed — provider resolves it internally
+            assert "api_key_env" not in call_kwargs.kwargs
+
 
 class TestChatMessage:
-    """Tests for ragapp.core.llm.ChatMessage."""
+    """Tests for ragapp.core.llm.ChatMessage (re-exported from providers.base)."""
 
     def test_init(self):
         from ragapp.core.llm import ChatMessage
@@ -131,9 +151,16 @@ class TestChatMessage:
         msg = ChatMessage("system", "test")
         assert "ChatMessage(role='system'" in repr(msg)
 
+    def test_is_same_as_base(self):
+        """llm.ChatMessage is the same class as providers.base.ChatMessage."""
+        from ragapp.core.llm import ChatMessage as LlmCM
+        from ragapp.core.providers.base import ChatMessage as BaseCM
+
+        assert LlmCM is BaseCM
+
 
 class TestExceptionClasses:
-    """Tests for llm exception classes."""
+    """Tests for llm exception classes (re-exported from providers.base)."""
 
     def test_key_missing_error_is_exception(self):
         from ragapp.core.llm import KeyMissingError
@@ -153,3 +180,16 @@ class TestExceptionClasses:
 
         exc = RAGError("rag error")
         assert isinstance(exc, Exception)
+
+    def test_exceptions_same_as_base(self):
+        """llm exceptions are the same classes as providers.base exceptions."""
+        from ragapp.core.llm import KeyMissingError as LlmKME
+        from ragapp.core.llm import RAGError as LlmRAG
+        from ragapp.core.llm import UnsupportedModelError as LlmUME
+        from ragapp.core.providers.base import KeyMissingError as BaseKME
+        from ragapp.core.providers.base import RAGError as BaseRAG
+        from ragapp.core.providers.base import UnsupportedModelError as BaseUME
+
+        assert LlmKME is BaseKME
+        assert LlmUME is BaseUME
+        assert LlmRAG is BaseRAG

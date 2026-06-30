@@ -77,6 +77,7 @@ def render_sidebar(vs: VectorStore, config: ConfigProvider) -> str:
         # Update index on selection (will persist to next render)
         selected_idx = next((i for i, (name, _) in enumerate(
             provider_options) if name == selected_provider_name), 0)
+        st.session_state._selected_provider_index = selected_idx
 
         # Find selected provider info
         selected_provider_info = next(
@@ -89,8 +90,6 @@ def render_sidebar(vs: VectorStore, config: ConfigProvider) -> str:
             st.info("🔄 Discovering available models...")
             # Force discovery by checking server health
             if selected_provider_info.discover_models and selected_provider_info.base_url_key:
-                base_url = os.environ.get(
-                    selected_provider_info.base_url_key, "")
                 discovered = _resolve_models(selected_provider_info)
                 if discovered:
                     provider_models = [
@@ -166,6 +165,26 @@ def render_sidebar(vs: VectorStore, config: ConfigProvider) -> str:
                 value=current_n,
                 key="_n_results",
                 help="Number of document chunks retrieved per query.",
+            )
+
+            # Retrieval Mode
+            current_mode = st.session_state.get("_retrieval_mode", None)
+            if current_mode is None:
+                current_mode = config.retrieval_mode
+
+            st.selectbox(
+                "Retrieval Mode",
+                options=["hybrid", "semantic", "keyword"],
+                index=(
+                    ["hybrid", "semantic", "keyword"].index(current_mode)
+                    if current_mode in ["hybrid", "semantic", "keyword"]
+                    else 0
+                ),
+                key="_retrieval_mode",
+                help=(
+                    "Choose the retrieval strategy: hybrid (semantic + keyword with RRF), "
+                    "semantic (vector search), or keyword (BM25 search)."
+                ),
             )
 
             # Embedding Model (read-only display, env-only config)

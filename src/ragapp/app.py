@@ -32,8 +32,8 @@ if "vector_store" not in st.session_state:
     )
 
 if "retriever" not in st.session_state:
-    from ragapp.core.retriever import RAGRetriever
-    st.session_state.retriever = RAGRetriever(
+    from ragapp.core.hybrid_retriever import HybridRetriever
+    st.session_state.retriever = HybridRetriever(
         vector_store=st.session_state.vector_store,
         config_provider=get_config(),
     )

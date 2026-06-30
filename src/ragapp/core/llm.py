@@ -1,46 +1,21 @@
 """LLM response facade — delegates to the resolved provider.
 
-Tests that patch ``core.llm.OpenAI`` or
-``core.llm.Anthropic`` will work because every provider
-lazy-looks up these classes from this module at call time.
+All types (ChatMessage, exceptions) are re-exported from
+``providers.base`` so existing imports like ``from core.llm import ChatMessage``
+continue to work.
 """
 
 from __future__ import annotations
 
 # --------------------------------------------------------------------------- #
-# Re-exports — tests patch these names on this module                       #
+# Re-exports for backward compatibility                                       #
 # --------------------------------------------------------------------------- #
-from anthropic import Anthropic  # noqa: F401
-from openai import OpenAI  # noqa: F401
-
-
-class ChatMessage:
-    """Message for LLM chat interface.
-
-    Also re-exported at module level so tests can patch ``core.llm.ChatMessage``.
-    """
-
-    def __init__(self, role: str, content: str) -> None:
-        self.role = role  # "system" | "user" | "assistant"
-        self.content = content
-
-    def __repr__(self) -> str:
-        return f"ChatMessage(role={self.role!r}, content=...)"
-
-
-class KeyMissingError(Exception):
-    """Raised when a required API key is not configured."""
-    pass
-
-
-class UnsupportedModelError(Exception):
-    """Raised when the model string doesn't match any known provider."""
-    pass
-
-
-class RAGError(Exception):
-    """Base exception for RAG-layer errors."""
-    pass
+from .providers.base import (  # noqa: F401
+    ChatMessage,
+    KeyMissingError,
+    RAGError,
+    UnsupportedModelError,
+)
 
 
 def get_llm_response(
@@ -53,6 +28,7 @@ def get_llm_response(
 
     Args:
         query_context: The retrieved context from vector store.
+        user_query: The user's question.
         llm_model: The model identifier (e.g., "gpt-4o-mini", "ollama:llama3").
         config_provider: Optional injected ConfigProvider to avoid import cycles.
 
@@ -67,9 +43,6 @@ def get_llm_response(
     from .providers.base import ChatMessage as CM
     from .providers.base import KeyMissingError as KME
     from .providers.base import UnsupportedModelError as UME
-    from .providers.lm_studio import LMStudioProvider
-    from .providers.ollama import OllamaProvider
-    from .providers.openai import OpenAIProvider
     from .providers.routing import resolve_provider
 
     system_prompt = cfg.system_prompt  # type: ignore[union-attr]
@@ -78,8 +51,7 @@ def get_llm_response(
         CM("system", system_prompt),
         CM(
             "user",
-            f"=== PROVIDED CONTEXT ===\n{
-                query_context}\n\n=== USER QUERY ===\n{user_query}\n\n",
+            f"=== PROVIDED CONTEXT ===\n{query_context}\n\n=== USER QUERY ===\n{user_query}\n\n",
         ),
     ]
 
@@ -88,28 +60,11 @@ def get_llm_response(
     except UME as exc:
         return f"\u26a0\ufe0f {exc}"
 
-    # Determine which provider type we have and instantiate accordingly
+    # Uniform instantiation — every provider uses the same constructor contract
     try:
-        if provider_class == OpenAIProvider:
-            api_key_env = "GROQ_API_KEY" if llm_model.startswith(
-                "groq:") else "OPENAI_API_KEY"
-            import os
-            print(f"DEBUG: model={llm_model}, OPENAI_API_KEY={
-                  os.environ.get("OPENAI_API_KEY", "NOT SET")}")
-            instance = provider_class(
-                model=llm_model, temperature=temperature, max_tokens=max_tokens, api_key_env=api_key_env)
-            return instance.chat(messages)
-        elif provider_class in (OllamaProvider, LMStudioProvider):
-            # Local providers don't need explicit key env for initialization
-            instance = provider_class(
-                model=llm_model, temperature=temperature, max_tokens=max_tokens)
-            return instance.chat(messages)
-        else:
-            # Other providers (Anthropic, Gemini, HuggingFace) take model param only
-            instance = provider_class(
-                model=llm_model, temperature=temperature, max_tokens=max_tokens)
-            return instance.chat(messages)
-
+        instance = provider_class(
+            model=llm_model, temperature=temperature, max_tokens=max_tokens)
+        return instance.chat(messages)
     except KME as exc:
         return f"\u26a0\ufe0f Error: {exc}"
     except Exception as exc:

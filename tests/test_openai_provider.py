@@ -9,12 +9,18 @@ class TestOpenAIProvider:
     def test_init_sets_attributes(self):
         from ragapp.core.providers.openai import OpenAIProvider
 
-        p = OpenAIProvider("gpt-4o", api_key_env="OPENAI_API_KEY", temperature=0.5, max_tokens=2048)
+        p = OpenAIProvider("gpt-4o", temperature=0.5, max_tokens=2048)
         assert p._model == "gpt-4o"
         assert p.name == "OpenAI"
         assert p._api_key_env == "OPENAI_API_KEY"
         assert p._temperature == 0.5
         assert p._max_tokens == 2048
+
+    def test_init_groq_model_resolves_key(self):
+        from ragapp.core.providers.openai import OpenAIProvider
+
+        p = OpenAIProvider("groq:llama-3.1-8b-instant")
+        assert p._api_key_env == "GROQ_API_KEY"
 
     def test_chat_with_key(self, monkeypatch):
         monkeypatch.setenv("OPENAI_API_KEY", "sk-test-123")
@@ -88,7 +94,7 @@ class TestOpenAIProvider:
 
             from ragapp.core.providers.openai import OpenAIProvider
 
-            p = OpenAIProvider("groq:llama-3.1", api_key_env="GROQ_API_KEY")
+            p = OpenAIProvider("groq:llama-3.1")
             msgs = [MagicMock(role="user", content="hello")]
             result = p.chat(msgs)
             assert result == "Groq reply"

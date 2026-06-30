@@ -37,14 +37,19 @@ def _get_openai_client():
 
 
 class OpenAIProvider:
-    """Standard OpenAI provider."""
+    """Standard OpenAI provider (also handles Groq via OpenAI-compatible API).
+
+    Automatically resolves the correct API key env var based on model prefix:
+    - ``groq:`` models → ``GROQ_API_KEY``
+    - everything else → ``OPENAI_API_KEY``
+    """
 
     name = "OpenAI"
 
-    def __init__(self, model: str, api_key_env: str = "OPENAI_API_KEY", base_url=None, temperature=0.2, max_tokens=1024):  # noqa: ANN001
+    def __init__(self, model: str, temperature: float = 0.2, max_tokens: int = 1024) -> None:
         self._model = model
-        self._api_key_env = api_key_env
-        self._base_url = base_url
+        # Groq models use GROQ_API_KEY; everything else uses OPENAI_API_KEY
+        self._api_key_env = "GROQ_API_KEY" if model.startswith("groq:") else "OPENAI_API_KEY"
         self._temperature = temperature
         self._max_tokens = max_tokens
 
@@ -58,7 +63,7 @@ class OpenAIProvider:
             raise KME(f"`{self._api_key_env}` is missing in the environment.")
 
         OAI = _get_openai_client()
-        client = OAI(api_key=key, base_url=self._base_url)
+        client = OAI(api_key=key)
         messages_dicts = [{"role": m.role, "content": m.content} for m in messages]
         resp = client.chat.completions.create(
             model=self._model,

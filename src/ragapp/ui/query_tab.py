@@ -21,7 +21,7 @@ def _build_export_markdown(
     """Build a markdown string suitable for file export."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     lines = [
-        f"# RAG Query Export",
+        "# RAG Query Export",
         "",
         f"**Date:** {timestamp}  ",
         f"**Model:** `{model}`",
