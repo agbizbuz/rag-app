@@ -25,6 +25,7 @@ class _MockSettings:
     embedding_model = "text-embedding-3-small"
     discovery_timeout = 3
     retrieval_mode = "hybrid"
+    evaluation_log_path = "./evaluation_logs.json"
 
 
 class ConfigProvider:
@@ -127,6 +128,11 @@ class ConfigProvider:
         """Return the configured retrieval mode ('semantic', 'keyword', or 'hybrid')."""
         val = getattr(self._settings, "retrieval_mode", "hybrid")  # type: ignore[union-attr]
         return self._get_session_value("_retrieval_mode", val)
+
+    @property
+    def evaluation_log_path(self) -> str:
+        """Return the path to save evaluation logs."""
+        return getattr(self._settings, "evaluation_log_path", "./evaluation_logs.json")  # type: ignore[union-attr]
 
     def get_openai_key(self) -> Optional[str]:
         """Return OpenAI API key if set."""

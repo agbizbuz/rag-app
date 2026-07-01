@@ -2,7 +2,7 @@
 
 import sys
 from types import ModuleType
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 def _unstub_streamlit():
@@ -83,8 +83,16 @@ class TestQueryTabLogic:
         render_query_tab(mock_retriever, "gpt-4o-mini")
         assert mock_retriever.retrieve.call_count == 1
 
-    def test_context_retrieved(self):
+    @patch("ragapp.core.evaluator.EvaluationManager")
+    @patch("ragapp.core.evaluator.EvaluationRecord")
+    def test_context_retrieved(self, mock_record_cls, mock_manager_cls):
         _unstub_streamlit()
+        
+        mock_record = MagicMock()
+        mock_record.avg_distance = 0.0
+        mock_record.record_id = "test-id"
+        mock_record_cls.return_value = mock_record
+
         st = ModuleType("streamlit")
         mock_vs = MagicMock()
         mock_vs.get_collection_size.return_value = 5
@@ -104,10 +112,26 @@ class TestQueryTabLogic:
         st.expander = MagicMock(context_enter=MagicMock(return_value=MagicMock()), context_exit=MagicMock())
         st.caption = MagicMock()
         st.download_button = MagicMock()
+        st.columns = MagicMock(side_effect=lambda n: [MagicMock() for _ in range(n)])
+        st.metric = MagicMock()
+        st.toast = MagicMock()
+        st.rerun = MagicMock()
+        st.markdown = MagicMock()
+        st.error = MagicMock()
         st.session_state = {
             "_selected_provider_index": 0,
             "_selected_model": "gpt-4o-mini",
             "_temp_slider": None,
+            "last_query_result": {
+                "record_id": "test-id",
+                "query": "What is this?",
+                "answer": "AI Answer",
+                "model": "gpt-4o-mini",
+                "latency": 1.0,
+                "avg_distance": 0.0,
+                "num_chunks": 1,
+                "results": mock_results,
+            }
         }
         sys.modules["streamlit"] = st
 
@@ -120,3 +144,131 @@ class TestQueryTabLogic:
         render_query_tab(mock_retriever, "gpt-4o-mini")
 
         assert mock_retriever.retrieve.called
+
+    @patch("ragapp.core.evaluator.EvaluationManager")
+    @patch("ragapp.core.evaluator.EvaluationRecord")
+    def test_feedback_thumbs_up(self, mock_record_cls, mock_manager_cls):
+        _unstub_streamlit()
+        
+        mock_record = MagicMock()
+        mock_record.avg_distance = 0.0
+        mock_record.record_id = "test-id"
+        mock_record_cls.return_value = mock_record
+
+        mock_eval_manager = MagicMock()
+        mock_manager_cls.return_value = mock_eval_manager
+
+        st = ModuleType("streamlit")
+        mock_vs = MagicMock()
+        mock_vs.get_collection_size.return_value = 5
+        mock_results = [{"text": "Context A", "metadata": {"source": "a.txt", "page": 1}}]
+        mock_retriever = MagicMock()
+        mock_retriever.vector_store = mock_vs
+        mock_retriever.retrieve = MagicMock(return_value=mock_results)
+        mock_retriever.format_context = MagicMock(return_value="Context A")
+
+        st.text_input = MagicMock(return_value="What is this?")
+        st.button = MagicMock(return_value=True)
+        st.spinner = MagicMock(context_enter=MagicMock(return_value=MagicMock()), context_exit=MagicMock())
+        st.header = MagicMock()
+        st.subheader = MagicMock()
+        st.write = MagicMock()
+        st.divider = MagicMock()
+        st.expander = MagicMock(context_enter=MagicMock(return_value=MagicMock()), context_exit=MagicMock())
+        st.caption = MagicMock()
+        st.download_button = MagicMock()
+        st.columns = MagicMock(side_effect=lambda n: [MagicMock() for _ in range(n)])
+        st.metric = MagicMock()
+        st.toast = MagicMock()
+        st.rerun = MagicMock()
+        st.markdown = MagicMock()
+        st.error = MagicMock()
+        
+        # st.feedback returns 1 for thumbs_up
+        st.feedback = MagicMock(return_value=1)
+        
+        st.session_state = {
+            "_selected_provider_index": 0,
+            "_selected_model": "gpt-4o-mini",
+            "_temp_slider": None,
+            "last_query_result": {
+                "record_id": "test-id",
+                "query": "What is this?",
+                "answer": "AI Answer",
+                "model": "gpt-4o-mini",
+                "latency": 1.0,
+                "avg_distance": 0.0,
+                "num_chunks": 1,
+                "results": mock_results,
+            }
+        }
+        sys.modules["streamlit"] = st
+
+        from ragapp.ui.query_tab import render_query_tab
+        render_query_tab(mock_retriever, "gpt-4o-mini")
+
+        mock_eval_manager.update_feedback.assert_any_call("test-id", rating="thumbs_up")
+
+    @patch("ragapp.core.evaluator.EvaluationManager")
+    @patch("ragapp.core.evaluator.EvaluationRecord")
+    def test_feedback_thumbs_down(self, mock_record_cls, mock_manager_cls):
+        _unstub_streamlit()
+        
+        mock_record = MagicMock()
+        mock_record.avg_distance = 0.0
+        mock_record.record_id = "test-id"
+        mock_record_cls.return_value = mock_record
+
+        mock_eval_manager = MagicMock()
+        mock_manager_cls.return_value = mock_eval_manager
+
+        st = ModuleType("streamlit")
+        mock_vs = MagicMock()
+        mock_vs.get_collection_size.return_value = 5
+        mock_results = [{"text": "Context A", "metadata": {"source": "a.txt", "page": 1}}]
+        mock_retriever = MagicMock()
+        mock_retriever.vector_store = mock_vs
+        mock_retriever.retrieve = MagicMock(return_value=mock_results)
+        mock_retriever.format_context = MagicMock(return_value="Context A")
+
+        st.text_input = MagicMock(return_value="What is this?")
+        st.button = MagicMock(return_value=True)
+        st.spinner = MagicMock(context_enter=MagicMock(return_value=MagicMock()), context_exit=MagicMock())
+        st.header = MagicMock()
+        st.subheader = MagicMock()
+        st.write = MagicMock()
+        st.divider = MagicMock()
+        st.expander = MagicMock(context_enter=MagicMock(return_value=MagicMock()), context_exit=MagicMock())
+        st.caption = MagicMock()
+        st.download_button = MagicMock()
+        st.columns = MagicMock(side_effect=lambda n: [MagicMock() for _ in range(n)])
+        st.metric = MagicMock()
+        st.toast = MagicMock()
+        st.rerun = MagicMock()
+        st.markdown = MagicMock()
+        st.error = MagicMock()
+        
+        # st.feedback returns 0 for thumbs_down
+        st.feedback = MagicMock(return_value=0)
+        
+        st.session_state = {
+            "_selected_provider_index": 0,
+            "_selected_model": "gpt-4o-mini",
+            "_temp_slider": None,
+            "last_query_result": {
+                "record_id": "test-id",
+                "query": "What is this?",
+                "answer": "AI Answer",
+                "model": "gpt-4o-mini",
+                "latency": 1.0,
+                "avg_distance": 0.0,
+                "num_chunks": 1,
+                "results": mock_results,
+            }
+        }
+        sys.modules["streamlit"] = st
+
+        from ragapp.ui.query_tab import render_query_tab
+        render_query_tab(mock_retriever, "gpt-4o-mini")
+
+        mock_eval_manager.update_feedback.assert_any_call("test-id", rating="thumbs_down")

@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     discovery_timeout: int = Field(default=3, validation_alias="DISCOVERY_TIMEOUT")
 
     retrieval_mode: str = Field(default="hybrid", validation_alias="RETRIEVAL_MODE")
+    evaluation_log_path: str = Field(default="./evaluation_logs.json", validation_alias="EVALUATION_LOG_PATH")
     # model_config = {"env_file": str(_ENV_PATH), "env_file_encoding": "utf-8"}
 
 

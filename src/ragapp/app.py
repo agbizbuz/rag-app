@@ -55,7 +55,7 @@ def _main(config: ConfigProvider | None = None) -> None:
     selected_model = render_sidebar(vs, cfg) or selected_model
 
     # Tab navigation
-    tab1, tab2 = st.tabs(["📝 **Builder**", "❓ **Query**"])
+    tab1, tab2, tab3 = st.tabs(["📝 **Builder**", "❓ **Query**", "📊 **Evaluation**"])
 
     with tab1:
         from ragapp.ui.builder_tab import render_builder
@@ -64,6 +64,10 @@ def _main(config: ConfigProvider | None = None) -> None:
     with tab2:
         from ragapp.ui.query_tab import render_query_tab as _render_query_tab
         _render_query_tab(retriever, selected_model)  # noqa: F841
+
+    with tab3:
+        from ragapp.ui.evaluation_tab import render_evaluation_tab
+        render_evaluation_tab()
 
 
 _main()
