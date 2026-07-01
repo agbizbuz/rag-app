@@ -1,4 +1,4 @@
-"""Streamlit entry point — thin glue between UI components and core."""
+"""Streamlit entry point -- thin glue between UI components and core."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # Main title banner (restored from pre-refactor version)
-st.title("📚 Local Research RAG")
+st.title("\U0001f4da Local Research RAG")
 st.caption(
     "A persistent, local, and secure Question Answering system powered by ChromaDB.")
 
@@ -55,7 +55,16 @@ def _main(config: ConfigProvider | None = None) -> None:
     selected_model = render_sidebar(vs, cfg) or selected_model
 
     # Tab navigation
-    tab1, tab2, tab3 = st.tabs(["📝 **Builder**", "❓ **Query**", "📊 **Evaluation**"])
+    (
+        tab1, tab2, tab3, tab4
+    ) = st.tabs(
+        [
+            "\U0001f4dd **Builder**",
+            "\u2753 **Query**",
+            "\U0001f4ca **Evaluation**",
+            "\U0001f5c3\ufe0f **Database Info**",
+        ]
+    )
 
     with tab1:
         from ragapp.ui.builder_tab import render_builder
@@ -68,6 +77,10 @@ def _main(config: ConfigProvider | None = None) -> None:
     with tab3:
         from ragapp.ui.evaluation_tab import render_evaluation_tab
         render_evaluation_tab()
+
+    with tab4:
+        from ragapp.ui.db_tab import render_db_tab as _render_db_tab
+        _render_db_tab(vs)
 
 
 _main()

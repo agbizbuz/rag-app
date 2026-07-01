@@ -1,6 +1,74 @@
 """Tests for src/ragapp/ui/sidebar.py logic functions."""
 
+import sys
+from types import ModuleType
 from unittest.mock import MagicMock, patch
+
+
+class _AttrDict(dict):
+    """dict that also supports attribute-style access (like real st.session_state)."""
+
+    def __getattr__(self, key):  # noqa: D401
+        try:
+            return self[key]
+        except KeyError:
+            raise AttributeError(key)
+
+    def __setattr__(self, key, value):
+        self[key] = value
+
+
+def _unstub_streamlit():
+    """Remove cached streamlit so our mocks take effect."""
+    sys.modules.pop("streamlit", None)
+    for mod in list(sys.modules):
+        if mod.startswith("ragapp.ui.sidebar") or mod == "streamlit":
+            del sys.modules[mod]
+
+
+def _make_fake_streamlit():
+    """Create a fully-stubbed fake streamlit module with all sidebar methods."""
+    st = ModuleType("streamlit")
+
+    class FakeExpander:
+        def __init__(self, title):  # noqa: ARG002
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    st.sidebar = MagicMock()
+    st.header = MagicMock()
+    st.slider = MagicMock()
+    st.divider = MagicMock()
+    st.button = MagicMock(side_effect=[False, False, False])
+    st.markdown = MagicMock()
+    st.rerun = MagicMock()
+    st.expander = FakeExpander
+    st.number_input = MagicMock(return_value=1000)
+    st.text_input = MagicMock(return_value="text-embedding-3-small")
+
+    st.session_state = _AttrDict(
+        {
+            "_selected_provider_index": 0,
+            "_selected_model": "gpt-4o-mini",
+            "_temp_slider": None,
+            "_chunk_size": 1000,
+            "confirm_delete": False,
+        }
+    )
+
+    def mock_selectbox(*args, **kwargs):
+        idx = kwargs.get("index", 0)
+        options = args[1] if len(args) > 1 else []
+        return options[idx] if idx < len(options) else (options[0] if options else "placeholder")
+
+    st.selectbox = mock_selectbox
+    sys.modules["streamlit"] = st
+    return st
 
 
 class TestGetSortedProviders:
@@ -34,12 +102,13 @@ class TestCheckServerHealth:
         from ragapp.ui.components.provider_catalog import fetch_ollama_models
         from ragapp.ui.sidebar import _check_server_health
 
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"models": [{"name": "test"}]}
+        mock_result = MagicMock()
+        mock_result.json.return_value = {"models": [{"name": "llama3"}]}
 
-        with patch("requests.get", return_value=mock_response):
-            result = _check_server_health("http://localhost:11434", fetch_ollama_models)
+        with patch("requests.get", return_value=mock_result):
+            result = _check_server_health(
+                "http://localhost:11434", fetch_ollama_models
+            )
             assert result is True
 
 
@@ -50,48 +119,36 @@ class TestResolveModels:
         from ragapp.ui.components.provider_catalog import ProviderInfo, fetch_ollama_models
         from ragapp.ui.sidebar import _resolve_models
 
-        info = ProviderInfo(
-            name="Ollama", key_env=None, model_options=[],
-            discover_models=fetch_ollama_models, base_url_key="OLLAMA_BASE_URL",
-        )
+        mock_result = MagicMock()
+        mock_result.json.return_value = {
+            "models": [
+                {"name": "llama3"},
+                {"name": "gpt-4"},
+            ]
+        }
 
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"models": [{"name": "llama3"}]}
+        with patch.dict("os.environ", {"OLLAMA_BASE_URL": "http://localhost:11434"}):
+            info = ProviderInfo(
+                name="TestProvider",
+                key_env=None,
+                model_options=[],
+                discover_models=fetch_ollama_models,
+                base_url_key="OLLAMA_BASE_URL",
+            )
 
-        with patch("requests.get", return_value=mock_response):
-            import os
-            with patch.dict(os.environ, {"OLLAMA_BASE_URL": "http://localhost:11434"}):
+            with patch("requests.get", return_value=mock_result):
                 result = _resolve_models(info)
-                assert set(result) == {"llama3"}
+
+        # Both models returned from mock; set comparison is correct
+        assert set(result) == {"llama3", "gpt-4"}
 
 
 class TestRenderSidebar:
     """Tests for render_sidebar logic."""
 
     def test_returns_model_string(self):
-        import sys
-        from types import ModuleType
-
-        st = ModuleType("streamlit")
-        st.sidebar = MagicMock()
-        st.header = MagicMock()
-        st.slider = MagicMock()
-        st.divider = MagicMock()
-        st.button = MagicMock(side_effect=[False, False, False])
-        st.markdown = MagicMock()
-        st.rerun = MagicMock()
-        st.session_state = {
-            "_selected_provider_index": 0,
-            "_selected_model": "gpt-4o-mini",
-            "_temp_slider": None,
-        }
-
-        def mock_selectbox(*args, **kwargs):
-            return args[1][0] if len(args) > 1 else "placeholder"
-
-        st.selectbox = mock_selectbox
-        sys.modules["streamlit"] = st
+        _unstub_streamlit()
+        st = _make_fake_streamlit()
 
         from ragapp.core.vector_store import VectorStore
         from ragapp.config_provider import ConfigProvider
