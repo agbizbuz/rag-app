@@ -175,6 +175,87 @@ class VectorStore:
                 "metadata": result["metadatas"][i] if result["metadatas"] else {},  # type: ignore[index]
             })
         return documents
+    def get_all_files(self) -> list[dict]:
+        """Return all indexed files grouped by source.
+
+        Returns:
+            List of dicts with keys 'source', 'type', 'chunk_count',
+            'page_range' (str), 'preview'.
+        """
+        self._ensure_collection()
+        result = self._collection.get(include=["documents", "metadatas"])
+        if not result["ids"]:
+            return []
+
+        # Group documents by source filename
+        groups: dict[str, list[dict]] = {}
+        for i, doc_id in enumerate(result["ids"]):
+            meta = result["metadatas"][i] if result["metadatas"] else {}  # type: ignore[index]
+            docs_list = result["documents"]
+            text = docs_list[i] if docs_list else ""  # type: ignore[index]
+            source = meta.get("source", "unknown")
+            groups.setdefault(source, []).append({"meta": meta, "text": text, "id": doc_id})
+
+        files: list[dict] = []
+        for source, chunks in groups.items():
+            chunk_count = len(chunks)
+            type_labels: set[str] = set()
+            page_nums: list[int] = []
+            txt_chunks: list[int] = []
+            docx_paras: list[int] = []
+            for c in chunks:
+                meta = c["meta"]
+                # Guard against non-integer metadata values (e.g. list, str) from ChromaDB
+                def _int_key(k: str) -> int | None:
+                    v = meta.get(k)
+                    if isinstance(v, int):
+                        return v
+                    try:
+                        return int(v)
+                    except (ValueError, TypeError):
+                        pass
+
+                if (page := _int_key("page")) is not None:
+                    type_labels.add("PDF")
+                    page_nums.append(page)
+                elif _int_key("row") is not None:
+                    type_labels.add("CSV")
+                elif (para := _int_key("paragraph")) is not None:
+                    type_labels.add("DOCX")
+                    docx_paras.append(para)
+                elif (chunk := _int_key("chunk")) is not None:
+                    type_labels.add("TXT")
+                    txt_chunks.append(chunk)
+
+
+            # Single dominant type label
+            if len(type_labels) == 1:
+                type_label = next(iter(type_labels))
+            else:
+                type_label = "Mixed"
+
+            # Page range
+            if page_nums:
+                page_range = f"{min(page_nums)}-{max(page_nums)}"
+            elif txt_chunks:
+                page_range = f"Chunk {min(txt_chunks)}-{max(txt_chunks)}"
+            elif docx_paras:
+                page_range = f"Para {min(docx_paras)}-{max(docx_paras)}"
+            else:
+                page_range = "-"
+
+            # Preview from first chunk of this file
+            preview = (chunks[0]["text"] or "").strip()[:80]
+
+            files.append({
+                "source": source,
+                "type": type_label,
+                "chunk_count": chunk_count,
+                "page_range": page_range,
+                "preview": preview,
+            })
+
+        return files
 
     def delete_collection(self) -> None:
         """Delete the current collection (destructive)."""

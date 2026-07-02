@@ -133,6 +133,97 @@ class TestVectorStore:
         docs = vs.get_all_documents()
         assert docs == []
 
+    def test_get_all_files_groups_by_source(self):
+        vs, _, mock_collection = self._make_vs()
+        mock_collection.get.return_value = {
+            "ids": ["doc1", "doc2", "doc3"],
+            "documents": ["text1", "text2", "text3"],
+            "metadatas": [
+                {"source": "report.pdf", "page": 1},
+                {"source": "report.pdf", "page": 2},
+                {"source": "other.txt", "chunk": 0},
+            ],
+        }
+        files = vs.get_all_files()
+        assert len(files) == 2
+        sources = {f["source"] for f in files}
+        assert "report.pdf" in sources
+        assert "other.txt" in sources
+        # report.pdf has 2 chunks
+        report = [f for f in files if f["source"] == "report.pdf"][0]
+        assert report["chunk_count"] == 2
+        assert report["page_range"] == "1-2"
+
+    def test_get_all_files_empty(self):
+        vs, _, mock_collection = self._make_vs()
+        mock_collection.get.return_value = {
+            "ids": [],
+            "documents": [],
+            "metadatas": [],
+        }
+        files = vs.get_all_files()
+        assert files == []
+
+    def test_get_all_files_type_detection(self):
+        vs, _, mock_collection = self._make_vs()
+        mock_collection.get.return_value = {
+            "ids": ["d1", "d2", "d3", "d4"],
+            "documents": ["a", "b", "c", "d"],
+            "metadatas": [
+                {"source": "f.pdf", "page": 3},
+                {"source": "g.csv", "row": 10},
+                {"source": "h.docx", "paragraph": 7},
+                {"source": "i.txt", "chunk": 2},
+            ],
+        }
+        files = vs.get_all_files()
+        assert len(files) == 4
+        for f in files:
+            if f["source"] == "f.pdf":
+                assert f["type"] == "PDF"
+                assert f["page_range"] == "3-3"
+            elif f["source"] == "g.csv":
+                assert f["type"] == "CSV"
+                assert f["page_range"] == "-"
+            elif f["source"] == "h.docx":
+                assert f["type"] == "DOCX"
+                assert f["page_range"] == "Para 7-7"
+            elif f["source"] == "i.txt":
+                assert f["type"] == "TXT"
+                assert f["page_range"] == "Chunk 2-2"
+    def test_get_all_files_mixed_type(self):
+        vs, _, mock_collection = self._make_vs()
+        # Edge case: a weird source with mixed metadata types
+        mock_collection.get.return_value = {
+            "ids": ["d1", "d2"],
+            "documents": ["a", "b"],
+            "metadatas": [
+                {"source": "weird.pdf", "page": 1},
+                {"source": "weird.pdf", "chunk": 0},  # mixed: PDF + TXT
+            ],
+        }
+        files = vs.get_all_files()
+        assert len(files) == 1
+        assert files[0]["type"] == "Mixed"
+    def test_get_all_files_single_file(self):
+        vs, _, mock_collection = self._make_vs()
+        mock_collection.get.return_value = {
+            "ids": ["d1", "d2"],
+            "documents": ["first paragraph of the report...", "page 2 content"],
+            "metadatas": [
+                {"source": "report.pdf", "page": 1},
+                {"source": "report.pdf", "page": 2},
+            ],
+        }
+        files = vs.get_all_files()
+        assert len(files) == 1
+        f = files[0]
+        assert f["source"] == "report.pdf"
+        assert f["type"] == "PDF"
+        assert f["chunk_count"] == 2
+        assert f["page_range"] == "1-2"
+        assert f["preview"] == "first paragraph of the report..."
+
     def test_collection_property_lazy_init(self):
         """Test that collection property triggers lazy init."""
         with patch("ragapp.core.vector_store.chromadb.PersistentClient") as MockClient:

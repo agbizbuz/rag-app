@@ -17,12 +17,13 @@ def render_db_tab(vs) -> None:  # noqa: PLR0912
     # Collection overview cards
     vs._ensure_collection()  # noqa: SLF001
     doc_count = vs.get_collection_size()
+    files = vs.get_all_files()
 
     col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("Collection Name", vs.collection_name)
     with col2:
-        st.metric("Total Chunks", f"{doc_count:,}")
+        st.metric("Files Indexed", f"{len(files)}")
     with col3:
         st.metric("Database Path", vs.db_path)
 
@@ -35,45 +36,20 @@ def render_db_tab(vs) -> None:  # noqa: PLR0912
             "Use the **Builder** tab to ingest documents."
         )
     else:
-        docs = vs.get_all_documents()
-        rows: list[dict] = []
-        for d in docs:
-            meta = d.get("metadata") or {}
-            source = meta.get("source", "unknown")
-
-            page = meta.get("page")
-            row_idx = meta.get("row")
-            paragraph = meta.get("paragraph")
-            chunk_num_val = meta.get("chunk")
-
-            if page is not None:
-                type_label = "PDF"
-                location = f"Page {page}"
-            elif row_idx is not None:
-                type_label = "CSV"
-                location = f"Row {row_idx}"
-            elif paragraph is not None:
-                type_label = "DOCX"
-                location = f"Paragraph {paragraph}"
-            elif chunk_num_val is not None:
-                type_label = "TXT"
-                location = f"Chunk {chunk_num_val}"
-            else:
-                type_label = "UNK"
-                location = "-"
-
-            preview = (d.get("text") or "").strip()[:80]
-
-            rows.append({
-                "source": source,
-                "type": type_label,
-                "location": location,
-                "preview": preview,
-            })
-
-        df = pd.DataFrame(rows)
-        st.dataframe(df, use_container_width=True, hide_index=True)
-
+        if not files:
+            st.info("No indexed files found.")
+        else:
+            rows: list[dict] = []
+            for f in files:
+                rows.append({
+                    "File": f["source"],
+                    "Type": f["type"],
+                    "Chunks": f["chunk_count"],
+                    "Pages/Range": f["page_range"],
+                    "Preview": f["preview"],
+                })
+            df = pd.DataFrame(rows)
+            st.dataframe(df, use_container_width=True, hide_index=True)
     st.write("---")
 
     # Management section

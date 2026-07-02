@@ -48,7 +48,7 @@ class TestDbTabEmptyDB:
 class TestDbTabWithDocuments:
     """Tests for render_db_tab when documents are present."""
 
-    def test_displays_pdf_doc(self):
+    def test_groups_chunks_per_file(self):
         _unstub_streamlit()
         st = ModuleType("streamlit")
         st.header = MagicMock()
@@ -66,20 +66,24 @@ class TestDbTabWithDocuments:
         st.columns = MagicMock(side_effect=_columns)
 
         mock_vs = MagicMock()
-        mock_vs.get_collection_size.return_value = 2
+        mock_vs.get_collection_size.return_value = 5
         mock_vs._ensure_collection = MagicMock()
         mock_vs.collection_name = "test_col"
         mock_vs.db_path = "./chroma_db"
-        mock_vs.get_all_documents.return_value = [
+        mock_vs.get_all_files.return_value = [
             {
-                "id": "abc12345",
-                "text": "Page 1 content of document.pdf",
-                "metadata": {"source": "document.pdf", "page": 1},
+                "source": "report.pdf",
+                "type": "PDF",
+                "chunk_count": 3,
+                "page_range": "1-5",
+                "preview": "First paragraph of the report...",
             },
             {
-                "id": "def67890",
-                "text": "Row A,B,C from data.csv",
-                "metadata": {"source": "data.csv", "row": 2},
+                "source": "data.csv",
+                "type": "CSV",
+                "chunk_count": 2,
+                "page_range": "-",
+                "preview": "col1 | col2 | col3",
             },
         ]
         st.session_state = {"confirm_delete": False}
@@ -91,14 +95,12 @@ class TestDbTabWithDocuments:
 
         assert st.dataframe.called
         df_call = st.dataframe.call_args[0][0]
-        sources = list(df_call["source"])
-        assert "document.pdf" in sources
+        assert len(df_call) == 2  # two files, not chunks
+        sources = list(df_call["File"])
+        assert "report.pdf" in sources
         assert "data.csv" in sources
-        types_list = list(df_call["type"])
-        assert "PDF" in types_list
-        assert "CSV" in types_list
 
-    def test_displays_txt_and_docx(self):
+    def test_groups_txt_and_docx(self):
         _unstub_streamlit()
         st = ModuleType("streamlit")
         st.header = MagicMock()
@@ -116,20 +118,24 @@ class TestDbTabWithDocuments:
         st.columns = MagicMock(side_effect=_columns)
 
         mock_vs = MagicMock()
-        mock_vs.get_collection_size.return_value = 2
+        mock_vs.get_collection_size.return_value = 11
         mock_vs._ensure_collection = MagicMock()
         mock_vs.collection_name = "test_col"
         mock_vs.db_path = "./chroma_db"
-        mock_vs.get_all_documents.return_value = [
+        mock_vs.get_all_files.return_value = [
             {
-                "id": "aaaa1111",
-                "text": "Line 1 of readme.txt\nLine 2",
-                "metadata": {"source": "readme.txt", "chunk": 0},
+                "source": "readme.txt",
+                "type": "TXT",
+                "chunk_count": 4,
+                "page_range": "Chunk 0-3",
+                "preview": "This is a readme...",
             },
             {
-                "id": "bbbb2222",
-                "text": "Heading: Introduction",
-                "metadata": {"source": "report.docx", "paragraph": 5},
+                "source": "report.docx",
+                "type": "DOCX",
+                "chunk_count": 7,
+                "page_range": "Para 1-12",
+                "preview": "Introduction to the report",
             },
         ]
         st.session_state = {"confirm_delete": False}
@@ -139,14 +145,11 @@ class TestDbTabWithDocuments:
 
         render_db_tab(mock_vs)
 
-        assert st.dataframe.called
         df_call = st.dataframe.call_args[0][0]
-        types_list = list(df_call["type"])
+        assert len(df_call) == 2
+        types_list = list(df_call["Type"])
         assert "TXT" in types_list
         assert "DOCX" in types_list
-        locations = list(df_call["location"])
-        assert any("Chunk" in loc for loc in locations)
-        assert any("Paragraph" in loc for loc in locations)
 
 
 class TestDbTabDeleteFlow:
@@ -161,6 +164,7 @@ class TestDbTabDeleteFlow:
         st.dataframe = MagicMock()
         st.markdown = MagicMock()
         st.warning = MagicMock()
+        st.info = MagicMock()
 
         def _columns(n):
             if isinstance(n, list):
@@ -175,13 +179,7 @@ class TestDbTabDeleteFlow:
         mock_vs._ensure_collection = MagicMock()
         mock_vs.collection_name = "test_col"
         mock_vs.db_path = "./chroma_db"
-        mock_vs.get_all_documents.return_value = [
-            {
-                "id": "cccc3333",
-                "text": "Some content",
-                "metadata": {"source": "file.pdf", "page": 1},
-            },
-        ]
+        mock_vs.get_all_files.return_value = []
 
         # First render: "Clear Database" button clicked
         st.button = MagicMock(return_value=True)
