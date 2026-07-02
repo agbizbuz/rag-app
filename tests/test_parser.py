@@ -228,7 +228,7 @@ class TestProcessFilePDF:
         for chunk in chunks:
             text = chunk["text"]
             assert not text.endswith(" "), f"Chunk should be stripped: {repr(text[-20:])}"
-            assert "sub_chunk" in chunk["metadata"], f"Oversized chunks should have 'sub_chunk' metadata"
+            assert "sub_chunk" in chunk["metadata"], "Oversized chunks should have 'sub_chunk' metadata"
 
     def test_process_pdf_metadata_consistency(self):
         """Every chunk should always have both 'page' and 'paragraph' in metadata."""

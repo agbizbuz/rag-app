@@ -150,8 +150,8 @@ class TestRenderSidebar:
         _unstub_streamlit()
         st = _make_fake_streamlit()
 
-        from ragapp.core.vector_store import VectorStore
         from ragapp.config_provider import ConfigProvider
+        from ragapp.core.vector_store import VectorStore
         from ragapp.ui.sidebar import render_sidebar
 
         mock_vs = MagicMock(spec=VectorStore)

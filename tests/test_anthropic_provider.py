@@ -1,6 +1,6 @@
 """Tests for src/ragapp/core/providers/anthropic.py."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 
 class TestAnthropicProvider:
@@ -18,8 +18,8 @@ class TestAnthropicProvider:
         """KeyMissingError raised when env var not set."""
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
-        from ragapp.core.providers.base import KeyMissingError as KME
         from ragapp.core.providers.anthropic import AnthropicProvider
+        from ragapp.core.providers.base import KeyMissingError as KME
 
         p = AnthropicProvider("claude-3-opus")
         msgs = [MagicMock(role="user", content="hello")]
@@ -30,8 +30,8 @@ class TestAnthropicProvider:
             assert "ANTHROPIC_API_KEY" in str(e)
     def test_chat_success_with_mocked_client(self, monkeypatch):
         """Test chat method body (lines 54-72 of anthropic.py) with mocked Anthropic client."""
-        from ragapp.core.providers.anthropic import AnthropicProvider
         from ragapp.core.providers import anthropic as anth_mod
+        from ragapp.core.providers.anthropic import AnthropicProvider
 
         monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test-key")
         # Mock the response structure that AnthropicClient.messages.create() returns

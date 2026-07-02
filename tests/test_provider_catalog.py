@@ -88,7 +88,7 @@ class TestProviderCatalogData:
         assert len(PROVIDERS) >= 4
 
     def test_providers_have_required_fields(self):
-        from ragapp.ui.components.provider_catalog import ProviderInfo, PROVIDERS
+        from ragapp.ui.components.provider_catalog import PROVIDERS, ProviderInfo
 
         for p in PROVIDERS:
             assert isinstance(p, ProviderInfo)

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import json
 import os
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from ragapp.config_provider import ConfigProvider
 from ragapp.core.evaluator import EvaluationManager, EvaluationRecord, LLMJudge
 

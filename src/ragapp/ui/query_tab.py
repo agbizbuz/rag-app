@@ -71,7 +71,8 @@ def _safe_filename(query: str, max_len: int = 40) -> str:
 def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
     """Render the Query tab with RAG execution and performance metrics."""
     import time
-    from ragapp.core.evaluator import EvaluationRecord, EvaluationManager, LLMJudge
+
+    from ragapp.core.evaluator import EvaluationManager, EvaluationRecord, LLMJudge
 
     if retriever.vector_store.get_collection_size() == 0:
         st.warning("\U0001F6A8 Database is empty.")

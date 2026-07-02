@@ -1,7 +1,6 @@
 """Tests for src/ragapp/core/embedding_manager.py."""
 
 from unittest.mock import MagicMock, patch
-import pytest
 
 from ragapp.core.embedding_manager import EmbeddingManager
 

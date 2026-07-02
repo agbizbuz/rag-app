@@ -269,12 +269,12 @@ Do not include any other markdown formatting (like ```json), introduction, or tr
                     "relevance_reason": str(data.get("relevance_reason", "")),
                 }
             else:
-                raise ValueError(f"Could not parse JSON from model response: {{response}}")
-        except Exception as e:
+                raise ValueError("Could not parse JSON from model response: {response}")
+        except Exception:
             return {
-                "error": f"Failed to run LLM Judge: {{e}}",
+                "error": "Failed to run LLM Judge: {e}",
                 "faithfulness_score": 0,
-                "faithfulness_reason": f"Evaluation error: {{e}}",
+                "faithfulness_reason": "Evaluation error: {e}",
                 "relevance_score": 0,
-                "relevance_reason": f"Evaluation error: {{e}}",
+                "relevance_reason": "Evaluation error: {e}",
             }

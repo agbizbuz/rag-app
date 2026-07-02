@@ -1,8 +1,6 @@
 """Tests for src/ragapp/config_provider.py and ragapp.config."""
 
-import os
 
-import pytest
 
 
 def _set_all_keys(monkeypatch):
@@ -78,7 +76,7 @@ class TestConfigProvider:
     """Tests for ragapp.config_provider.ConfigProvider."""
 
     def test_singleton_returns_instance(self):
-        from ragapp.config_provider import get_config, ConfigProvider
+        from ragapp.config_provider import ConfigProvider, get_config
 
         cfg = get_config()
         assert isinstance(cfg, ConfigProvider)

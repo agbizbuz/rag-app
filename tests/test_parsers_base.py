@@ -27,34 +27,28 @@ class TestBaseParser:
         ids = set()
         for _ in range(100):
             c = Chunk(text="", metadata={})
-            from ragapp.core.parsers.base import BaseParser
 
             ids.add(BaseParser._make_id())
         assert len(ids) == 100, "Each call should produce a unique ID"
 
     def test_make_id_format(self):
-        from ragapp.core.parsers.base import BaseParser
 
         uid = BaseParser._make_id()
         assert len(uid) == 36  # UUID4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
 
     def test_clean_empty_string(self):
-        from ragapp.core.parsers.base import BaseParser
 
         assert BaseParser._clean("") == ""
 
     def test_clean_whitespace_only(self):
-        from ragapp.core.parsers.base import BaseParser
 
         assert BaseParser._clean("   \n\t  ") == ""
 
     def test_clean_normal_string(self):
-        from ragapp.core.parsers.base import BaseParser
 
         assert BaseParser._clean("  hello world  ") == "hello world"
 
     def test_clean_none_input(self):
-        from ragapp.core.parsers.base import BaseParser
 
         assert BaseParser._clean(None) == ""
 

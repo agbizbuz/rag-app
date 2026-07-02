@@ -10,8 +10,8 @@ class TestProviderRouting:
     def test_groq_routing(self, monkeypatch):
         """Test Groq routing - uses OpenAIProvider with GROQ_API_KEY."""
         self._setup_key(monkeypatch, "GROQ_API_KEY", "test-groq-key")
-        from ragapp.core.providers.routing import _REGISTRY
         from ragapp.core.providers.openai import OpenAIProvider
+        from ragapp.core.providers.routing import _REGISTRY
 
         # Verify groq provider is registered correctly (returns correct TYPE)
         p = _REGISTRY.resolve_provider("groq:llama-3.1-8b-instant")
@@ -27,8 +27,8 @@ class TestProviderRouting:
 
     def test_ollama_routing(self, monkeypatch):
         """Test Ollama-specific routing."""
-        from ragapp.core.providers.routing import _REGISTRY
         from ragapp.core.providers.ollama import OllamaProvider
+        from ragapp.core.providers.routing import _REGISTRY
 
         p = _REGISTRY.resolve_provider("ollama:llama3.1")
         assert p == OllamaProvider
@@ -36,8 +36,8 @@ class TestProviderRouting:
 
     def test_lm_studio_routing(self, monkeypatch):
         """Test LM Studio-specific routing."""
-        from ragapp.core.providers.routing import _REGISTRY
         from ragapp.core.providers.lm_studio import LMStudioProvider
+        from ragapp.core.providers.routing import _REGISTRY
 
         p = _REGISTRY.resolve_provider("lm-studio:llama-3.1-instruct")
         assert p == LMStudioProvider
@@ -45,8 +45,8 @@ class TestProviderRouting:
 
     def test_huggingface_routing(self, monkeypatch):
         """Test HuggingFace provider routing via Hub ID pattern."""
-        from ragapp.core.providers.routing import _REGISTRY
         from ragapp.core.providers.openai import OpenAIProvider
+        from ragapp.core.providers.routing import _REGISTRY
 
         # HuggingFace uses hub model IDs without prefix - resolves to default OpenAIProvider
         p = _REGISTRY.resolve_provider("meta-llama/Llama-3.3-70B-Instruct")
@@ -61,8 +61,8 @@ class TestProviderRouting:
     def test_openai_default_routing(self, monkeypatch):
         """Test that gpt-* models default to OpenAI."""
         self._setup_key(monkeypatch, "OPENAI_API_KEY", "test-key")
-        from ragapp.core.providers.routing import _REGISTRY
         from ragapp.core.providers.openai import OpenAIProvider
+        from ragapp.core.providers.routing import _REGISTRY
 
         p = _REGISTRY.resolve_provider("gpt-4o-mini")
         assert p == OpenAIProvider
@@ -79,8 +79,8 @@ class TestProviderRouting:
     def test_gemini_routing(self, monkeypatch):
         """Test Gemini model routing."""
         self._setup_key(monkeypatch, "GOOGLE_API_KEY", "test-key")
-        from ragapp.core.providers.routing import _REGISTRY
         from ragapp.core.providers.gemini import GeminiProvider
+        from ragapp.core.providers.routing import _REGISTRY
         
         p = _REGISTRY.resolve_provider("gemini-pro")
         assert p == GeminiProvider

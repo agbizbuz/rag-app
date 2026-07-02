@@ -1,7 +1,6 @@
 """Shared fixtures for all tests."""
 
 import io
-import os
 import sys
 from pathlib import Path
 
