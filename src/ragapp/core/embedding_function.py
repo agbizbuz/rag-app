@@ -9,6 +9,6 @@ def create_embedding_function() -> object | None:
     - If ``OPENAI_API_KEY`` is set → returns an OpenAI embedding function.
     - Otherwise → ``None`` (ChromaDB falls back to SentenceTransformer locally).
     """
-    from ragapp.core.embedding_manager import EmbeddingManager
+    from core.embedding_manager import EmbeddingManager
 
     return EmbeddingManager().get_embedding_function()

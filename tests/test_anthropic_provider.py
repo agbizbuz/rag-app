@@ -4,10 +4,10 @@ from unittest.mock import MagicMock
 
 
 class TestAnthropicProvider:
-    """Tests for ragapp.core.providers.anthropic.AnthropicProvider."""
+    """Tests for core.providers.anthropic.AnthropicProvider."""
 
     def test_init_sets_attributes(self):
-        from ragapp.core.providers.anthropic import AnthropicProvider
+        from core.providers.anthropic import AnthropicProvider
 
         p = AnthropicProvider("claude-3-opus", temperature=0.5, max_tokens=2048)
         assert p._model == "claude-3-opus"
@@ -18,8 +18,8 @@ class TestAnthropicProvider:
         """KeyMissingError raised when env var not set."""
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
-        from ragapp.core.providers.anthropic import AnthropicProvider
-        from ragapp.core.providers.base import KeyMissingError as KME
+        from core.providers.anthropic import AnthropicProvider
+        from core.providers.base import KeyMissingError as KME
 
         p = AnthropicProvider("claude-3-opus")
         msgs = [MagicMock(role="user", content="hello")]
@@ -30,8 +30,8 @@ class TestAnthropicProvider:
             assert "ANTHROPIC_API_KEY" in str(e)
     def test_chat_success_with_mocked_client(self, monkeypatch):
         """Test chat method body (lines 54-72 of anthropic.py) with mocked Anthropic client."""
-        from ragapp.core.providers import anthropic as anth_mod
-        from ragapp.core.providers.anthropic import AnthropicProvider
+        from core.providers import anthropic as anth_mod
+        from core.providers.anthropic import AnthropicProvider
 
         monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test-key")
         # Mock the response structure that AnthropicClient.messages.create() returns
@@ -64,7 +64,7 @@ class TestAnthropicSetter:
     """Tests for the test-only _set_anthropic setter."""
 
     def test_setter_patches_class(self):
-        from ragapp.core.providers import anthropic as anth_mod
+        from core.providers import anthropic as anth_mod
 
         MockClass = MagicMock()
         anth_mod._set_anthropic(MockClass)

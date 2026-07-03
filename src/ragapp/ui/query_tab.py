@@ -8,8 +8,8 @@ from datetime import datetime
 import streamlit as st
 
 # Absolute imports (requires PYTHONPATH=src)
-from ragapp.core.llm import get_llm_response  # noqa: F401
-from ragapp.core.retriever import RAGRetriever
+from core.llm import get_llm_response  # noqa: F401
+from core.retriever import RAGRetriever
 
 
 def _build_export_markdown(
@@ -72,7 +72,7 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
     """Render the Query tab with RAG execution and performance metrics."""
     import time
 
-    from ragapp.core.evaluator import EvaluationManager, EvaluationRecord, LLMJudge
+    from core.evaluator import EvaluationManager, EvaluationRecord, LLMJudge
 
     if retriever.vector_store.get_collection_size() == 0:
         st.warning("\U0001F6A8 Database is empty.")

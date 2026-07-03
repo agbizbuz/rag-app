@@ -22,7 +22,7 @@ def _unstub_streamlit():
     """Remove cached streamlit so our mocks take effect."""
     sys.modules.pop("streamlit", None)
     for mod in list(sys.modules):
-        if mod.startswith("ragapp.ui.sidebar") or mod == "streamlit":
+        if mod.startswith("ui.sidebar") or mod == "streamlit":
             del sys.modules[mod]
 
 
@@ -75,7 +75,7 @@ class TestGetSortedProviders:
     """Tests for _get_sorted_providers function."""
 
     def test_returns_sorted_list(self):
-        from ragapp.ui.sidebar import _get_sorted_providers
+        from ui.sidebar import _get_sorted_providers
 
         providers = _get_sorted_providers()
         assert isinstance(providers, list)
@@ -87,8 +87,8 @@ class TestGetProviderModels:
     """Tests for _get_provider_models helper."""
 
     def test_openai_no_prefix(self):
-        from ragapp.ui.components.provider_catalog import PROVIDERS
-        from ragapp.ui.sidebar import _get_provider_models
+        from ui.components.provider_catalog import PROVIDERS
+        from ui.sidebar import _get_provider_models
 
         openai_info = next(p for p in PROVIDERS if p.name == "OpenAI")
         models = _get_provider_models(openai_info)
@@ -99,8 +99,8 @@ class TestCheckServerHealth:
     """Tests for _check_server_health function."""
 
     def test_ollama_reachable(self):
-        from ragapp.ui.components.provider_catalog import fetch_ollama_models
-        from ragapp.ui.sidebar import _check_server_health
+        from ui.components.provider_catalog import fetch_ollama_models
+        from ui.sidebar import _check_server_health
 
         mock_result = MagicMock()
         mock_result.json.return_value = {"models": [{"name": "llama3"}]}
@@ -116,8 +116,8 @@ class TestResolveModels:
     """Tests for _resolve_models function."""
 
     def test_resolve_with_valid_url(self):
-        from ragapp.ui.components.provider_catalog import ProviderInfo, fetch_ollama_models
-        from ragapp.ui.sidebar import _resolve_models
+        from ui.components.provider_catalog import ProviderInfo, fetch_ollama_models
+        from ui.sidebar import _resolve_models
 
         mock_result = MagicMock()
         mock_result.json.return_value = {
@@ -150,9 +150,9 @@ class TestRenderSidebar:
         _unstub_streamlit()
         st = _make_fake_streamlit()
 
-        from ragapp.config_provider import ConfigProvider
-        from ragapp.core.vector_store import VectorStore
-        from ragapp.ui.sidebar import render_sidebar
+        from config_provider import ConfigProvider
+        from core.vector_store import VectorStore
+        from ui.sidebar import render_sidebar
 
         mock_vs = MagicMock(spec=VectorStore)
         mock_vs.get_collection_size.return_value = 0

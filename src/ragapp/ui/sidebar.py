@@ -6,9 +6,9 @@ import os
 
 import streamlit as st
 
-from ragapp.config_provider import ConfigProvider
-from ragapp.core.vector_store import VectorStore
-from ragapp.ui.components.provider_catalog import PROVIDERS
+from config_provider import ConfigProvider
+from core.vector_store import VectorStore
+from ui.components.provider_catalog import PROVIDERS
 
 
 def _get_provider_models(provider_info):
@@ -253,7 +253,7 @@ def _resolve_models(info):  # noqa: ANN001
 def _check_server_health(base_url, discover_func):  # noqa: ANN001
     """Check if server is reachable by trying to list models."""
     try:
-        from ragapp.ui.components.provider_catalog import fetch_lm_studio_models, fetch_ollama_models
+        from ui.components.provider_catalog import fetch_lm_studio_models, fetch_ollama_models
 
         if discover_func == fetch_ollama_models:
             return len(fetch_ollama_models(base_url)) > 0

@@ -1,6 +1,6 @@
 """Tests for src/ragapp/core/parsers/base.py."""
 
-from ragapp.core.parsers.base import BaseParser, Chunk, Parser
+from core.parsers.base import BaseParser, Chunk, Parser
 
 
 class TestChunk:
@@ -57,13 +57,13 @@ class TestParserProtocol:
     """Tests for Parser protocol."""
 
     def test_parser_protocol_with_concrete_class(self):
-        from ragapp.core.parsers.pdf_parser import PdfParser
+        from core.parsers.pdf_parser import PdfParser
 
         pdf = PdfParser()
         assert isinstance(pdf, Parser)  # type check at runtime
 
     def test_parser_protocol_with_base(self):
-        from ragapp.core.parsers.txt_parser import TxtParser
+        from core.parsers.txt_parser import TxtParser
 
         txt = TxtParser()
         assert hasattr(txt, "parse")

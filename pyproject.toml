@@ -64,20 +64,21 @@ select = ["E", "F", "I"]
 [tool.coverage.run]
 source = ["ragapp"]
 omit = [
-    "src/ragapp/app.py",
-    "src/ragapp/ui/*.py",
-    "src/ragapp/ui/components/*.py",
+  "src/ragapp/app.py",
+  "src/ragapp/ui/*.py",
+  "src/ragapp/ui/components/*.py",
 ]
 
 [tool.coverage.report]
 exclude_lines = [
-    "pragma: no cover",
-    "if __name__ == .__main__.",
-    "if TYPE_CHECKING:",
-    "raise NotImplementedError",
+  "pragma: no cover",
+  "if __name__ == .__main__.",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
 ]
 show_missing = true
 
 [tool.pytest.ini_options]
-addopts = "--cov=ragapp --cov-report=term-missing --cov-report=html"
+addopts = "--cov=src --cov-report=term-missing --cov-report=html"
 testpaths = ["tests"]
+pythonpath = [".", "src/ragapp"]

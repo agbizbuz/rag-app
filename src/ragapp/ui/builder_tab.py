@@ -5,7 +5,7 @@ from __future__ import annotations
 import streamlit as st
 
 # Absolute imports (requires PYTHONPATH=src)
-from ragapp.core.parser import process_file
+from core.parser import process_file
 
 
 def render_builder(vs) -> None:

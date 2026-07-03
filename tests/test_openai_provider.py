@@ -4,10 +4,10 @@ from unittest.mock import MagicMock, patch
 
 
 class TestOpenAIProvider:
-    """Tests for ragapp.core.providers.openai.OpenAIProvider."""
+    """Tests for core.providers.openai.OpenAIProvider."""
 
     def test_init_sets_attributes(self):
-        from ragapp.core.providers.openai import OpenAIProvider
+        from core.providers.openai import OpenAIProvider
 
         p = OpenAIProvider("gpt-4o", temperature=0.5, max_tokens=2048)
         assert p._model == "gpt-4o"
@@ -17,7 +17,7 @@ class TestOpenAIProvider:
         assert p._max_tokens == 2048
 
     def test_init_groq_model_resolves_key(self):
-        from ragapp.core.providers.openai import OpenAIProvider
+        from core.providers.openai import OpenAIProvider
 
         p = OpenAIProvider("groq:llama-3.1-8b-instant")
         assert p._api_key_env == "GROQ_API_KEY"
@@ -29,13 +29,13 @@ class TestOpenAIProvider:
         mock_response.choices = [MagicMock(message=MagicMock(content="Hello world"))]
 
         with patch(
-            "ragapp.core.providers.openai._get_openai_client"
+            "core.providers.openai._get_openai_client"
         ) as MockGetClient:
             mock_client = MagicMock()
             mock_client.chat.completions.create.return_value = mock_response
             MockGetClient.return_value = MagicMock(return_value=mock_client)
 
-            from ragapp.core.providers.openai import OpenAIProvider
+            from core.providers.openai import OpenAIProvider
 
             p = OpenAIProvider("gpt-4o-mini")
             msgs = [MagicMock(role="user", content="hello")]
@@ -52,13 +52,13 @@ class TestOpenAIProvider:
         mock_response.choices = [MagicMock(message=MagicMock(content=None))]
 
         with patch(
-            "ragapp.core.providers.openai._get_openai_client"
+            "core.providers.openai._get_openai_client"
         ) as MockGetClient:
             mock_client = MagicMock()
             mock_client.chat.completions.create.return_value = mock_response
             MockGetClient.return_value = MagicMock(return_value=mock_client)
 
-            from ragapp.core.providers.openai import OpenAIProvider
+            from core.providers.openai import OpenAIProvider
 
             p = OpenAIProvider("gpt-4o-mini")
             msgs = [MagicMock(role="user", content="hello")]
@@ -68,8 +68,8 @@ class TestOpenAIProvider:
     def test_chat_raises_key_missing(self, monkeypatch):
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
-        from ragapp.core.providers.base import KeyMissingError as KME
-        from ragapp.core.providers.openai import OpenAIProvider
+        from core.providers.base import KeyMissingError as KME
+        from core.providers.openai import OpenAIProvider
 
         p = OpenAIProvider("gpt-4o-mini")
         msgs = [MagicMock(role="user", content="hello")]
@@ -86,13 +86,13 @@ class TestOpenAIProvider:
         mock_response.choices = [MagicMock(message=MagicMock(content="Groq reply"))]
 
         with patch(
-            "ragapp.core.providers.openai._get_openai_client"
+            "core.providers.openai._get_openai_client"
         ) as MockGetClient:
             mock_client = MagicMock()
             mock_client.chat.completions.create.return_value = mock_response
             MockGetClient.return_value = MagicMock(return_value=mock_client)
 
-            from ragapp.core.providers.openai import OpenAIProvider
+            from core.providers.openai import OpenAIProvider
 
             p = OpenAIProvider("groq:llama-3.1")
             msgs = [MagicMock(role="user", content="hello")]
@@ -101,7 +101,7 @@ class TestOpenAIProvider:
 
     def test_get_openai_client_returns_class(self):
         """_get_openai_client returns the OpenAI class."""
-        from ragapp.core.providers.openai import _get_openai_client
+        from core.providers.openai import _get_openai_client
 
         result = _get_openai_client()
         assert hasattr(result, "__name__") or callable(result)
@@ -111,7 +111,7 @@ class TestOpenAISetter:
     """Tests for the test-only _set_openai setter."""
 
     def test_setter_patches_class(self):
-        from ragapp.core.providers import openai as openai_mod
+        from core.providers import openai as openai_mod
 
         MockClass = MagicMock()
         openai_mod._set_openai(MockClass)

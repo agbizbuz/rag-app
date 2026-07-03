@@ -168,5 +168,65 @@
     "faithfulness_reason": "The answer is strictly grounded in the provided context. It accurately lists the four required work products and correctly summarizes the qualification steps (use case analysis, malfunction impact evaluation, ASIL/deployment considerations, and documentation requirements) as stated in the text. It also correctly identifies that the context contains no information about 'lcov', thereby avoiding any hallucination or external knowledge injection.",
     "relevance_score": 5,
     "relevance_reason": "The answer directly addresses both parts of the user's query. It provides the requested ISO/DIS 26262 tool qualification process details based on the retrieved documents and explicitly states that the context does not cover 'lcov', which is the appropriate and fully relevant response given the constraints of the provided information."
+  },
+  {
+    "record_id": "a9cb5c2d-9a36-4bf9-a058-f856e0e6aae3",
+    "timestamp": "2026-07-03T10:49:21.810399+00:00",
+    "query": "What is this?",
+    "answer": "⚠️ Error: `OPENAI_API_KEY` is missing in the environment.",
+    "model": "gpt-4o-mini",
+    "latency": 0.00012493133544921875,
+    "retrieval_mode": "hybrid",
+    "num_chunks": 1,
+    "chunk_distances": [
+      0.0
+    ],
+    "avg_distance": 0.0,
+    "rating": "thumbs_down",
+    "feedback_comment": "What is this?",
+    "faithfulness_score": null,
+    "faithfulness_reason": null,
+    "relevance_score": null,
+    "relevance_reason": null
+  },
+  {
+    "record_id": "e1bef5a0-dca9-48ff-8beb-835a44dfcc99",
+    "timestamp": "2026-07-03T10:49:21.901847+00:00",
+    "query": "What is this?",
+    "answer": "⚠️ Error: `OPENAI_API_KEY` is missing in the environment.",
+    "model": "gpt-4o-mini",
+    "latency": 0.0002193450927734375,
+    "retrieval_mode": "hybrid",
+    "num_chunks": 1,
+    "chunk_distances": [
+      0.0
+    ],
+    "avg_distance": 0.0,
+    "rating": "thumbs_up",
+    "feedback_comment": "What is this?",
+    "faithfulness_score": null,
+    "faithfulness_reason": null,
+    "relevance_score": null,
+    "relevance_reason": null
+  },
+  {
+    "record_id": "1328a455-eeb9-4de2-80cc-b083aca166a8",
+    "timestamp": "2026-07-03T10:49:22.000364+00:00",
+    "query": "What is this?",
+    "answer": "⚠️ Error: `OPENAI_API_KEY` is missing in the environment.",
+    "model": "gpt-4o-mini",
+    "latency": 0.00010251998901367188,
+    "retrieval_mode": "hybrid",
+    "num_chunks": 1,
+    "chunk_distances": [
+      0.0
+    ],
+    "avg_distance": 0.0,
+    "rating": "thumbs_down",
+    "feedback_comment": "What is this?",
+    "faithfulness_score": null,
+    "faithfulness_reason": null,
+    "relevance_score": null,
+    "relevance_reason": null
   }
 ]

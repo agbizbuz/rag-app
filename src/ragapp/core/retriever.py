@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Optional
 
-from ragapp.config_provider import get_config
-from ragapp.core.vector_store import VectorStore
+from config_provider import get_config
+from core.vector_store import VectorStore
 
 
 class RAGRetriever:

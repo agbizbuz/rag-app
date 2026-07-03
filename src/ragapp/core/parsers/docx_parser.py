@@ -14,7 +14,7 @@ class DocxParser(BaseParser):
     def _get_chunk_size(self) -> int:
         if self._chunk_size is not None:
             return self._chunk_size
-        from ragapp.config_provider import get_config
+        from config_provider import get_config
         return get_config().chunk_size
 
     def parse(self, file) -> list[Chunk]:

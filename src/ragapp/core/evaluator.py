@@ -14,7 +14,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from ragapp.config_provider import ConfigProvider, get_config
+from config_provider import ConfigProvider, get_config
 
 
 class EvaluationRecord:
@@ -220,9 +220,9 @@ class LLMJudge:
         Returns:
             Dict containing scores and reasons, or error message.
         """
-        from ragapp.config_provider import get_config as _get_cfg
-        from ragapp.core.providers.base import ChatMessage as CM
-        from ragapp.core.providers.routing import resolve_provider
+        from config_provider import get_config as _get_cfg
+        from core.providers.base import ChatMessage as CM
+        from core.providers.routing import resolve_provider
 
         cfg = config_provider or _get_cfg()
         temperature = 0.0  # Determinisitic scoring

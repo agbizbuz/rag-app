@@ -275,6 +275,6 @@ Current coverage: **94%** across core modules (140 tests). Key targets:
 
 Use the existing test patterns:
 - **Core modules**: Direct function/class testing with standard `unittest.mock.MagicMock`
-- **Providers**: Patch provider classes at their import path (e.g. `"ragapp.core.providers.openai.OpenAIProvider"`)
+- **Providers**: Patch provider classes at their import path (e.g. `"core.providers.openai.OpenAIProvider"`)
 - **UI components**: Create a fake Streamlit module (`ModuleType("streamlit")`) and mock all st.* methods; always call `sys.modules.pop("streamlit", None)` first to avoid cached imports
 - **Shared fixtures**: Edit `tests/conftest.py` for reusable helpers (file bytes, env key clearing)

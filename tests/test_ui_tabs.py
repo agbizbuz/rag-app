@@ -8,10 +8,10 @@ from unittest.mock import MagicMock, patch
 def _unstub_streamlit():
     """Remove cached streamlit so our mocks work."""
     sys.modules.pop("streamlit", None)
-    if "ragapp.ui.builder_tab" in sys.modules:
-        del sys.modules["ragapp.ui.builder_tab"]
-    if "ragapp.ui.query_tab" in sys.modules:
-        del sys.modules["ragapp.ui.query_tab"]
+    if "ui.builder_tab" in sys.modules:
+        del sys.modules["ui.builder_tab"]
+    if "ui.query_tab" in sys.modules:
+        del sys.modules["ui.query_tab"]
 
 
 class TestBuilderTab:
@@ -28,7 +28,7 @@ class TestBuilderTab:
         st.spinner = MagicMock(context_enter=MagicMock(return_value=MagicMock()), context_exit=MagicMock())
         sys.modules["streamlit"] = st
 
-        from ragapp.ui.builder_tab import render_builder
+        from ui.builder_tab import render_builder
 
         render_builder(mock_vs)
         st.error.assert_called()
@@ -47,7 +47,7 @@ class TestQueryTabLogic:
         st.button = MagicMock(return_value=False)
         sys.modules["streamlit"] = st
 
-        from ragapp.ui.query_tab import render_query_tab
+        from ui.query_tab import render_query_tab
 
         mock_vs = MagicMock()
         mock_vs.get_collection_size.return_value = 0
@@ -78,13 +78,13 @@ class TestQueryTabLogic:
         }
         sys.modules["streamlit"] = st
 
-        from ragapp.ui.query_tab import render_query_tab
+        from ui.query_tab import render_query_tab
 
         render_query_tab(mock_retriever, "gpt-4o-mini")
         assert mock_retriever.retrieve.call_count == 1
 
-    @patch("ragapp.core.evaluator.EvaluationManager")
-    @patch("ragapp.core.evaluator.EvaluationRecord")
+    @patch("core.evaluator.EvaluationManager")
+    @patch("core.evaluator.EvaluationRecord")
     def test_context_retrieved(self, mock_record_cls, mock_manager_cls):
         _unstub_streamlit()
         
@@ -135,18 +135,18 @@ class TestQueryTabLogic:
         }
         sys.modules["streamlit"] = st
 
-        mock_llm_mod = ModuleType("ragapp.core.llm")
+        mock_llm_mod = ModuleType("core.llm")
         mock_llm_mod.get_llm_response = MagicMock(return_value="AI Answer")
-        sys.modules["ragapp.core.llm"] = mock_llm_mod
+        sys.modules["core.llm"] = mock_llm_mod
 
-        from ragapp.ui.query_tab import render_query_tab
+        from ui.query_tab import render_query_tab
 
         render_query_tab(mock_retriever, "gpt-4o-mini")
 
         assert mock_retriever.retrieve.called
 
-    @patch("ragapp.core.evaluator.EvaluationManager")
-    @patch("ragapp.core.evaluator.EvaluationRecord")
+    @patch("core.evaluator.EvaluationManager")
+    @patch("core.evaluator.EvaluationRecord")
     def test_feedback_thumbs_up(self, mock_record_cls, mock_manager_cls):
         _unstub_streamlit()
         
@@ -204,13 +204,13 @@ class TestQueryTabLogic:
         }
         sys.modules["streamlit"] = st
 
-        from ragapp.ui.query_tab import render_query_tab
+        from ui.query_tab import render_query_tab
         render_query_tab(mock_retriever, "gpt-4o-mini")
 
         mock_eval_manager.update_feedback.assert_any_call("test-id", rating="thumbs_up")
 
-    @patch("ragapp.core.evaluator.EvaluationManager")
-    @patch("ragapp.core.evaluator.EvaluationRecord")
+    @patch("core.evaluator.EvaluationManager")
+    @patch("core.evaluator.EvaluationRecord")
     def test_feedback_thumbs_down(self, mock_record_cls, mock_manager_cls):
         _unstub_streamlit()
         
@@ -268,7 +268,7 @@ class TestQueryTabLogic:
         }
         sys.modules["streamlit"] = st
 
-        from ragapp.ui.query_tab import render_query_tab
+        from ui.query_tab import render_query_tab
         render_query_tab(mock_retriever, "gpt-4o-mini")
 
         mock_eval_manager.update_feedback.assert_any_call("test-id", rating="thumbs_down")

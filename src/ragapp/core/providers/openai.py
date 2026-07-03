@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 # Re-export at module level so tests can patch via "core.providers.openai.OpenAI"
-# This enables test mocks to be applied via "patch('ragapp.core.providers.openai.OpenAI')"
+# This enables test mocks to be applied via "patch('core.providers.openai.OpenAI')"
 OpenAI = None  # type: ignore[assignment]
 _setter_called = False
 

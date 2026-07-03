@@ -27,9 +27,9 @@ cd src && PYTHONPATH=. streamlit run ragapp/app.py
 
 ## Key Notes
 
-- **`PYTHONPATH=src` is required** because `ragapp` is a package nested under `src/`, not a top-level module. This allows Python to resolve imports like `from ragapp.config import settings`.
+- **`PYTHONPATH=src` is required** because `ragapp` is a package nested under `src/`, not a top-level module. This allows Python to resolve imports like `from config import settings`.
 
-- The app uses **absolute imports** (e.g., `from ragapp.core.llm import get_llm_response`) which work when PYTHONPATH=src includes the parent directory containing `ragapp` as a package.
+- The app uses **absolute imports** (e.g., `from core.llm import get_llm_response`) which work when PYTHONPATH=src includes the parent directory containing `ragapp` as a package.
 
 ## Development
 

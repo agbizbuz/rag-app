@@ -1,4 +1,4 @@
-"""Tests for src/ragapp/config_provider.py and ragapp.config."""
+"""Tests for src/ragapp/config_provider.py and config."""
 
 
 
@@ -25,11 +25,11 @@ def _clear_all_keys(monkeypatch):
 
 
 class TestSettings:
-    """Tests for ragapp.config.Settings."""
+    """Tests for config.Settings."""
 
     def test_settings_defaults(self, monkeypatch):
         _clear_all_keys(monkeypatch)
-        from ragapp.config import Settings
+        from config import Settings
 
         s = Settings()
         assert s.openai_api_key == ""
@@ -61,7 +61,7 @@ class TestSettings:
         monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
         monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
 
-        from ragapp.config import Settings
+        from config import Settings
 
         s = Settings()
         assert s.db_path == "/custom/path"
@@ -73,23 +73,23 @@ class TestSettings:
 
 
 class TestConfigProvider:
-    """Tests for ragapp.config_provider.ConfigProvider."""
+    """Tests for config_provider.ConfigProvider."""
 
     def test_singleton_returns_instance(self):
-        from ragapp.config_provider import ConfigProvider, get_config
+        from config_provider import ConfigProvider, get_config
 
         cfg = get_config()
         assert isinstance(cfg, ConfigProvider)
 
     def test_singleton_reuses_instance(self):
-        from ragapp.config_provider import get_config
+        from config_provider import get_config
 
         cfg1 = get_config()
         cfg2 = get_config()
         assert cfg1 is cfg2
 
     def test_default_values_via_config_provider(self):
-        from ragapp.config_provider import ConfigProvider
+        from config_provider import ConfigProvider
 
         cfg = ConfigProvider()
         assert cfg.llm_temperature == 0.2
@@ -100,35 +100,35 @@ class TestConfigProvider:
 
     def test_key_getters_openai(self, monkeypatch):
         _set_all_keys(monkeypatch)
-        from ragapp.config_provider import ConfigProvider
+        from config_provider import ConfigProvider
 
         cfg = ConfigProvider()
         assert cfg.get_openai_key() == "sk-openai-123"
 
     def test_key_getters_anthropic(self, monkeypatch):
         _set_all_keys(monkeypatch)
-        from ragapp.config_provider import ConfigProvider
+        from config_provider import ConfigProvider
 
         cfg = ConfigProvider()
         assert cfg.get_anthropic_key() == "sk-ant-456"
 
     def test_key_getters_gemini(self, monkeypatch):
         _set_all_keys(monkeypatch)
-        from ragapp.config_provider import ConfigProvider
+        from config_provider import ConfigProvider
 
         cfg = ConfigProvider()
         assert cfg.get_gemini_key() == "goo-gle-789"
 
     def test_key_getters_groq(self, monkeypatch):
         _set_all_keys(monkeypatch)
-        from ragapp.config_provider import ConfigProvider
+        from config_provider import ConfigProvider
 
         cfg = ConfigProvider()
         assert cfg.get_groq_key() == "groq-key-012"
 
     def test_key_getters_missing(self, monkeypatch):
         _clear_all_keys(monkeypatch)
-        from ragapp.config_provider import ConfigProvider
+        from config_provider import ConfigProvider
 
         cfg = ConfigProvider()
         assert cfg.get_openai_key() is None
@@ -138,7 +138,7 @@ class TestConfigProvider:
 
     def test_config_provider_with_mock_settings(self):
         """ConfigProvider accepts a mock settings object."""
-        from ragapp.config_provider import ConfigProvider, _MockSettings
+        from config_provider import ConfigProvider, _MockSettings
 
         cfg = ConfigProvider(_MockSettings())
         assert cfg.db_path == "./chroma_db"
@@ -146,11 +146,11 @@ class TestConfigProvider:
 
 
 class TestEmbeddingFunction:
-    """Tests for ragapp.core.embedding_function.create_embedding_function."""
+    """Tests for core.embedding_function.create_embedding_function."""
 
     def test_no_openai_key_returns_none(self, monkeypatch):
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-        from ragapp.core.embedding_function import create_embedding_function
+        from core.embedding_function import create_embedding_function
 
         result = create_embedding_function()
         assert result is None
@@ -163,7 +163,7 @@ class TestEmbeddingFunction:
             "chromadb.utils.embedding_functions.OpenAIEmbeddingFunction"
         ) as MockEF:
             MockEF.return_value = "mock_ef"
-            from ragapp.core.embedding_function import create_embedding_function
+            from core.embedding_function import create_embedding_function
 
             result = create_embedding_function()
             assert result == "mock_ef"

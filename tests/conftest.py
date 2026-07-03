@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-# Add src to path so ragapp.core.* modules can be imported as top-level module
+# Add src to path so core.* modules can be imported as top-level module
 SRC_PATH = Path(__file__).parent.parent / "src"
 if str(SRC_PATH) not in sys.path:
     # Prepend for priority

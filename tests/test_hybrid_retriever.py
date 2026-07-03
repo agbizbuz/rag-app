@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from ragapp.core.hybrid_retriever import HybridRetriever
+from core.hybrid_retriever import HybridRetriever
 
 
 class TestHybridRetriever:
@@ -52,7 +52,7 @@ class TestHybridRetriever:
 
         retriever = HybridRetriever(vector_store=mock_vs, config_provider=cfg)
 
-        with patch("ragapp.core.hybrid_retriever.KeywordSearcher") as MockSearcher:
+        with patch("core.hybrid_retriever.KeywordSearcher") as MockSearcher:
             mock_instance = MagicMock()
             mock_instance.search.return_value = [{"id": "doc1", "text": "apple banana", "metadata": {}, "distance": 0.5}]
             MockSearcher.return_value = mock_instance
@@ -84,7 +84,7 @@ class TestHybridRetriever:
 
         retriever = HybridRetriever(vector_store=mock_vs, config_provider=cfg)
 
-        with patch("ragapp.core.hybrid_retriever.KeywordSearcher") as MockSearcher:
+        with patch("core.hybrid_retriever.KeywordSearcher") as MockSearcher:
             mock_searcher_instance = MagicMock()
             # Keyword results return reversed rank order to see fusion effect
             mock_searcher_instance.search.return_value = [

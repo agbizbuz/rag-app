@@ -8,8 +8,8 @@ from unittest.mock import MagicMock
 def _unstub_streamlit():
     """Remove cached streamlit so our mocks work."""
     sys.modules.pop("streamlit", None)
-    if "ragapp.ui.db_tab" in sys.modules:
-        del sys.modules["ragapp.ui.db_tab"]
+    if "ui.db_tab" in sys.modules:
+        del sys.modules["ui.db_tab"]
 
 
 class TestDbTabEmptyDB:
@@ -38,7 +38,7 @@ class TestDbTabEmptyDB:
         st.session_state = {"confirm_delete": False}
         sys.modules["streamlit"] = st
 
-        from ragapp.ui.db_tab import render_db_tab
+        from ui.db_tab import render_db_tab
 
         render_db_tab(mock_vs)
         st.info.assert_called_once()
@@ -89,7 +89,7 @@ class TestDbTabWithDocuments:
         st.session_state = {"confirm_delete": False}
         sys.modules["streamlit"] = st
 
-        from ragapp.ui.db_tab import render_db_tab
+        from ui.db_tab import render_db_tab
 
         render_db_tab(mock_vs)
 
@@ -141,7 +141,7 @@ class TestDbTabWithDocuments:
         st.session_state = {"confirm_delete": False}
         sys.modules["streamlit"] = st
 
-        from ragapp.ui.db_tab import render_db_tab
+        from ui.db_tab import render_db_tab
 
         render_db_tab(mock_vs)
 
@@ -186,7 +186,7 @@ class TestDbTabDeleteFlow:
         st.session_state = {"confirm_delete": False, "vector_store": MagicMock()}
         sys.modules["streamlit"] = st
 
-        from ragapp.ui.db_tab import render_db_tab
+        from ui.db_tab import render_db_tab
 
         render_db_tab(mock_vs)
         assert st.session_state["confirm_delete"] is True

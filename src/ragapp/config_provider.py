@@ -39,13 +39,13 @@ class ConfigProvider:
         """Initialize with optional Settings instance.
 
         Args:
-            settings: Optional Settings instance from ragapp.config. Defaults to mock.
+            settings: Optional Settings instance from config. Defaults to mock.
         """
         if settings is not None:
             self._settings = settings
         else:
             try:
-                from ragapp.config import Settings
+                from config import Settings
 
                 self._settings = Settings()
             except ImportError:

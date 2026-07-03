@@ -5,10 +5,10 @@ from unittest.mock import MagicMock, patch
 
 
 class TestHuggingFaceProvider:
-    """Tests for ragapp.core.providers.huggingface.HuggingFaceProvider."""
+    """Tests for core.providers.huggingface.HuggingFaceProvider."""
 
     def test_init_sets_attributes(self):
-        from ragapp.core.providers.huggingface import HuggingFaceProvider
+        from core.providers.huggingface import HuggingFaceProvider
 
         p = HuggingFaceProvider("meta-llama/Llama-3.3-70B-Instruct", temperature=0.5, max_tokens=2048)
         assert p._model == "meta-llama/Llama-3.3-70B-Instruct"
@@ -22,7 +22,7 @@ class TestHuggingFaceProvider:
 
         with patch.dict(os.environ, {"HUGGINGFACE_API_KEY": "hf-test-key"}):
             with patch("requests.post", return_value=mock_response) as mock_post:
-                from ragapp.core.providers.huggingface import HuggingFaceProvider
+                from core.providers.huggingface import HuggingFaceProvider
 
                 p = HuggingFaceProvider("meta-llama/Llama-3.3-70B-Instruct")
                 msgs = [MagicMock(role="user", content="hello")]
@@ -41,7 +41,7 @@ class TestHuggingFaceProvider:
 
         with patch.dict(os.environ, {"HUGGINGFACE_API_KEY": "hf-test-key"}):
             with patch("requests.post", return_value=mock_response):
-                from ragapp.core.providers.huggingface import HuggingFaceProvider
+                from core.providers.huggingface import HuggingFaceProvider
 
                 p = HuggingFaceProvider("test-model")
                 msgs = [MagicMock(role="user", content="hello")]
@@ -57,7 +57,7 @@ class TestHuggingFaceProvider:
 
         with patch.dict(os.environ, {"HUGGINGFACE_API_KEY": "hf-test-key"}):
             with patch("requests.post", return_value=mock_response):
-                from ragapp.core.providers.huggingface import HuggingFaceProvider
+                from core.providers.huggingface import HuggingFaceProvider
 
                 p = HuggingFaceProvider("test-model")
                 msgs = [MagicMock(role="user", content="hello")]
@@ -74,8 +74,8 @@ class TestHuggingFaceProvider:
             del os.environ["HUGGINGFACE_API_KEY"]
 
         try:
-            from ragapp.core.providers.base import KeyMissingError as KME
-            from ragapp.core.providers.huggingface import HuggingFaceProvider
+            from core.providers.base import KeyMissingError as KME
+            from core.providers.huggingface import HuggingFaceProvider
 
             p = HuggingFaceProvider("test-model")
             msgs = [MagicMock(role="user", content="hello")]

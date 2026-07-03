@@ -2,7 +2,7 @@
 
 import io
 
-from ragapp.core.parser import process_file
+from core.parser import process_file
 
 
 def _txt_bytes():

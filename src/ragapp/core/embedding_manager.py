@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from typing import Optional
 
-from ragapp.config_provider import get_config
+from config_provider import get_config
 
 
 class EmbeddingManager:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ragapp.core.keyword_search import KeywordSearcher, _tokenize
+from core.keyword_search import KeywordSearcher, _tokenize
 
 
 def test_tokenize() -> None:

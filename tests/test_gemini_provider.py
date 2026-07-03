@@ -5,10 +5,10 @@ from unittest.mock import MagicMock, patch
 
 
 class TestGeminiProvider:
-    """Tests for ragapp.core.providers.gemini.GeminiProvider."""
+    """Tests for core.providers.gemini.GeminiProvider."""
 
     def test_init_sets_attributes(self):
-        from ragapp.core.providers.gemini import GeminiProvider
+        from core.providers.gemini import GeminiProvider
 
         p = GeminiProvider("gemini-pro", temperature=0.3, max_tokens=512)
         assert p._model == "gemini-pro"
@@ -30,7 +30,7 @@ class TestGeminiProvider:
         mock_genai.GenerativeModel = mock_model_cls
 
         with patch.dict(sys.modules, {"google.generativeai": mock_genai}):
-            from ragapp.core.providers.gemini import GeminiProvider
+            from core.providers.gemini import GeminiProvider
 
             p = GeminiProvider("gemini-pro")
             msgs = [MagicMock(role="user", content="hello")]
@@ -51,7 +51,7 @@ class TestGeminiProvider:
         mock_genai.GenerativeModel = mock_model_cls
 
         with patch.dict(sys.modules, {"google.generativeai": mock_genai}):
-            from ragapp.core.providers.gemini import GeminiProvider
+            from core.providers.gemini import GeminiProvider
 
             p = GeminiProvider("gemini-pro")
             msgs = [
@@ -66,8 +66,8 @@ class TestGeminiProvider:
     def test_chat_raises_key_missing(self, monkeypatch):
         monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
 
-        from ragapp.core.providers.base import KeyMissingError as KME
-        from ragapp.core.providers.gemini import GeminiProvider
+        from core.providers.base import KeyMissingError as KME
+        from core.providers.gemini import GeminiProvider
 
         p = GeminiProvider("gemini-pro")
         msgs = [MagicMock(role="user", content="hello")]

@@ -1,6 +1,6 @@
 """Tests for src/ragapp/core/providers/base.py."""
 
-from ragapp.core.providers.base import (
+from core.providers.base import (
     ChatMessage,
     KeyMissingError,
     Provider,
@@ -79,14 +79,14 @@ class TestProviderProtocol:
     """Tests for the provider protocol and routing."""
 
     def test_registry_resolve_by_prefix(self):
-        from ragapp.core.providers import _REGISTRY
+        from core.providers import _REGISTRY
 
         # These should be registered by the auto-registration in __init__
         p = _REGISTRY.resolve_provider("gpt-4o-mini")
         assert p is not None
 
     def test_registry_raises_for_unknown(self):
-        from ragapp.core.providers.routing import _Registry
+        from core.providers.routing import _Registry
 
         r = _Registry()
         try:
@@ -100,7 +100,7 @@ class TestAllExport:
     """Tests that __all__ contains expected symbols."""
 
     def test_all_exports(self):
-        from ragapp.core.providers.base import __all__
+        from core.providers.base import __all__
 
         expected = [
             "RAGError",

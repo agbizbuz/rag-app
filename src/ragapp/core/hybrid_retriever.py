@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Optional
 
-from ragapp.core.keyword_search import KeywordSearcher
-from ragapp.core.retriever import RAGRetriever
+from core.keyword_search import KeywordSearcher
+from core.retriever import RAGRetriever
 
 
 class HybridRetriever(RAGRetriever):

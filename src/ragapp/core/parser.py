@@ -35,7 +35,7 @@ def process_file(file) -> list[dict]:
     if parser_cls == CsvParser:
         instance = parser_cls()
     else:
-        from ragapp.config_provider import get_config
+        from config_provider import get_config
         instance = parser_cls(chunk_size=get_config().chunk_size)
     raw_chunks: list[Chunk] = instance.parse(file)
 

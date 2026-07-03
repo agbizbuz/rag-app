@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from ragapp.core.retriever import RAGRetriever
+from core.retriever import RAGRetriever
 
 
 class TestRAGRetriever:

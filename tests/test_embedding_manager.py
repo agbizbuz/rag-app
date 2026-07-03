@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from ragapp.core.embedding_manager import EmbeddingManager
+from core.embedding_manager import EmbeddingManager
 
 
 class TestEmbeddingManager:

@@ -35,7 +35,7 @@ def get_llm_response(
     Returns:
         LLM-generated text or error message prefixed with ⚠️.
     """
-    from ragapp.config_provider import get_config as _get_cfg
+    from config_provider import get_config as _get_cfg
     cfg = config_provider or _get_cfg()
     temperature = cfg.llm_temperature  # type: ignore[union-attr]
     max_tokens = cfg.llm_max_tokens  # type: ignore[union-attr]

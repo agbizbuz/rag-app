@@ -7,7 +7,7 @@ import json
 import pandas as pd
 import streamlit as st
 
-from ragapp.core.evaluator import EvaluationManager
+from core.evaluator import EvaluationManager
 
 
 def render_evaluation_tab() -> None:
