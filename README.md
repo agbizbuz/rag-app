@@ -10,7 +10,9 @@ This application allows you to ingest local documents (PDF, DOCX, TXT, CSV) into
 - **💾 Persistent Vector Database**: Powered by ChromaDB; indexed documents survive app restarts.
 - **🤖 Provider Agnostic**: Switch seamlessly between OpenAI, Anthropic (Claude), Google Gemini, Groq, Ollama, LM Studio, and HuggingFace — via a registry pattern that makes adding providers trivial.
 - **📄 Multi-Format Parsing**: PDFs, DOCX files, CSVs, and TXT files are automatically chunked and embedded.
-- **✅ 94% Test Coverage**: Core modules fully tested across 140+ unit tests with `pytest`.
+- **🔍 Hybrid Search**: Combines semantic (vector) and keyword (BM25) retrieval for better recall.
+- **✅ Automated Evaluation**: LLM-judge based evaluation framework for retrieval quality testing.
+- **🧪 184 Unit Tests** across 23 test files with coverage reporting via `pytest`.
 
 ## 🏗️ Project Structure
 
@@ -28,6 +30,11 @@ rag-app/
 │   │   ├── parser.py               # File parsing dispatcher (extension → parser)
 │   │   ├── vector_store.py         # ChromaDB wrapper (CRUD, query, embedding)
 │   │   ├── embedding_function.py   # Embedding factory (OpenAI / SentenceTransformer)
+│   │   ├── embedding_manager.py    # Embedding function configuration manager
+│   │   ├── retriever.py            # RAG retrieval coordinator (semantic/keyword/hybrid)
+│   │   ├── hybrid_retriever.py     # BM25 + semantic hybrid search with reciprocal rank fusion
+│   │   ├── keyword_search.py       # BM25 keyword scoring and ranking
+│   │   ├── evaluator.py            # LLM-judge evaluation framework
 │   │   │
 │   │   ├── parsers/                # Document parsers — registry pattern (OCP)
 │   │   │   ├── __init__.py         # ParserRegistry with @register decorator
@@ -55,16 +62,36 @@ rag-app/
 │       └── components/
 │           └── provider_catalog.py # Model options for all providers
 │
-├── tests/                          # 16 test files · 140 tests · 94% coverage
+├── tests/                          # 23 test files · 184 tests · coverage via pytest
 │   ├── conftest.py                 # Shared fixtures (file bytes, env clearing)
+│   │
 │   ├── test_config_provider.py     # Settings + ConfigProvider singletons
 │   ├── test_llm.py                 # get_llm_response routing to all providers
+│   ├── test_llm_routing.py         # Provider routing by prefix/model
 │   ├── test_vector_store.py        # ChromaDB CRUD operations
 │   ├── test_parser.py              # process_file for all 4 formats + edge cases
-│   ├── test_*.py                   # Per-provider and per-parsing-module tests
-│   └── test_ui_tabs.py             # UI logic with stubbed Streamlit
+│   ├── test_db_tab.py              # Builder tab UI logic (ingestion, deletion)
+│   ├── test_ui_tabs.py             # Query tab feedback flow with stubbed Streamlit
+│   ├── test_sidebar.py             # Sidebar rendering and model resolution
+│   ├── test_retriever.py           # RAGRetriever coordinator tests
+│   ├── test_hybrid_retriever.py    # Hybrid (BM25 + semantic) retrieval
+│   ├── test_keyword_search.py      # BM25 tokenization and ranking
+│   ├── test_embedding_manager.py   # Embedding function config
+│   ├── test_evaluator.py           # LLM-judge evaluation manager
+│   ├── test_provider_catalog.py    # Provider catalog data and fetch functions
+│   ├── test_parsers_base.py        # Chunk dataclass, BaseParser protocol
+│   ├── test_provider_base.py       # ProviderProtocol, registry resolution
+│   │
+│   └── Per-provider tests:
+│       ├── test_openai_provider.py          (119 lines)
+│       ├── test_anthropic_provider.py       (72 lines)
+│       ├── test_gemini_provider.py          (78 lines)
+│       ├── test_huggingface_provider.py     (89 lines)
+│       ├── test_ollama_provider.py          (85 lines)
+│       └── test_lm_studio_provider.py       (75 lines)
 │
 ├── chroma_db/                      # Persistent ChromaDB storage (auto-created)
+├── ARCHITECTURE.md                 # Architecture diagrams and detailed design docs
 ├── pyproject.toml                  # Dependencies, coverage config, pytest settings
 ├── AGENTS.md                       # Developer guide (SOLID rationale, skills)
 ├── README.md                       # This file
@@ -149,17 +176,20 @@ uv run pytest tests/test_parser.py -v  # single file
 open htmlcov/index.html                # open HTML coverage report
 ```
 
-| Module                      | Coverage |
-| --------------------------- | -------- |
-| `config.py`                 | 100%     |
-| `core/parser.py`            | 100%     |
-| `core/parsers/base.py`      | 100%     |
-| `core/providers/routing.py` | 100%     |
-| `core/vector_store.py`      | 97%      |
-| `config_provider.py`        | 96%      |
-| `parsers/*`                 | 92–100%  |
-| `providers/openai.py`       | 89%      |
-| **TOTAL**                   | **94%**  |
+**Test summary**: 184 tests across 23 files (3071 lines). Core areas covered:
+
+| Module / Area                        | Test File(s)                            |
+| ------------------------------------ | --------------------------------------- |
+| Config & settings                    | `test_config_provider.py`               |
+| LLM response routing                 | `test_llm.py`, `test_llm_routing.py`    |
+| ChromaDB CRUD                        | `test_vector_store.py`                  |
+| File parsing (PDF/TXT/CSV/DOCX)      | `test_parser.py`, `test_parsers_base.py`|
+| Provider implementations             | `test_openai_provider.py`, etc. (6 files)|
+| Provider registry / catalog          | `test_provider_base.py`, `test_provider_catalog.py` |
+| UI tabs & sidebar                    | `test_db_tab.py`, `test_ui_tabs.py`, `test_sidebar.py` |
+| Retrieval & hybrid search            | `test_retriever.py`, `test_hybrid_retriever.py`, `test_keyword_search.py` |
+| Embedding management                 | `test_embedding_manager.py`             |
+| Evaluation framework                 | `test_evaluator.py`                     |
 
 Linting and formatting:
 
@@ -174,9 +204,9 @@ The core layers follow SOLID principles via registry patterns:
 
 - **Parser Registry** (`core/parsers/__init__`): New file formats are added by creating a parser class and decorating it with `@register("ext")`. Zero changes to existing code.
 - **Provider Registry** (`core/providers/__init__`): New LLM backends are registered with `register("prefix-", ProviderClass)`. Providers implement `ProviderProtocol.chat()`.
-- **Strategy Pattern**: The UI components (`builder_tab`, `query_tab`, `sidebar`) delegate to the vector store and LLM dispatcher, keeping Streamlit concerns separate from business logic.
+- **Retrieval Coordination**: `retriever.py` routes between semantic (ChromaDB cosine), keyword (BM25), and hybrid modes; `hybrid_retriever.py` implements reciprocal rank fusion.
 
-See [AGENTS.md](AGENTS.md) for detailed design rationale and extension guides.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed design rationale and extension guides, and [AGENTS.md](AGENTS.md) for developer skills.
 
 ## 🍽️ License
 
