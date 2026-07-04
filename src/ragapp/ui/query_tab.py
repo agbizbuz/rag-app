@@ -82,6 +82,25 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
         return
 
     st.header("Ask Your Documents")
+    # Initialize system prompt in session state if not yet set (populates with default on first load)
+    if "_system_prompt" not in st.session_state:
+        st.session_state["_system_prompt"] = None  # will be populated via ConfigProvider below
+
+    from config_provider import get_config as _get_cfg
+    _cfg = _get_cfg()
+    _default_prompt = _cfg.system_prompt  # reads Settings.DEFAULT → env fallback → hardcoded default
+
+    with st.expander("⚙️ Edit System Prompt", expanded=False):
+        st.text_area(
+            "System prompt",
+            value=st.session_state["_system_prompt"] if st.session_state.get("_system_prompt") else _default_prompt,
+            height=180,
+            key="_prompt_text_area",
+            help="Modify the system prompt used for LLM responses. Saved to session state.",
+        )
+
+    # Sync back to session state so ConfigProvider picks it up
+    st.session_state["_system_prompt"] = st.session_state.get("_prompt_text_area", _default_prompt)
 
     user_query = st.text_input(
         "What would you like to know?",

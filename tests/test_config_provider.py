@@ -144,6 +144,69 @@ class TestConfigProvider:
         assert cfg.db_path == "./chroma_db"
         assert cfg.llm_temperature == 0.2
 
+    def test_system_prompt_returns_default_without_session_key(self):
+        """ConfigProvider.system_prompt returns Settings default when no session override."""
+        from config_provider import ConfigProvider, _MockSettings
+
+        cfg = ConfigProvider(_MockSettings())
+        expected = (
+            "You are a highly capable research assistant. Answer the user's query "
+            "strictly based on the provided context. If the context does not contain "
+            "sufficient information to answer the question, respectfully state that "
+            "the information is not found in the documents. Provide the answer clearly "
+            "and concisely."
+        )
+        assert cfg.system_prompt == expected
+
+    def test_system_prompt_session_override(self):
+        """Session-state override beats Settings default for system_prompt."""
+        from config_provider import ConfigProvider, _MockSettings
+
+        # Stub out session state with a custom prompt value
+        fake_state = {"_system_prompt": "Be concise and answer in one sentence."}
+
+        def mock_get_session_value(self, key: str, default):
+            if key in fake_state and fake_state[key] is not None:
+                return fake_state[key]
+            return default
+
+        real_method = ConfigProvider._get_session_value
+        try:
+            ConfigProvider._get_session_value = mock_get_session_value
+            cfg = ConfigProvider(_MockSettings())
+            assert cfg.system_prompt == "Be concise and answer in one sentence.", (
+                f"Session-state override failed: got {cfg.system_prompt!r}"
+            )
+        finally:
+            ConfigProvider._get_session_value = real_method
+
+    def test_system_prompt_session_none_falls_to_default(self):
+        """None session value falls back to Settings default."""
+        from config_provider import ConfigProvider, _MockSettings
+
+        fake_state = {"_system_prompt": None}  # key present but None should fall through
+
+        def mock_get_session_value(self, key: str, default):
+            if key in fake_state and fake_state[key] is not None:
+                return fake_state[key]
+            return default
+
+        real_method = ConfigProvider._get_session_value
+        try:
+            ConfigProvider._get_session_value = mock_get_session_value
+            cfg = ConfigProvider(_MockSettings())
+            expected = (
+                "You are a highly capable research assistant. Answer the user's query "
+                "strictly based on the provided context. If the context does not contain "
+                "sufficient information to answer the question, respectfully state that "
+                "the information is not found in the documents. Provide the answer clearly "
+                "and concisely."
+            )
+            assert cfg.system_prompt == expected, (
+                f"Expected default when session-state None: got {cfg.system_prompt!r}"
+            )
+        finally:
+            ConfigProvider._get_session_value = real_method
 
 class TestEmbeddingFunction:
     """Tests for core.embedding_function.create_embedding_function."""

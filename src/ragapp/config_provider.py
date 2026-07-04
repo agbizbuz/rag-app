@@ -111,7 +111,8 @@ class ConfigProvider:
             "the question, respectfully state that the information is not found in "
             "the documents. Provide the answer clearly and concisely."
         )
-        return getattr(self._settings, "system_prompt", _default)  # type: ignore[union-attr]
+        val = getattr(self._settings, "system_prompt", _default)  # type: ignore[union-attr]
+        return self._get_session_value("_system_prompt", val)
 
     @property
     def embedding_model(self) -> str:

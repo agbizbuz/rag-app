@@ -71,6 +71,8 @@ class TestQueryTabLogic:
         st.spinner = MagicMock(context_enter=MagicMock(return_value=MagicMock()), context_exit=MagicMock())
         st.header = MagicMock()
         st.info = MagicMock()
+        st.expander = MagicMock()
+        st.text_area = MagicMock(return_value="You are a highly capable research assistant. Answer the user's query strictly based on the provided context. If the context does not contain sufficient information to answer the question, respectfully state that the information is not found in the documents. Provide the answer clearly and concisely.")
         st.session_state = {
             "_selected_provider_index": 0,
             "_selected_model": "gpt-4o-mini",
@@ -118,6 +120,7 @@ class TestQueryTabLogic:
         st.rerun = MagicMock()
         st.markdown = MagicMock()
         st.error = MagicMock()
+        st.text_area = MagicMock(return_value="You are a highly capable research assistant. Answer the user's query strictly based on the provided context. If the context does not contain sufficient information to answer the question, respectfully state that the information is not found in the documents. Provide the answer clearly and concisely.")
         st.session_state = {
             "_selected_provider_index": 0,
             "_selected_model": "gpt-4o-mini",
@@ -183,6 +186,7 @@ class TestQueryTabLogic:
         st.rerun = MagicMock()
         st.markdown = MagicMock()
         st.error = MagicMock()
+        st.text_area = MagicMock(return_value="You are a highly capable research assistant. Answer the user's query strictly based on the provided context. If the context does not contain sufficient information to answer the question, respectfully state that the information is not found in the documents. Provide the answer clearly and concisely.")
         
         # st.feedback returns 1 for thumbs_up
         st.feedback = MagicMock(return_value=1)
@@ -247,6 +251,7 @@ class TestQueryTabLogic:
         st.rerun = MagicMock()
         st.markdown = MagicMock()
         st.error = MagicMock()
+        st.text_area = MagicMock(return_value="You are a highly capable research assistant. Answer the user's query strictly based on the provided context. If the context does not contain sufficient information to answer the question, respectfully state that the information is not found in the documents. Provide the answer clearly and concisely.")
         
         # st.feedback returns 0 for thumbs_down
         st.feedback = MagicMock(return_value=0)
