@@ -340,6 +340,116 @@ class TestProcessFileDOCX:
 
         chunks = process_file(buf)
         assert len(chunks) >= 1, f"Expected at least 1 chunk from large paragraph, got {len(chunks)}"
+    def test_process_docx_table_splits_across_chunks(self):
+        """Oversized table with many rows should split into multiple chunks."""
+        from docx import Document
+
+        doc = Document()
+        big = doc.add_table(rows=0, cols=3)
+        for _ in range(50):
+            big.add_row()
+        i = 0
+        for row in big.rows:
+            for c_idx in range(3):
+                row.cells[c_idx].text = f"R{i}_cell_{c_idx}" + "x" * 40
+            i += 1
+
+        buf = io.BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+        buf.name = "test_split.docx"
+
+        chunks = process_file(buf)
+        assert len(chunks) >= 3, (
+            f"Expected oversize table to split across >= 3 chunks, got {len(chunks)}: "
+            + [ch["text"][:80].replace(chr(10), " ") for ch in chunks]
+        )
+        # Every chunk from a table should carry a `table` metadata key.
+        for chunk in chunks:
+            assert "table" in chunk["metadata"], (
+                f"Missing 'table' metadata on chunk {chunk['text'][:60]}"
+            )
+
+    def test_process_docx_table_empty_cells_render_as_placeholder(self):
+        """Empty cells are rendered as ``(empty)`` placeholders, not bare ``||``."""
+        from docx import Document
+
+        doc = Document()
+        t = doc.add_table(rows=2, cols=3)
+        t.cell(0, 0).text = "A"
+        t.cell(0, 1).text = ""
+        t.cell(0, 2).text = "C"
+        # row 1 is completely empty except for cell B
+
+        buf = io.BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+        buf.name = "test_empty.docx"
+
+        chunks = process_file(buf)
+        assert len(chunks) >= 1, f"No table chunks produced: {chunks}"
+        full_text = "\n".join(ch["text"] for ch in chunks)
+        assert "(empty)" in full_text, (
+            f"Expected '(empty)' placeholder in rendered table text, got:\n{full_text[:400]}"
+        )
+
+    def test_process_docx_table_ragged_separator_keeps_valid_markdown(self):
+        """A ragged-table row's separator uses its own actual cell count so the markdown stays well-formed."""
+        from docx import Document
+        from core.parsers.docx_parser import DocxParser
+
+        doc = Document()
+        t = doc.add_table(rows=3, cols=5)
+        # header has 5 cells; row 2 has only 2 (ragged); row 3 back to 5.
+        for c in range(5):
+            t.cell(0, c).text = f"H{c}"
+        t.cell(1, 0).text = "A"
+        t.cell(1, 1).text = "B"   # only 2 cols! (ragged)
+        for c in range(5):
+            t.cell(2, c).text = f"C{c}"
+
+        buf = io.BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+        buf.name = "test_ragged.docx"
+
+        parser = DocxParser(chunk_size=4096)  # force single-chunk path
+        chunks = parser.parse(buf)
+        assert len(chunks) == 1, (
+            f"Expected one chunk for small ragged table, got {len(chunks)}: "
+            + [ch.text[:80].replace(chr(10), ' ') for ch in chunks]
+        )
+
+        md = chunks[0].text
+        sep_lines = [line for line in md.split("\n") if "---" in line]
+        assert len(sep_lines) == 1, f"Expected exactly one separator; got {sep_lines}"
+        expected_cols = "| " + " | ".join(["---"] * 5) + " |"
+        assert sep_lines[0] == expected_cols, (
+            f"First separator should match header width. Expected:\n{expected_cols}\nGot:\n{sep_lines[0]}"
+        )
+
+    def test_process_docx_small_table_uses_single_chunk(self):
+        """A small table fits cleanly into one chunk — no spurious splitting."""
+        from docx import Document
+
+        doc = Document()
+        t = doc.add_table(rows=3, cols=3)
+        for r_idx in range(3):
+            for c_idx in range(3):
+                t.cell(r_idx, c_idx).text = f"R{r_idx}C{c_idx}_short "
+
+        buf = io.BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+        buf.name = "test_small.docx"
+
+        chunks = process_file(buf)
+        table_chunks = [ch for ch in chunks if "table" in ch["metadata"]]
+        assert len(table_chunks) == 1, (
+            f"Expected exactly one chunk for a small table, got {len(table_chunks)}: {[ch['text'][:80] for ch in table_chunks]}"
+        )
+
+
 
 
 class TestProcessFileUnsupported:
