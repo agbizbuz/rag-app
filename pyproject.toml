@@ -3,11 +3,11 @@ requires = ["setuptools>=42"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-where = ['src']
-include = ['ragapp*']
+where = ['src/ragapp']
+# include = ['ragapp*']
 
 [project]
-name = "rag-app"
+name = "ragapp"
 version = "0.1.0"
 description = "A local persistent RAG web app built with Streamlit and ChromaDB"
 requires-python = ">=3.10"
