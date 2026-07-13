@@ -40,4 +40,3 @@ class HuggingFaceProvider:
             return result
         else:
             raise RuntimeError(f"Unexpected HuggingFace response format: {result}")
-

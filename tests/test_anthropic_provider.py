@@ -28,6 +28,7 @@ class TestAnthropicProvider:
             assert False, "Should have raised KeyMissingError"
         except KME as e:
             assert "ANTHROPIC_API_KEY" in str(e)
+
     def test_chat_success_with_mocked_client(self, monkeypatch):
         """Test chat method body (lines 54-72 of anthropic.py) with mocked Anthropic client."""
         from core.providers import anthropic as anth_mod

@@ -19,6 +19,7 @@ class PdfParser(BaseParser):
         if self._chunk_size is not None:
             return self._chunk_size
         from config_provider import get_config
+
         return get_config().chunk_size
 
     def parse(self, file) -> list[Chunk]:
@@ -46,10 +47,12 @@ class PdfParser(BaseParser):
                 continue
 
             for para_idx, para in enumerate(paragraphs):
-                blocks.append((
-                    para,
-                    {"page": page_idx + 1, "paragraph": para_idx},
-                ))
+                blocks.append(
+                    (
+                        para,
+                        {"page": page_idx + 1, "paragraph": para_idx},
+                    )
+                )
 
         # Phase 2: Merge small blocks / flush at target_chunk_size
         chunks: list[Chunk] = []
@@ -114,13 +117,15 @@ class PdfParser(BaseParser):
                     end = split_at
             segment = text[start:end].strip()
             if segment:
-                chunks.append(Chunk(
-                    text=segment,
-                    metadata={
-                        "source": source_name,
-                        **meta,
-                        "sub_chunk": sub_idx,
-                    },
-                ))
+                chunks.append(
+                    Chunk(
+                        text=segment,
+                        metadata={
+                            "source": source_name,
+                            **meta,
+                            "sub_chunk": sub_idx,
+                        },
+                    )
+                )
                 sub_idx += 1
             start = end

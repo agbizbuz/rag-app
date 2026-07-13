@@ -26,8 +26,6 @@ class TestBaseParser:
     def test_make_id_uniqueness(self):
         ids = set()
         for _ in range(100):
-            c = Chunk(text="", metadata={})
-
             ids.add(BaseParser._make_id())
         assert len(ids) == 100, "Each call should produce a unique ID"
 

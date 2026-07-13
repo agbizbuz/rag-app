@@ -12,22 +12,28 @@ from .routing import _REGISTRY, Protocol, ProviderProtocol, register, resolve_pr
 
 def _register_all():
     from .anthropic import AnthropicProvider  # noqa: TLE001
+
     register("claude-", AnthropicProvider)
 
     from .gemini import GeminiProvider  # noqa: TLE001
+
     register("gemini", GeminiProvider)
 
     from .huggingface import HuggingFaceProvider  # noqa: TLE001
+
     register("hf-", HuggingFaceProvider)
 
     from .lm_studio import LMStudioProvider  # noqa: TLE001
+
     register("lm-studio:", LMStudioProvider)
     register("lmstudio:", LMStudioProvider)  # alias used by provider_catalog UI
 
     from .ollama import OllamaProvider  # noqa: TLE001
+
     register("ollama:", OllamaProvider)
 
     from .openai import OpenAIProvider  # noqa: TLE001
+
     register("", OpenAIProvider)  # Default for gpt-* models
     register("groq:", OpenAIProvider)  # Groq uses same provider but with GROQ_API_KEY
 
@@ -47,4 +53,3 @@ __all__ = [
     "register",
     "resolve_provider",
 ]
-

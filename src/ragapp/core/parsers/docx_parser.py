@@ -15,6 +15,7 @@ class DocxParser(BaseParser):
         if self._chunk_size is not None:
             return self._chunk_size
         from config_provider import get_config
+
         return get_config().chunk_size
 
     def _render_row(self, row) -> tuple[str, int]:
@@ -28,9 +29,7 @@ class DocxParser(BaseParser):
         for cell in row.cells:
             cleaned = self._clean(cell.text)
             cells.append(cleaned if cleaned else "(empty)")
-        last_real = max(
-            (i for i, c in enumerate(cells) if c != "(empty)"), default=-1
-        )
+        last_real = max((i for i, c in enumerate(cells) if c != "(empty)"), default=-1)
         effective = cells[: last_real + 1] if last_real >= 0 else cells
         return ("| " + " | ".join(effective) + " |", len(effective))
 
@@ -56,7 +55,8 @@ class DocxParser(BaseParser):
         header_rt = rendered_rows[0][0]
 
         def _approx_len(rows_acc):
-            if not rows_acc: return 0
+            if not rows_acc:
+                return 0
             max_nc = max(nc for _, nc in rows_acc) or num_cols
             extra = (len(["---"] * max_nc) + 2) if len(rows_acc) > 1 else 0
             return sum(len(rt) for rt, _ in rows_acc) + extra
@@ -132,7 +132,6 @@ class DocxParser(BaseParser):
                 blocks.extend(new_blocks)
                 element_index = next_idx
 
-
         # Chunking / Merging Strategy
         chunks: list[Chunk] = []
         current_texts: list[str] = []
@@ -146,10 +145,7 @@ class DocxParser(BaseParser):
             nonlocal current_texts, current_metadata, current_length
             if current_texts:
                 merged_text = "\n\n".join(current_texts)
-                metadata = {
-                    "source": source_name,
-                    **current_metadata
-                }
+                metadata = {"source": source_name, **current_metadata}
                 chunks.append(Chunk(text=merged_text, metadata=metadata))
                 current_texts = []
                 current_metadata = {}
@@ -161,15 +157,7 @@ class DocxParser(BaseParser):
             # If the block itself is larger than target chunk size, flush current and put it in its own chunk
             if block_len >= target_chunk_size:
                 flush()
-                chunks.append(
-                    Chunk(
-                        text=text,
-                        metadata={
-                            "source": source_name,
-                            **meta
-                        }
-                    )
-                )
+                chunks.append(Chunk(text=text, metadata={"source": source_name, **meta}))
                 continue
 
             # If adding this block exceeds target chunk size, flush first

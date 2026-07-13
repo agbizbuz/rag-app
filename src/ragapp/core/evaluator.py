@@ -147,9 +147,7 @@ class EvaluationManager:
         logs = self._load_logs()
         return [EvaluationRecord.from_dict(d) for d in logs]
 
-    def update_feedback(
-        self, record_id: str, rating: Optional[str], feedback_comment: Optional[str] = None
-    ) -> bool:
+    def update_feedback(self, record_id: str, rating: Optional[str], feedback_comment: Optional[str] = None) -> bool:
         """Update qualitative feedback (rating, comment) on an existing record."""
         logs = self._load_logs()
         updated = False

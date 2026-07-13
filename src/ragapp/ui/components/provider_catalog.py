@@ -10,7 +10,7 @@ from typing import Callable
 @dataclass(frozen=True)
 class ProviderInfo:
     name: str
-    key_env: str | None       # API key env var, or ``None`` for local servers
+    key_env: str | None  # API key env var, or ``None`` for local servers
     model_options: list[str]  # static dropdown options
     discover_models: Callable[[str], list[str]] | None = None  # dynamic discovery
     base_url_key: str | None = None
@@ -52,7 +52,6 @@ PROVIDERS: list[ProviderInfo] = [
 def fetch_ollama_models(base_url: str) -> list[str]:
     """Fetch available models from an Ollama server."""
     import requests
-
     from config_provider import get_config
 
     try:
@@ -66,7 +65,6 @@ def fetch_ollama_models(base_url: str) -> list[str]:
 def fetch_lm_studio_models(base_url: str) -> list[str]:
     """Fetch available models from an LM Studio server."""
     import requests
-
     from config_provider import get_config
 
     try:
@@ -112,4 +110,3 @@ PROVIDERS.append(
         ],
     )
 )
-

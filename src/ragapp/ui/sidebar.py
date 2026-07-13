@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 
 import streamlit as st
-
 from config_provider import ConfigProvider
 from core.vector_store import VectorStore
 from ui.components.provider_catalog import PROVIDERS
@@ -61,8 +60,7 @@ def render_sidebar(vs: VectorStore, config: ConfigProvider) -> str:
         st.header("Configuration")
 
         # Provider selection - dropdown to choose provider category
-        provider_options = [(name, info)
-                            for name, info in _get_sorted_providers()]
+        provider_options = [(name, info) for name, info in _get_sorted_providers()]
 
         if "_selected_provider_index" not in st.session_state:
             st.session_state._selected_provider_index = 0
@@ -71,17 +69,15 @@ def render_sidebar(vs: VectorStore, config: ConfigProvider) -> str:
             "Select Provider",
             [name for name, _ in provider_options],
             index=st.session_state._selected_provider_index,
-            key="_selected_provider_name"
+            key="_selected_provider_name",
         )
 
         # Update index on selection (will persist to next render)
-        selected_idx = next((i for i, (name, _) in enumerate(
-            provider_options) if name == selected_provider_name), 0)
+        selected_idx = next((i for i, (name, _) in enumerate(provider_options) if name == selected_provider_name), 0)
         st.session_state._selected_provider_index = selected_idx
 
         # Find selected provider info
-        selected_provider_info = next(
-            info for name, info in provider_options if name == selected_provider_name)
+        selected_provider_info = next(info for name, info in provider_options if name == selected_provider_name)
 
         # Model selection - shows models for the currently selected provider
         provider_models = _get_provider_models(selected_provider_info)
@@ -92,11 +88,9 @@ def render_sidebar(vs: VectorStore, config: ConfigProvider) -> str:
             if selected_provider_info.discover_models and selected_provider_info.base_url_key:
                 discovered = _resolve_models(selected_provider_info)
                 if discovered:
-                    provider_models = [
-                        f"{selected_provider_name}:{m}" for m in discovered]
+                    provider_models = [f"{selected_provider_name}:{m}" for m in discovered]
                 else:
-                    st.warning(
-                        "⚠️ Server appears offline. Check URL settings.")
+                    st.warning("⚠️ Server appears offline. Check URL settings.")
                     provider_models = []
 
         # Remove duplicates while preserving order
@@ -111,14 +105,14 @@ def render_sidebar(vs: VectorStore, config: ConfigProvider) -> str:
             selected_model = st.selectbox(
                 "Select Model",
                 unique_options,
-                index=next((i for i, model in enumerate(unique_options)
-                            if model == st.session_state.get("_selected_model")), 0),
-                key="_selected_model"
+                index=next(
+                    (i for i, model in enumerate(unique_options) if model == st.session_state.get("_selected_model")), 0
+                ),
+                key="_selected_model",
             )
         else:
             # No models available - show placeholder with guidance
-            st.selectbox("Select Model", [
-                         "⚠️ Add API key or check server"], index=0)
+            st.selectbox("Select Model", ["⚠️ Add API key or check server"], index=0)
             selected_model = None
 
         # Temperature - use default from settings as initial value
@@ -150,7 +144,7 @@ def render_sidebar(vs: VectorStore, config: ConfigProvider) -> str:
                 step=100,
                 key="_chunk_size",
                 help="Target size for document chunks during ingestion. "
-                     "Smaller = more precise retrieval, larger = more context per chunk.",
+                "Smaller = more precise retrieval, larger = more context per chunk.",
             )
 
             # Retrieved Results (n_results)
@@ -192,8 +186,7 @@ def render_sidebar(vs: VectorStore, config: ConfigProvider) -> str:
                 "Embedding Model",
                 value=config.embedding_model,
                 disabled=True,
-                help="⚠️ Set via EMBEDDING_MODEL env var. "
-                     "Changing requires re-indexing all documents.",
+                help="⚠️ Set via EMBEDDING_MODEL env var. Changing requires re-indexing all documents.",
             )
 
         st.divider()
@@ -217,14 +210,14 @@ def render_sidebar(vs: VectorStore, config: ConfigProvider) -> str:
 def render_key_status(info) -> None:
     """Show a key / server health indicator for the selected provider."""
 
-    if hasattr(info, 'key_env') and info.key_env:
+    if hasattr(info, "key_env") and info.key_env:
         has_key = bool(os.environ.get(info.key_env))
         label = f"**{info.name} API Key:**"
         status = "✅" if has_key else "⚠️ Missing"
 
         st.write(f"{label} {status}")
 
-    elif hasattr(info, 'discover_models') and info.discover_models and info.base_url_key:
+    elif hasattr(info, "discover_models") and info.discover_models and info.base_url_key:
         url = os.environ.get(info.base_url_key, "")
         if not url:
             return  # No URL set
@@ -272,5 +265,4 @@ def _quit_session() -> None:
 
     # Trigger a refresh that closes the browser window/tab by executing JS
     body = "<script>window.close();</script>"
-    st.html(
-        f"<script>try{{window.open('about:blank','_self').close()}}catch(e){{}}</script>{body}", height=0, width=0)
+    st.html(f"<script>try{{window.open('about:blank','_self').close()}}catch(e){{}}</script>{body}", height=0, width=0)

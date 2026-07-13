@@ -53,22 +53,22 @@ class KeywordSearcher:
         scores = self._bm25.get_scores(tokenized_query)
 
         # Pair scores with document indices and sort descending
-        scored_indices = sorted(
-            enumerate(scores), key=lambda x: x[1], reverse=True
-        )
+        scored_indices = sorted(enumerate(scores), key=lambda x: x[1], reverse=True)
 
         results: list[dict] = []
         for idx, score in scored_indices[:n_results]:
             if score <= 0:
                 break  # No point returning zero-score documents
             doc = self._documents[idx]
-            results.append({
-                "id": doc["id"],
-                "text": doc["text"],
-                "metadata": doc.get("metadata", {}),
-                # Convert BM25 score to a "distance" (lower = better) for
-                # compatibility with vector store results
-                "distance": 1.0 / (1.0 + score),
-            })
+            results.append(
+                {
+                    "id": doc["id"],
+                    "text": doc["text"],
+                    "metadata": doc.get("metadata", {}),
+                    # Convert BM25 score to a "distance" (lower = better) for
+                    # compatibility with vector store results
+                    "distance": 1.0 / (1.0 + score),
+                }
+            )
 
         return results

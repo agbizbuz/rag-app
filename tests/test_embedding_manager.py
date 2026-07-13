@@ -35,8 +35,5 @@ class TestEmbeddingManager:
 
             ef = manager.get_embedding_function()
             assert ef == mock_inst
-            MockEF.assert_called_once_with(
-                api_key="test-key-123",
-                model_name="text-embedding-3-small"
-            )
+            MockEF.assert_called_once_with(api_key="test-key-123", model_name="text-embedding-3-small")
             assert manager.is_openai

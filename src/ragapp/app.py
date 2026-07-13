@@ -12,18 +12,16 @@ def _get_config() -> ConfigProvider:
     return get_config()
 
 
-st.set_page_config(
-    page_title="Local RAG Assistant", page_icon="\U0001F4DA", layout="wide"
-)
+st.set_page_config(page_title="Local RAG Assistant", page_icon="\U0001f4da", layout="wide")
 
 # Main title banner (restored from pre-refactor version)
 st.title("\U0001f4da Local Research RAG")
-st.caption(
-    "A persistent, local, and secure Question Answering system powered by ChromaDB.")
+st.caption("A persistent, local, and secure Question Answering system powered by ChromaDB.")
 
 # Lazy init components once per session
 if "vector_store" not in st.session_state:
     from core.embedding_manager import EmbeddingManager
+
     _config = get_config()
     st.session_state.embedding_manager = EmbeddingManager(config_provider=_config)
     st.session_state.vector_store = VectorStore(
@@ -33,6 +31,7 @@ if "vector_store" not in st.session_state:
 
 if "retriever" not in st.session_state:
     from core.hybrid_retriever import HybridRetriever
+
     st.session_state.retriever = HybridRetriever(
         vector_store=st.session_state.vector_store,
         config_provider=get_config(),
@@ -42,6 +41,7 @@ if "retriever" not in st.session_state:
 def _main(config: ConfigProvider | None = None) -> None:
     if st.session_state.get("_quit_requested"):
         import sys
+
         sys.exit(0)
 
     vs = st.session_state.vector_store
@@ -55,9 +55,7 @@ def _main(config: ConfigProvider | None = None) -> None:
     selected_model = render_sidebar(vs, cfg) or selected_model
 
     # Tab navigation
-    (
-        tab1, tab2, tab3, tab4
-    ) = st.tabs(
+    (tab1, tab2, tab3, tab4) = st.tabs(
         [
             "\U0001f4dd **Builder**",
             "\u2753 **Query**",
@@ -68,18 +66,22 @@ def _main(config: ConfigProvider | None = None) -> None:
 
     with tab1:
         from ui.builder_tab import render_builder
+
         _ = render_builder(vs)  # noqa: F841
 
     with tab2:
         from ui.query_tab import render_query_tab as _render_query_tab
+
         _render_query_tab(retriever, selected_model)  # noqa: F841
 
     with tab3:
         from ui.evaluation_tab import render_evaluation_tab
+
         render_evaluation_tab()
 
     with tab4:
         from ui.db_tab import render_db_tab as _render_db_tab
+
         _render_db_tab(vs)
 
 

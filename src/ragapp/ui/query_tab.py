@@ -47,9 +47,7 @@ def _build_export_markdown(
         source = res["metadata"].get("source", "N/A")
         page_or_chunk = res["metadata"].get(
             "page",
-            res["metadata"].get(
-                "chunk", res["metadata"].get("paragraph", "N/A")
-            ),
+            res["metadata"].get("chunk", res["metadata"].get("paragraph", "N/A")),
         )
         lines.append(f"### Source {i}")
         lines.append("")
@@ -75,10 +73,9 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
     from core.evaluator import EvaluationManager, EvaluationRecord, LLMJudge
 
     if retriever.vector_store.get_collection_size() == 0:
-        st.warning("\U0001F6A8 Database is empty.")
+        st.warning("\U0001f6a8 Database is empty.")
         st.info("Navigate to the **Builder** tab to ingest your documents first.")
-        st.page_link("https://google.com", label="Google Search",
-                     use_container_width=True)
+        st.page_link("https://google.com", label="Google Search", use_container_width=True)
         return
 
     st.header("Ask Your Documents")
@@ -87,6 +84,7 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
         st.session_state["_system_prompt"] = None  # will be populated via ConfigProvider below
 
     from config_provider import get_config as _get_cfg
+
     _cfg = _get_cfg()
     _default_prompt = _cfg.system_prompt  # reads Settings.DEFAULT → env fallback → hardcoded default
 
@@ -125,8 +123,7 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
             results = retriever.retrieve(user_query, n_results=n_results)
 
             if not results:
-                st.info(
-                    "No relevant documents found in the database matching your query.")
+                st.info("No relevant documents found in the database matching your query.")
                 st.session_state["last_query_result"] = None
                 return
 
@@ -137,7 +134,7 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
 
             # 3. Create evaluation record
             chunk_distances = [res.get("distance", 0.0) for res in results if isinstance(res, dict)]
-            
+
             record = EvaluationRecord(
                 query=user_query,
                 answer=answer,
@@ -145,7 +142,7 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
                 latency=latency,
                 retrieval_mode=st.session_state.get("_retrieval_mode", "hybrid"),
                 num_chunks=len(results),
-                chunk_distances=chunk_distances
+                chunk_distances=chunk_distances,
             )
             eval_manager.add_record(record)
 
@@ -178,7 +175,7 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
         relevance_score = res_data.get("relevance_score")
         relevance_reason = res_data.get("relevance_reason")
 
-        st.subheader("\U0001F916 AI Response")
+        st.subheader("\U0001f916 AI Response")
         st.write(answer)
 
         # Quantitative Metrics Row
@@ -196,7 +193,7 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
 
         with f_col1:
             st.markdown("##### 👍 Qualitative Feedback")
-            
+
             # Use streamlit feedback if available
             if hasattr(st, "feedback"):
                 # Use key specific to this record_id so it resets on new queries
@@ -216,7 +213,9 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
                         eval_manager.update_feedback(record_id, rating="thumbs_down")
                         st.toast("Feedback recorded.")
 
-            comment_val = st.text_input("Feedback Comment", placeholder="Enter comments or corrections here...", key=f"comment_{record_id}")
+            comment_val = st.text_input(
+                "Feedback Comment", placeholder="Enter comments or corrections here...", key=f"comment_{record_id}"
+            )
             if st.button("Save Comment", key=f"btn_comment_{record_id}"):
                 eval_manager.update_feedback(record_id, rating=None, feedback_comment=comment_val)
                 st.toast("Comment saved!")
@@ -242,7 +241,7 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
                                 faithfulness_score=eval_res["faithfulness_score"],
                                 faithfulness_reason=eval_res["faithfulness_reason"],
                                 relevance_score=eval_res["relevance_score"],
-                                relevance_reason=eval_res["relevance_reason"]
+                                relevance_reason=eval_res["relevance_reason"],
                             )
                             # Update local session state
                             res_data["faithfulness_score"] = eval_res["faithfulness_score"]
@@ -252,9 +251,7 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
                             st.rerun()
 
         # 4. Export to Markdown
-        md_content = _build_export_markdown(
-            user_query, answer, llm_model, results
-        )
+        md_content = _build_export_markdown(user_query, answer, llm_model, results)
         filename = f"{_safe_filename(user_query)}.md"
         st.download_button(
             label="📥 Export Response to Markdown",
@@ -264,15 +261,12 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
         )
 
         st.divider()
-        st.subheader("\U0001F4D1 Relevant Context Retrieved")
+        st.subheader("\U0001f4d1 Relevant Context Retrieved")
         for i, res in enumerate(results):
-            with st.expander(f"\U0001F4C4 Document Source {i + 1}"):
+            with st.expander(f"\U0001f4c4 Document Source {i + 1}"):
                 st.write(res["text"])
                 source = res["metadata"].get("source", "N/A")
-                page_or_chunk = (
-                    res["metadata"].get("page",
-                                        res["metadata"].get("chunk",
-                                                            res["metadata"].get("paragraph", "N/A")))
+                page_or_chunk = res["metadata"].get(
+                    "page", res["metadata"].get("chunk", res["metadata"].get("paragraph", "N/A"))
                 )
-                st.caption(
-                    f"Source: {source} | Page/Chunk: {page_or_chunk} | Distance: {res.get('distance', 0.0):.4f}")
+                st.caption(f"Source: {source} | Page/Chunk: {page_or_chunk} | Distance: {res.get('distance', 0.0):.4f}")

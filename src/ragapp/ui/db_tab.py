@@ -31,23 +31,22 @@ def render_db_tab(vs) -> None:  # noqa: PLR0912
 
     # Document inventory table
     if doc_count == 0:
-        st.info(
-            "The database is empty. "
-            "Use the **Builder** tab to ingest documents."
-        )
+        st.info("The database is empty. Use the **Builder** tab to ingest documents.")
     else:
         if not files:
             st.info("No indexed files found.")
         else:
             rows: list[dict] = []
             for f in files:
-                rows.append({
-                    "File": f["source"],
-                    "Type": f["type"],
-                    "Chunks": f["chunk_count"],
-                    "Pages/Range": f["page_range"],
-                    "Preview": f["preview"],
-                })
+                rows.append(
+                    {
+                        "File": f["source"],
+                        "Type": f["type"],
+                        "Chunks": f["chunk_count"],
+                        "Pages/Range": f["page_range"],
+                        "Preview": f["preview"],
+                    }
+                )
             df = pd.DataFrame(rows)
             st.dataframe(df, use_container_width=True, hide_index=True)
     st.write("---")
@@ -59,9 +58,7 @@ def render_db_tab(vs) -> None:  # noqa: PLR0912
         st.warning("This will permanently delete all indexed documents.")
         _, btn_col, _ = st.columns([3, 1, 3])
         with btn_col:
-            if st.button(
-                "Confirm Delete", type="primary", use_container_width=True
-            ):
+            if st.button("Confirm Delete", type="primary", use_container_width=True):
                 vs.delete_collection()
                 st.session_state["vector_store"]._collection = None  # noqa: SLF001
                 st.session_state["confirm_delete"] = False

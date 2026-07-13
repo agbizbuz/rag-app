@@ -55,6 +55,7 @@ class ConfigProvider:
         """Safely fetch a value from Streamlit's session state if running."""
         try:
             import streamlit as st
+
             if st.runtime.exists() and key in st.session_state:
                 val = st.session_state[key]
                 if val is not None:

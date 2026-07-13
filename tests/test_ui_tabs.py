@@ -14,6 +14,15 @@ def _unstub_streamlit():
         del sys.modules["ui.query_tab"]
 
 
+DEFAULT_SYSTEM_PROMPT = (
+    "You are a highly capable research assistant. "
+    "Answer the user's query strictly based on the provided context. "
+    "If the context does not contain sufficient information to answer the question, "
+    "respectfully state that the information is not found in the documents. "
+    "Provide the answer clearly and concisely."
+)
+
+
 class TestBuilderTab:
     """Tests for render_builder function."""
 
@@ -72,7 +81,7 @@ class TestQueryTabLogic:
         st.header = MagicMock()
         st.info = MagicMock()
         st.expander = MagicMock()
-        st.text_area = MagicMock(return_value="You are a highly capable research assistant. Answer the user's query strictly based on the provided context. If the context does not contain sufficient information to answer the question, respectfully state that the information is not found in the documents. Provide the answer clearly and concisely.")
+        st.text_area = MagicMock(return_value=DEFAULT_SYSTEM_PROMPT)
         st.session_state = {
             "_selected_provider_index": 0,
             "_selected_model": "gpt-4o-mini",
@@ -89,7 +98,7 @@ class TestQueryTabLogic:
     @patch("core.evaluator.EvaluationRecord")
     def test_context_retrieved(self, mock_record_cls, mock_manager_cls):
         _unstub_streamlit()
-        
+
         mock_record = MagicMock()
         mock_record.avg_distance = 0.0
         mock_record.record_id = "test-id"
@@ -120,7 +129,7 @@ class TestQueryTabLogic:
         st.rerun = MagicMock()
         st.markdown = MagicMock()
         st.error = MagicMock()
-        st.text_area = MagicMock(return_value="You are a highly capable research assistant. Answer the user's query strictly based on the provided context. If the context does not contain sufficient information to answer the question, respectfully state that the information is not found in the documents. Provide the answer clearly and concisely.")
+        st.text_area = MagicMock(return_value=DEFAULT_SYSTEM_PROMPT)
         st.session_state = {
             "_selected_provider_index": 0,
             "_selected_model": "gpt-4o-mini",
@@ -134,7 +143,7 @@ class TestQueryTabLogic:
                 "avg_distance": 0.0,
                 "num_chunks": 1,
                 "results": mock_results,
-            }
+            },
         }
         sys.modules["streamlit"] = st
 
@@ -152,7 +161,7 @@ class TestQueryTabLogic:
     @patch("core.evaluator.EvaluationRecord")
     def test_feedback_thumbs_up(self, mock_record_cls, mock_manager_cls):
         _unstub_streamlit()
-        
+
         mock_record = MagicMock()
         mock_record.avg_distance = 0.0
         mock_record.record_id = "test-id"
@@ -186,11 +195,11 @@ class TestQueryTabLogic:
         st.rerun = MagicMock()
         st.markdown = MagicMock()
         st.error = MagicMock()
-        st.text_area = MagicMock(return_value="You are a highly capable research assistant. Answer the user's query strictly based on the provided context. If the context does not contain sufficient information to answer the question, respectfully state that the information is not found in the documents. Provide the answer clearly and concisely.")
-        
+        st.text_area = MagicMock(return_value=DEFAULT_SYSTEM_PROMPT)
+
         # st.feedback returns 1 for thumbs_up
         st.feedback = MagicMock(return_value=1)
-        
+
         st.session_state = {
             "_selected_provider_index": 0,
             "_selected_model": "gpt-4o-mini",
@@ -204,11 +213,12 @@ class TestQueryTabLogic:
                 "avg_distance": 0.0,
                 "num_chunks": 1,
                 "results": mock_results,
-            }
+            },
         }
         sys.modules["streamlit"] = st
 
         from ui.query_tab import render_query_tab
+
         render_query_tab(mock_retriever, "gpt-4o-mini")
 
         mock_eval_manager.update_feedback.assert_any_call("test-id", rating="thumbs_up")
@@ -217,7 +227,7 @@ class TestQueryTabLogic:
     @patch("core.evaluator.EvaluationRecord")
     def test_feedback_thumbs_down(self, mock_record_cls, mock_manager_cls):
         _unstub_streamlit()
-        
+
         mock_record = MagicMock()
         mock_record.avg_distance = 0.0
         mock_record.record_id = "test-id"
@@ -251,11 +261,11 @@ class TestQueryTabLogic:
         st.rerun = MagicMock()
         st.markdown = MagicMock()
         st.error = MagicMock()
-        st.text_area = MagicMock(return_value="You are a highly capable research assistant. Answer the user's query strictly based on the provided context. If the context does not contain sufficient information to answer the question, respectfully state that the information is not found in the documents. Provide the answer clearly and concisely.")
-        
+        st.text_area = MagicMock(return_value=DEFAULT_SYSTEM_PROMPT)
+
         # st.feedback returns 0 for thumbs_down
         st.feedback = MagicMock(return_value=0)
-        
+
         st.session_state = {
             "_selected_provider_index": 0,
             "_selected_model": "gpt-4o-mini",
@@ -269,11 +279,12 @@ class TestQueryTabLogic:
                 "avg_distance": 0.0,
                 "num_chunks": 1,
                 "results": mock_results,
-            }
+            },
         }
         sys.modules["streamlit"] = st
 
         from ui.query_tab import render_query_tab
+
         render_query_tab(mock_retriever, "gpt-4o-mini")
 
         mock_eval_manager.update_feedback.assert_any_call("test-id", rating="thumbs_down")

@@ -31,6 +31,7 @@ def _get_anthropic_client_class():
             return result
 
     from anthropic import Anthropic
+
     return Anthropic
 
 
@@ -70,5 +71,3 @@ class AnthropicProvider:
         resp = client.messages.create(**kwargs_dict)
         content_block = resp.content[0]
         return getattr(content_block, "text", None) or ""
-
-

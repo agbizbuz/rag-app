@@ -33,6 +33,7 @@ def _get_openai_client():
             return result
 
     from openai import OpenAI as OAI
+
     return OAI
 
 

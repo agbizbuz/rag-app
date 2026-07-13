@@ -139,14 +139,16 @@ class VectorStore:
         for i in range(len(results["ids"])):
             query_id = results["ids"][i]
             for j, doc_id in enumerate(query_id):
-                all_results.append({
-                    "id": doc_id,
-                    "text": results["documents"][i][j],  # type: ignore[index]
-                    # type: ignore[index]
-                    "metadata": results["metadatas"][i][j] if results["metadatas"] else {},
-                    # type: ignore[index]
-                    "distance": results["distances"][i][j],
-                })
+                all_results.append(
+                    {
+                        "id": doc_id,
+                        "text": results["documents"][i][j],  # type: ignore[index]
+                        # type: ignore[index]
+                        "metadata": results["metadatas"][i][j] if results["metadatas"] else {},
+                        # type: ignore[index]
+                        "distance": results["distances"][i][j],
+                    }
+                )
 
         return all_results
 
@@ -169,12 +171,15 @@ class VectorStore:
 
         documents: list[dict] = []
         for i, doc_id in enumerate(result["ids"]):
-            documents.append({
-                "id": doc_id,
-                "text": result["documents"][i] if result["documents"] else "",  # type: ignore[index]
-                "metadata": result["metadatas"][i] if result["metadatas"] else {},  # type: ignore[index]
-            })
+            documents.append(
+                {
+                    "id": doc_id,
+                    "text": result["documents"][i] if result["documents"] else "",  # type: ignore[index]
+                    "metadata": result["metadatas"][i] if result["metadatas"] else {},  # type: ignore[index]
+                }
+            )
         return documents
+
     def get_all_files(self) -> list[dict]:
         """Return all indexed files grouped by source.
 
@@ -205,6 +210,7 @@ class VectorStore:
             docx_paras: list[int] = []
             for c in chunks:
                 meta = c["meta"]
+
                 # Guard against non-integer metadata values (e.g. list, str) from ChromaDB
                 def _int_key(k: str) -> int | None:
                     v = meta.get(k)
@@ -227,7 +233,6 @@ class VectorStore:
                     type_labels.add("TXT")
                     txt_chunks.append(chunk)
 
-
             # Single dominant type label
             if len(type_labels) == 1:
                 type_label = next(iter(type_labels))
@@ -247,13 +252,15 @@ class VectorStore:
             # Preview from first chunk of this file
             preview = (chunks[0]["text"] or "").strip()[:80]
 
-            files.append({
-                "source": source,
-                "type": type_label,
-                "chunk_count": chunk_count,
-                "page_range": page_range,
-                "preview": preview,
-            })
+            files.append(
+                {
+                    "source": source,
+                    "type": type_label,
+                    "chunk_count": chunk_count,
+                    "page_range": page_range,
+                    "preview": preview,
+                }
+            )
 
         return files
 

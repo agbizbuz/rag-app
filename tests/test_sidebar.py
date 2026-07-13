@@ -106,9 +106,7 @@ class TestCheckServerHealth:
         mock_result.json.return_value = {"models": [{"name": "llama3"}]}
 
         with patch("requests.get", return_value=mock_result):
-            result = _check_server_health(
-                "http://localhost:11434", fetch_ollama_models
-            )
+            result = _check_server_health("http://localhost:11434", fetch_ollama_models)
             assert result is True
 
 
@@ -148,7 +146,7 @@ class TestRenderSidebar:
 
     def test_returns_model_string(self):
         _unstub_streamlit()
-        st = _make_fake_streamlit()
+        _make_fake_streamlit()
 
         from config_provider import ConfigProvider
         from core.vector_store import VectorStore

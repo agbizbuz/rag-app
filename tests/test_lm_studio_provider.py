@@ -23,9 +23,7 @@ class TestLMStudioProvider:
         mock_response = MagicMock()
         mock_response.choices = [MagicMock(message=MagicMock(content="LM Studio reply"))]
 
-        with patch(
-            "core.providers.lm_studio._get_openai_client"
-        ) as MockGetClient:
+        with patch("core.providers.lm_studio._get_openai_client") as MockGetClient:
             mock_client_class = MagicMock()
             mock_instance = MagicMock()
             mock_instance.chat.completions.create.return_value = mock_response
@@ -47,9 +45,7 @@ class TestLMStudioProvider:
         mock_response = MagicMock()
         mock_response.choices = [MagicMock(message=MagicMock(content="OK"))]
 
-        with patch(
-            "core.providers.lm_studio._get_openai_client"
-        ) as MockGetClient:
+        with patch("core.providers.lm_studio._get_openai_client") as MockGetClient:
             mock_client_class = MagicMock()
             mock_instance = MagicMock()
             mock_instance.chat.completions.create.return_value = mock_response
@@ -72,4 +68,5 @@ class TestLMStudioGetClient:
 
         c1 = _get_openai_client()
         c2 = _get_openai_client()
+        assert c1 is c2
         assert hasattr(_get_openai_client, "_cached")

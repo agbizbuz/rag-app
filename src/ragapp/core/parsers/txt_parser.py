@@ -15,6 +15,7 @@ class TxtParser(BaseParser):
         if self._chunk_size is not None:
             return self._chunk_size
         from config_provider import get_config
+
         return get_config().chunk_size
 
     def parse(self, file) -> list[Chunk]:

@@ -29,9 +29,7 @@ class GeminiProvider:
             {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
             {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
         ]
-        model_obj = genai.GenerativeModel(
-            model_name=self._model, safety_settings=safety_settings
-        )
+        model_obj = genai.GenerativeModel(model_name=self._model, safety_settings=safety_settings)
         combined = "\n\n".join(m.content for m in messages if m.role != "system")
         response = model_obj.generate_content(combined)
         return response.text

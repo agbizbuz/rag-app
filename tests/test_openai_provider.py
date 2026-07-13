@@ -28,9 +28,7 @@ class TestOpenAIProvider:
         mock_response = MagicMock()
         mock_response.choices = [MagicMock(message=MagicMock(content="Hello world"))]
 
-        with patch(
-            "core.providers.openai._get_openai_client"
-        ) as MockGetClient:
+        with patch("core.providers.openai._get_openai_client") as MockGetClient:
             mock_client = MagicMock()
             mock_client.chat.completions.create.return_value = mock_response
             MockGetClient.return_value = MagicMock(return_value=mock_client)
@@ -51,9 +49,7 @@ class TestOpenAIProvider:
         mock_response = MagicMock()
         mock_response.choices = [MagicMock(message=MagicMock(content=None))]
 
-        with patch(
-            "core.providers.openai._get_openai_client"
-        ) as MockGetClient:
+        with patch("core.providers.openai._get_openai_client") as MockGetClient:
             mock_client = MagicMock()
             mock_client.chat.completions.create.return_value = mock_response
             MockGetClient.return_value = MagicMock(return_value=mock_client)
@@ -85,9 +81,7 @@ class TestOpenAIProvider:
         mock_response = MagicMock()
         mock_response.choices = [MagicMock(message=MagicMock(content="Groq reply"))]
 
-        with patch(
-            "core.providers.openai._get_openai_client"
-        ) as MockGetClient:
+        with patch("core.providers.openai._get_openai_client") as MockGetClient:
             mock_client = MagicMock()
             mock_client.chat.completions.create.return_value = mock_response
             MockGetClient.return_value = MagicMock(return_value=mock_client)

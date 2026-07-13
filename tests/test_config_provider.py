@@ -1,8 +1,6 @@
 """Tests for src/ragapp/config_provider.py and config."""
 
 
-
-
 def _set_all_keys(monkeypatch):
     """Set all known API keys."""
     monkeypatch.setenv("OPENAI_API_KEY", "sk-openai-123")
@@ -202,11 +200,10 @@ class TestConfigProvider:
                 "the information is not found in the documents. Provide the answer clearly "
                 "and concisely."
             )
-            assert cfg.system_prompt == expected, (
-                f"Expected default when session-state None: got {cfg.system_prompt!r}"
-            )
+            assert cfg.system_prompt == expected, f"Expected default when session-state None: got {cfg.system_prompt!r}"
         finally:
             ConfigProvider._get_session_value = real_method
+
 
 class TestEmbeddingFunction:
     """Tests for core.embedding_function.create_embedding_function."""
@@ -222,14 +219,10 @@ class TestEmbeddingFunction:
         monkeypatch.setenv("OPENAI_API_KEY", "sk-test-key")
         from unittest.mock import patch
 
-        with patch(
-            "chromadb.utils.embedding_functions.OpenAIEmbeddingFunction"
-        ) as MockEF:
+        with patch("chromadb.utils.embedding_functions.OpenAIEmbeddingFunction") as MockEF:
             MockEF.return_value = "mock_ef"
             from core.embedding_function import create_embedding_function
 
             result = create_embedding_function()
             assert result == "mock_ef"
-            MockEF.assert_called_once_with(
-                api_key="sk-test-key", model_name="text-embedding-3-small"
-            )
+            MockEF.assert_called_once_with(api_key="sk-test-key", model_name="text-embedding-3-small")

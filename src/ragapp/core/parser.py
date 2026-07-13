@@ -36,6 +36,7 @@ def process_file(file) -> list[dict]:
         instance = parser_cls()
     else:
         from config_provider import get_config
+
         instance = parser_cls(chunk_size=get_config().chunk_size)
     raw_chunks: list[Chunk] = instance.parse(file)
 

@@ -86,6 +86,8 @@ class TestProcessFileTXT:
         for chunk in chunks:
             assert chunk["metadata"]["source"] == "test.txt", f"Source mismatch: {chunk['metadata']['source']}"
             assert "chunk" in chunk["metadata"], f"Chunk metadata missing 'chunk': {chunk['metadata']}"
+
+
 class TestProcessFileTXTWordSplit:
     """Tests for TXT parser word-boundary chunking (lines 20-22 of txt_parser)."""
 
@@ -103,7 +105,7 @@ class TestProcessFileTXTWordSplit:
         for chunk in chunks:
             text = chunk["text"]
             last_token = text.split(" ")[-1] if " " in text else text
-            assert last_token == text[-len(last_token):], f"Trailing space issue: {repr(text[-20:])}"
+            assert last_token == text[-len(last_token) :], f"Trailing space issue: {repr(text[-20:])}"
 
     def test_txt_under_threshold(self):
         """Content under 1000 chars should produce exactly 1 chunk."""
@@ -135,6 +137,7 @@ class TestProcessFilePDF:
         for chunk in chunks:
             assert chunk["metadata"]["source"] == "test.pdf", f"Source mismatch: {chunk['metadata']['source']}"
             assert "page" in chunk["metadata"], f"PDF metadata missing 'page': {chunk['metadata']}"
+
     def test_process_pdf_multi_paragraph_splits_into_chunks(self):
         """Test PDF page with extractable text containing newlines (covers paragraph splitting)."""
         from unittest.mock import MagicMock, patch
@@ -287,6 +290,7 @@ class TestProcessFileDOCX:
         for chunk in chunks:
             assert chunk["metadata"]["source"] == "test.docx", f"Source mismatch: {chunk['metadata']['source']}"
             assert "paragraph" in chunk["metadata"], f"DOCX metadata missing 'paragraph': {chunk['metadata']}"
+
     def test_process_docx_with_table(self):
         """Test DOCX table content generates markdown (lines 43-60 of docx_parser)."""
         from docx import Document
@@ -340,6 +344,7 @@ class TestProcessFileDOCX:
 
         chunks = process_file(buf)
         assert len(chunks) >= 1, f"Expected at least 1 chunk from large paragraph, got {len(chunks)}"
+
     def test_process_docx_table_splits_across_chunks(self):
         """Oversized table with many rows should split into multiple chunks."""
         from docx import Document
@@ -360,15 +365,12 @@ class TestProcessFileDOCX:
         buf.name = "test_split.docx"
 
         chunks = process_file(buf)
-        assert len(chunks) >= 3, (
-            f"Expected oversize table to split across >= 3 chunks, got {len(chunks)}: "
-            + [ch["text"][:80].replace(chr(10), " ") for ch in chunks]
-        )
+        assert len(chunks) >= 3, f"Expected oversize table to split across >= 3 chunks, got {len(chunks)}: " + [
+            ch["text"][:80].replace(chr(10), " ") for ch in chunks
+        ]
         # Every chunk from a table should carry a `table` metadata key.
         for chunk in chunks:
-            assert "table" in chunk["metadata"], (
-                f"Missing 'table' metadata on chunk {chunk['text'][:60]}"
-            )
+            assert "table" in chunk["metadata"], f"Missing 'table' metadata on chunk {chunk['text'][:60]}"
 
     def test_process_docx_table_empty_cells_render_as_placeholder(self):
         """Empty cells are rendered as ``(empty)`` placeholders, not bare ``||``."""
@@ -389,14 +391,12 @@ class TestProcessFileDOCX:
         chunks = process_file(buf)
         assert len(chunks) >= 1, f"No table chunks produced: {chunks}"
         full_text = "\n".join(ch["text"] for ch in chunks)
-        assert "(empty)" in full_text, (
-            f"Expected '(empty)' placeholder in rendered table text, got:\n{full_text[:400]}"
-        )
+        assert "(empty)" in full_text, f"Expected '(empty)' placeholder in rendered table text, got:\n{full_text[:400]}"
 
     def test_process_docx_table_ragged_separator_keeps_valid_markdown(self):
         """A ragged-table row's separator uses its own actual cell count so the markdown stays well-formed."""
-        from docx import Document
         from core.parsers.docx_parser import DocxParser
+        from docx import Document
 
         doc = Document()
         t = doc.add_table(rows=3, cols=5)
@@ -404,7 +404,7 @@ class TestProcessFileDOCX:
         for c in range(5):
             t.cell(0, c).text = f"H{c}"
         t.cell(1, 0).text = "A"
-        t.cell(1, 1).text = "B"   # only 2 cols! (ragged)
+        t.cell(1, 1).text = "B"  # only 2 cols! (ragged)
         for c in range(5):
             t.cell(2, c).text = f"C{c}"
 
@@ -415,10 +415,9 @@ class TestProcessFileDOCX:
 
         parser = DocxParser(chunk_size=4096)  # force single-chunk path
         chunks = parser.parse(buf)
-        assert len(chunks) == 1, (
-            f"Expected one chunk for small ragged table, got {len(chunks)}: "
-            + [ch.text[:80].replace(chr(10), ' ') for ch in chunks]
-        )
+        assert len(chunks) == 1, f"Expected one chunk for small ragged table, got {len(chunks)}: " + [
+            ch.text[:80].replace(chr(10), " ") for ch in chunks
+        ]
 
         md = chunks[0].text
         sep_lines = [line for line in md.split("\n") if "---" in line]
@@ -448,8 +447,6 @@ class TestProcessFileDOCX:
         assert len(table_chunks) == 1, (
             f"Expected exactly one chunk for a small table, got {len(table_chunks)}: {[ch['text'][:80] for ch in table_chunks]}"
         )
-
-
 
 
 class TestProcessFileUnsupported:

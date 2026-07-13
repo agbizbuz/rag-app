@@ -6,7 +6,6 @@ import os
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from config_provider import ConfigProvider
 from core.evaluator import EvaluationManager, EvaluationRecord, LLMJudge
 
@@ -109,9 +108,7 @@ def test_evaluation_manager_lifecycle(mock_config, temp_log_path):
     assert records[0].record_id == record.record_id
 
     # Update feedback
-    success = manager.update_feedback(
-        record_id=record.record_id, rating="thumbs_down", feedback_comment="wrong"
-    )
+    success = manager.update_feedback(record_id=record.record_id, rating="thumbs_down", feedback_comment="wrong")
     assert success is True
 
     records = manager.get_records()

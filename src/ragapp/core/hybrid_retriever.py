@@ -46,13 +46,11 @@ class HybridRetriever(RAGRetriever):
         # Hybrid mode: get candidates from both, fuse them, and take top n_res
         # Retrieve slightly more candidates from each to ensure overlap and better reranking
         candidate_count = max(n_res * 2, 10)
-        
+
         semantic_results = super().retrieve(query, n_results=candidate_count)
         keyword_results = searcher.search(query, n_results=candidate_count)
 
-        fused = self._reciprocal_rank_fusion(
-            semantic_results, keyword_results, k=self._rrf_k
-        )
+        fused = self._reciprocal_rank_fusion(semantic_results, keyword_results, k=self._rrf_k)
         return fused[:n_res]
 
     @staticmethod
@@ -83,11 +81,13 @@ class HybridRetriever(RAGRetriever):
         results = []
         for doc_id in sorted_ids:
             doc = docs_map[doc_id]
-            results.append({
-                "id": doc_id,
-                "text": doc["text"],
-                "metadata": doc.get("metadata", {}),
-                "distance": 1.0 / (1.0 + scores[doc_id]),
-            })
+            results.append(
+                {
+                    "id": doc_id,
+                    "text": doc["text"],
+                    "metadata": doc.get("metadata", {}),
+                    "distance": 1.0 / (1.0 + scores[doc_id]),
+                }
+            )
 
         return results

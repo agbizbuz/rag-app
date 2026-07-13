@@ -55,6 +55,7 @@ class TestProviderRouting:
     def test_unsupported_model(self):
         """Test that unsupported model IDs fall back to default OpenAI provider."""
         from core.providers.routing import _REGISTRY
+
         p = _REGISTRY.resolve_provider("gpt-4o-mini")
         assert p is not None
 
@@ -71,7 +72,7 @@ class TestProviderRouting:
         """Test Claude model routing to Anthropic provider."""
         self._setup_key(monkeypatch, "ANTHROPIC_API_KEY", "test-key")
         from core.providers.routing import _REGISTRY
-        
+
         p = _REGISTRY.resolve_provider("claude-3-haiku-20240307")
         # Should resolve to AnthropicProvider (or at least a valid provider)
         assert p is not None
@@ -81,8 +82,6 @@ class TestProviderRouting:
         self._setup_key(monkeypatch, "GOOGLE_API_KEY", "test-key")
         from core.providers.gemini import GeminiProvider
         from core.providers.routing import _REGISTRY
-        
+
         p = _REGISTRY.resolve_provider("gemini-pro")
         assert p == GeminiProvider
-
-

@@ -191,6 +191,7 @@ class TestVectorStore:
             elif f["source"] == "i.txt":
                 assert f["type"] == "TXT"
                 assert f["page_range"] == "Chunk 2-2"
+
     def test_get_all_files_mixed_type(self):
         vs, _, mock_collection = self._make_vs()
         # Edge case: a weird source with mixed metadata types
@@ -205,6 +206,7 @@ class TestVectorStore:
         files = vs.get_all_files()
         assert len(files) == 1
         assert files[0]["type"] == "Mixed"
+
     def test_get_all_files_single_file(self):
         vs, _, mock_collection = self._make_vs()
         mock_collection.get.return_value = {

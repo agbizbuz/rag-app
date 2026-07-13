@@ -36,6 +36,7 @@ def get_llm_response(
         LLM-generated text or error message prefixed with ⚠️.
     """
     from config_provider import get_config as _get_cfg
+
     cfg = config_provider or _get_cfg()
     temperature = cfg.llm_temperature  # type: ignore[union-attr]
     max_tokens = cfg.llm_max_tokens  # type: ignore[union-attr]
@@ -62,8 +63,7 @@ def get_llm_response(
 
     # Uniform instantiation — every provider uses the same constructor contract
     try:
-        instance = provider_class(
-            model=llm_model, temperature=temperature, max_tokens=max_tokens)
+        instance = provider_class(model=llm_model, temperature=temperature, max_tokens=max_tokens)
         return instance.chat(messages)
     except KME as exc:
         return f"\u26a0\ufe0f Error: {exc}"

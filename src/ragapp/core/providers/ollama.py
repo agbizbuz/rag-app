@@ -26,6 +26,7 @@ def _get_openai_client():
             return result
 
     from openai import OpenAI as OAI
+
     _get_openai_client._cached = OAI  # type: ignore[attr-defined]
     return OAI
 
@@ -34,12 +35,12 @@ class OllamaProvider:
     name = "Ollama"
 
     def __init__(self, model: str, temperature=0.2, max_tokens=1024) -> None:
-        self._model = strip_pattern.sub('', model)
+        self._model = strip_pattern.sub("", model)
         base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
         if not base_url.endswith("/v1"):
             base_url = base_url + "/v1"
         self._base_url = base_url
-        
+
     def chat(self, messages, temperature=0.0):  # noqa: ANN001
         OAI = _get_openai_client()
         client = OAI(api_key="ollama", base_url=self._base_url)

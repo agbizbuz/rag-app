@@ -54,7 +54,9 @@ class TestHybridRetriever:
 
         with patch("core.hybrid_retriever.KeywordSearcher") as MockSearcher:
             mock_instance = MagicMock()
-            mock_instance.search.return_value = [{"id": "doc1", "text": "apple banana", "metadata": {}, "distance": 0.5}]
+            mock_instance.search.return_value = [
+                {"id": "doc1", "text": "apple banana", "metadata": {}, "distance": 0.5}
+            ]
             MockSearcher.return_value = mock_instance
 
             results = retriever.retrieve("apple")

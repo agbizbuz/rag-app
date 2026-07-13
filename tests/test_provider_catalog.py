@@ -131,8 +131,10 @@ class TestOllamaBaseURL:
             from importlib import reload
 
             import ui.components.provider_catalog as pc
+
             reload(pc)
             assert pc.OLLAMA_BASE_URL is None
+
 
 class TestProviderStaticOptions:
     """Tests for static provider options (Gemini uses static)."""
