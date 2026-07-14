@@ -12,16 +12,6 @@ logger = logging.getLogger(__name__)
 class PdfParser(BaseParser):
     supported_extensions = ("pdf",)
 
-    def __init__(self, chunk_size: int | None = None) -> None:
-        self._chunk_size = chunk_size
-
-    def _get_chunk_size(self) -> int:
-        if self._chunk_size is not None:
-            return self._chunk_size
-        from config_provider import get_config
-
-        return get_config().chunk_size
-
     def parse(self, file) -> list[Chunk]:
         from pypdf import PdfReader
 
@@ -32,7 +22,7 @@ class PdfParser(BaseParser):
             return []
 
         source_name = getattr(file, "name", "")
-        target_chunk_size = self._get_chunk_size()
+        target_chunk_size = self.chunk_size
 
         # Phase 1: Extract blocks as (text, metadata) tuples
         blocks: list[tuple[str, dict]] = []

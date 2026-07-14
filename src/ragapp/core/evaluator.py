@@ -8,13 +8,16 @@ Follows SOLID design principles:
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from config_provider import ConfigProvider, get_config
+
+logger = logging.getLogger(__name__)
 
 
 class EvaluationRecord:
@@ -28,15 +31,15 @@ class EvaluationRecord:
         latency: float,
         retrieval_mode: str,
         num_chunks: int,
-        chunk_distances: List[float],
-        timestamp: Optional[str] = None,
-        record_id: Optional[str] = None,
-        rating: Optional[str] = None,  # "thumbs_up", "thumbs_down", or None
-        feedback_comment: Optional[str] = None,
-        faithfulness_score: Optional[int] = None,
-        faithfulness_reason: Optional[str] = None,
-        relevance_score: Optional[int] = None,
-        relevance_reason: Optional[str] = None,
+        chunk_distances: list[float],
+        timestamp: str | None = None,
+        record_id: str | None = None,
+        rating: str | None = None,  # "thumbs_up", "thumbs_down", or None
+        feedback_comment: str | None = None,
+        faithfulness_score: int | None = None,
+        faithfulness_reason: str | None = None,
+        relevance_score: int | None = None,
+        relevance_reason: str | None = None,
     ) -> None:
         self.record_id = record_id or str(uuid.uuid4())
         self.timestamp = timestamp or datetime.now(timezone.utc).isoformat()
@@ -61,7 +64,7 @@ class EvaluationRecord:
             return 0.0
         return sum(self.chunk_distances) / len(self.chunk_distances)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert record to a JSON-serializable dictionary."""
         return {
             "record_id": self.record_id,
@@ -83,7 +86,7 @@ class EvaluationRecord:
         }
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> EvaluationRecord:
+    def from_dict(cls, d: dict[str, Any]) -> EvaluationRecord:
         """Create an EvaluationRecord from a dictionary."""
         return cls(
             query=d.get("query", ""),
@@ -107,12 +110,12 @@ class EvaluationRecord:
 class EvaluationManager:
     """Handles persistence of evaluation records to a local JSON file."""
 
-    def __init__(self, config_provider: Optional[ConfigProvider] = None) -> None:
+    def __init__(self, config_provider: ConfigProvider | None = None) -> None:
         self._config = config_provider or get_config()
         # Fallback if property is not defined
         self.log_path = getattr(self._config, "evaluation_log_path", "./evaluation_logs.json")
 
-    def _load_logs(self) -> List[Dict[str, Any]]:
+    def _load_logs(self) -> list[dict[str, Any]]:
         """Load raw logs from disk."""
         if not os.path.exists(self.log_path):
             return []
@@ -123,9 +126,10 @@ class EvaluationManager:
                     return []
                 return json.loads(content)  # type: ignore[no-any-return]
         except Exception:
+            logger.exception("Failed to load evaluation logs")
             return []
 
-    def _save_logs(self, logs: List[Dict[str, Any]]) -> None:
+    def _save_logs(self, logs: list[dict[str, Any]]) -> None:
         """Save raw logs to disk."""
         dir_name = os.path.dirname(self.log_path)
         if dir_name:
@@ -134,7 +138,7 @@ class EvaluationManager:
             with open(self.log_path, "w", encoding="utf-8") as f:
                 json.dump(logs, f, indent=2, ensure_ascii=False)
         except Exception:
-            pass
+            logger.exception("Failed to save evaluation logs")
 
     def add_record(self, record: EvaluationRecord) -> None:
         """Append an evaluation record to log."""
@@ -142,12 +146,12 @@ class EvaluationManager:
         logs.append(record.to_dict())
         self._save_logs(logs)
 
-    def get_records(self) -> List[EvaluationRecord]:
+    def get_records(self) -> list[EvaluationRecord]:
         """Retrieve all logged evaluation records."""
         logs = self._load_logs()
         return [EvaluationRecord.from_dict(d) for d in logs]
 
-    def update_feedback(self, record_id: str, rating: Optional[str], feedback_comment: Optional[str] = None) -> bool:
+    def update_feedback(self, record_id: str, rating: str | None, feedback_comment: str | None = None) -> bool:
         """Update qualitative feedback (rating, comment) on an existing record."""
         logs = self._load_logs()
         updated = False
@@ -192,7 +196,7 @@ class EvaluationManager:
             try:
                 os.remove(self.log_path)
             except Exception:
-                pass
+                logger.exception("Failed to clear evaluation logs")
 
 
 class LLMJudge:
@@ -204,8 +208,8 @@ class LLMJudge:
         context: str,
         answer: str,
         model: str,
-        config_provider: Optional[ConfigProvider] = None,
-    ) -> Dict[str, Any]:
+        config_provider: ConfigProvider | None = None,
+    ) -> dict[str, Any]:
         """Evaluate the quality (faithfulness and relevance) of a response.
 
         Args:
@@ -267,12 +271,13 @@ Do not include any other markdown formatting (like ```json), introduction, or tr
                     "relevance_reason": str(data.get("relevance_reason", "")),
                 }
             else:
-                raise ValueError("Could not parse JSON from model response: {response}")
-        except Exception:
+                raise ValueError(f"Could not parse JSON from model response: {response}")
+        except Exception as exc:
+            logger.exception("LLM Judge evaluation failed")
             return {
-                "error": "Failed to run LLM Judge: {e}",
+                "error": f"Failed to run LLM Judge: {exc}",
                 "faithfulness_score": 0,
-                "faithfulness_reason": "Evaluation error: {e}",
+                "faithfulness_reason": f"Evaluation error: {exc}",
                 "relevance_score": 0,
-                "relevance_reason": "Evaluation error: {e}",
+                "relevance_reason": f"Evaluation error: {exc}",
             }

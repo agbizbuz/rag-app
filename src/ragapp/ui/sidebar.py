@@ -203,7 +203,8 @@ def render_sidebar(vs: VectorStore, config: ConfigProvider) -> str:
         if st.button("Quit App", type="primary"):
             _quit_session()
 
-    # type: ignore[return-value]
+    if selected_model is None:
+        return None
     return selected_provider_name + ":" + selected_model
 
 

@@ -2,42 +2,11 @@
 
 from __future__ import annotations
 
-# Re-export at module level so tests can patch via "core.providers.openai.OpenAI"
-# This enables test mocks to be applied via "patch('core.providers.openai.OpenAI')"
-OpenAI = None  # type: ignore[assignment]
-_setter_called = False
+from ._openai_compat import get_openai_client
+from .base import ChatMessage, Provider
 
 
-def _set_openai(cls):
-    """Setter for OpenAI class - used by tests to inject mock."""
-    global OpenAI, _setter_called
-    OpenAI = cls
-    _setter_called = True
-
-
-# Default behavior if not patched by tests: try core.llm first, then import directly
-def _get_openai_client():
-    """Get OpenAI client class - supports test patching via core.llm module."""
-
-    # First check if test has patched via this module
-    global OpenAI, _setter_called
-    if OpenAI is not None:
-        return OpenAI
-
-    import sys
-
-    llm_mod = sys.modules.get("core.llm")
-    if llm_mod is not None:
-        result = getattr(llm_mod, "OpenAI", None)
-        if result is not None:
-            return result
-
-    from openai import OpenAI as OAI
-
-    return OAI
-
-
-class OpenAIProvider:
+class OpenAIProvider(Provider):
     """Standard OpenAI provider (also handles Groq via OpenAI-compatible API).
 
     Automatically resolves the correct API key env var based on model prefix:
@@ -54,7 +23,7 @@ class OpenAIProvider:
         self._temperature = temperature
         self._max_tokens = max_tokens
 
-    def chat(self, messages, temperature=0.0):  # noqa: ANN001
+    def chat(self, messages: list[ChatMessage]) -> str:
         import os
 
         from .base import KeyMissingError as KME
@@ -63,12 +32,12 @@ class OpenAIProvider:
         if not key:
             raise KME(f"`{self._api_key_env}` is missing in the environment.")
 
-        OAI = _get_openai_client()
+        OAI = get_openai_client()
         client = OAI(api_key=key)
         messages_dicts = [{"role": m.role, "content": m.content} for m in messages]
         resp = client.chat.completions.create(
             model=self._model,
             messages=messages_dicts,
-            temperature=temperature,
+            temperature=self._temperature,
         )
-        return (resp.choices[0].message.content) or ""
+        return resp.choices[0].message.content or ""

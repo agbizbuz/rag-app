@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 
-class GeminiProvider:
+from .base import ChatMessage, Provider
+
+
+class GeminiProvider(Provider):
     name = "Google Gemini"
 
     def __init__(self, model: str, temperature=0.2, max_tokens=1024) -> None:
@@ -11,7 +14,7 @@ class GeminiProvider:
         self._temperature = temperature
         self._max_tokens = max_tokens
 
-    def chat(self, messages, temperature=0.0):  # noqa: ANN001
+    def chat(self, messages: list[ChatMessage]) -> str:
         import os
 
         from .base import KeyMissingError

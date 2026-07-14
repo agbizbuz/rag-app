@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 
-class HuggingFaceProvider:
+from .base import ChatMessage, Provider
+
+
+class HuggingFaceProvider(Provider):
     name = "HuggingFace"
 
     def __init__(self, model: str, temperature: float = 0.0, max_tokens: int = 1024) -> None:
@@ -11,7 +14,7 @@ class HuggingFaceProvider:
         self._temperature = temperature
         self._max_tokens = max_tokens
 
-    def chat(self, messages):
+    def chat(self, messages: list[ChatMessage]) -> str:
         import os
 
         from .base import KeyMissingError as KME

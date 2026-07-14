@@ -43,7 +43,7 @@ class TestOllamaProvider:
         mock_response = MagicMock()
         mock_response.choices = [MagicMock(message=MagicMock(content="Ollama reply"))]
 
-        with patch("core.providers.ollama._get_openai_client") as MockGetClient:
+        with patch("core.providers.ollama.get_openai_client") as MockGetClient:
             mock_client = MagicMock()
             mock_client.chat.completions.create.return_value = mock_response
             MockGetClient.return_value = MagicMock(return_value=mock_client)
@@ -72,13 +72,4 @@ class TestOllamaStripPattern:
         assert result == "model"
 
 
-class TestOllamaGetClient:
-    """Tests for _get_openai_client function."""
 
-    def test_caching(self):
-        from core.providers.ollama import _get_openai_client
-
-        c1 = _get_openai_client()
-        c2 = _get_openai_client()
-        assert c1 is c2
-        assert hasattr(_get_openai_client, "_cached")

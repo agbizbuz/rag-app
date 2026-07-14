@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import uuid
+
 from .parsers.base import Chunk
 from .parsers.csv_parser import CsvParser
 from .parsers.docx_parser import DocxParser
@@ -40,15 +42,11 @@ def process_file(file) -> list[dict]:
         instance = parser_cls(chunk_size=get_config().chunk_size)
     raw_chunks: list[Chunk] = instance.parse(file)
 
-    import uuid
-
-    result: list[dict] = []
-    for chunk in raw_chunks:
-        result.append(
-            {
-                "id": str(uuid.uuid4()),
-                "text": chunk.text,
-                "metadata": dict(chunk.metadata),
-            }
-        )
-    return result
+    return [
+        {
+            "id": str(uuid.uuid4()),
+            "text": chunk.text,
+            "metadata": dict(chunk.metadata),
+        }
+        for chunk in raw_chunks
+    ]

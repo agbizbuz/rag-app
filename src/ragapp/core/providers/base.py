@@ -44,7 +44,7 @@ class Provider(ABC):
     name: str  # class attribute for display
 
     @abstractmethod
-    def chat(self, messages: list[ChatMessage], temperature: float = 0.0) -> str: ...
+    def chat(self, messages: list[ChatMessage]) -> str: ...
 
     def validate_key(self, key_name: str) -> None:
         """Raise KeyMissingError if the env var is not set."""

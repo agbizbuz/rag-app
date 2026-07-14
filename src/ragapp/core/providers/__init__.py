@@ -7,7 +7,7 @@ from .base import (
     RAGError,
     UnsupportedModelError,
 )
-from .routing import _REGISTRY, Protocol, ProviderProtocol, register, resolve_provider
+from .routing import _REGISTRY, register, resolve_provider
 
 
 def _register_all():
@@ -47,8 +47,6 @@ __all__ = [
     "Provider",
     "RAGError",
     "UnsupportedModelError",
-    "Protocol",
-    "ProviderProtocol",
     "_REGISTRY",
     "register",
     "resolve_provider",

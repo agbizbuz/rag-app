@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Optional
+import os
+from typing import Any
 
 
 class _MockSettings:
@@ -51,7 +52,7 @@ class ConfigProvider:
             except ImportError:
                 self._settings = _MockSettings()
 
-    def _get_session_value(self, key: str, default: any) -> any:
+    def _get_session_value(self, key: str, default: Any) -> Any:
         """Safely fetch a value from Streamlit's session state if running."""
         try:
             import streamlit as st
@@ -67,39 +68,39 @@ class ConfigProvider:
     @property
     def llm_temperature(self) -> float:
         """Return the configured temperature (default 0.2)."""
-        val = getattr(self._settings, "llm_temperature", 0.2)  # type: ignore[union-attr]
+        val = self._settings.llm_temperature
         return self._get_session_value("_temp_slider", val)
 
     @property
     def db_path(self) -> str:
         """Return the ChromaDB persistence path."""
-        return getattr(self._settings, "db_path", "./chroma_db")  # type: ignore[union-attr]
+        return self._settings.db_path
 
     @property
     def collection_name(self) -> str:
         """Return the vector store collection name."""
-        return getattr(self._settings, "collection_name", "my_rag_collection")  # type: ignore[union-attr]
+        return self._settings.collection_name
 
     @property
     def default_llm(self) -> str:
         """Return the default model identifier."""
-        return getattr(self._settings, "default_llm", "gpt-4o-mini")  # type: ignore[union-attr]
+        return self._settings.default_llm
 
     @property
     def llm_max_tokens(self) -> int:
         """Return max tokens for LLM responses."""
-        return getattr(self._settings, "llm_max_tokens", 1024)  # type: ignore[union-attr]
+        return self._settings.llm_max_tokens
 
     @property
     def chunk_size(self) -> int:
         """Return target chunk size in characters for document parsing."""
-        val = getattr(self._settings, "chunk_size", 1000)  # type: ignore[union-attr]
+        val = self._settings.chunk_size
         return self._get_session_value("_chunk_size", val)
 
     @property
     def n_results(self) -> int:
         """Return default number of results for vector search queries."""
-        val = getattr(self._settings, "n_results", 3)  # type: ignore[union-attr]
+        val = self._settings.n_results
         return self._get_session_value("_n_results", val)
 
     @property
@@ -112,57 +113,49 @@ class ConfigProvider:
             "the question, respectfully state that the information is not found in "
             "the documents. Provide the answer clearly and concisely."
         )
-        val = getattr(self._settings, "system_prompt", _default)  # type: ignore[union-attr]
+        val = getattr(self._settings, "system_prompt", _default)
         return self._get_session_value("_system_prompt", val)
 
     @property
     def embedding_model(self) -> str:
         """Return the OpenAI embedding model name."""
-        return getattr(self._settings, "embedding_model", "text-embedding-3-small")  # type: ignore[union-attr]
+        return self._settings.embedding_model
 
     @property
     def discovery_timeout(self) -> int:
         """Return HTTP timeout in seconds for model discovery calls."""
-        return getattr(self._settings, "discovery_timeout", 3)  # type: ignore[union-attr]
+        return self._settings.discovery_timeout
 
     @property
     def retrieval_mode(self) -> str:
         """Return the configured retrieval mode ('semantic', 'keyword', or 'hybrid')."""
-        val = getattr(self._settings, "retrieval_mode", "hybrid")  # type: ignore[union-attr]
+        val = self._settings.retrieval_mode
         return self._get_session_value("_retrieval_mode", val)
 
     @property
     def evaluation_log_path(self) -> str:
         """Return the path to save evaluation logs."""
-        return getattr(self._settings, "evaluation_log_path", "./evaluation_logs.json")  # type: ignore[union-attr]
+        return self._settings.evaluation_log_path
 
-    def get_openai_key(self) -> Optional[str]:
+    def get_openai_key(self) -> str | None:
         """Return OpenAI API key if set."""
-        import os
-
         return os.environ.get("OPENAI_API_KEY")
 
-    def get_anthropic_key(self) -> Optional[str]:
+    def get_anthropic_key(self) -> str | None:
         """Return Anthropic API key if set."""
-        import os
-
         return os.environ.get("ANTHROPIC_API_KEY")
 
-    def get_gemini_key(self) -> Optional[str]:
+    def get_gemini_key(self) -> str | None:
         """Return Google Gemini API key if set."""
-        import os
-
         return os.environ.get("GOOGLE_API_KEY")
 
-    def get_groq_key(self) -> Optional[str]:
+    def get_groq_key(self) -> str | None:
         """Return Groq API key if set."""
-        import os
-
         return os.environ.get("GROQ_API_KEY")
 
 
 # Singleton instance for use as a module-level utility (optional global fallback)
-_config_provider_instance: Optional[ConfigProvider] = None
+_config_provider_instance: ConfigProvider | None = None
 
 
 def get_config() -> ConfigProvider:

@@ -87,7 +87,6 @@ PROVIDERS.append(
 )
 
 # Always include Ollama with default URL for discovery
-OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL")
 PROVIDERS.append(
     ProviderInfo(
         name="Ollama",

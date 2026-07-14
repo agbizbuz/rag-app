@@ -8,16 +8,6 @@ from .base import BaseParser, Chunk
 class DocxParser(BaseParser):
     supported_extensions = ("docx",)
 
-    def __init__(self, chunk_size: int | None = None) -> None:
-        self._chunk_size = chunk_size
-
-    def _get_chunk_size(self) -> int:
-        if self._chunk_size is not None:
-            return self._chunk_size
-        from config_provider import get_config
-
-        return get_config().chunk_size
-
     def _render_row(self, row) -> tuple[str, int]:
         """Render a single table row to pipe-delimited markdown.
 
@@ -50,7 +40,7 @@ class DocxParser(BaseParser):
         if not rendered_rows:
             return [], element_index + 1
 
-        target_size = self._get_chunk_size()
+        target_size = self.chunk_size
         num_cols = rendered_rows[0][1]
         header_rt = rendered_rows[0][0]
 
@@ -137,7 +127,7 @@ class DocxParser(BaseParser):
         current_texts: list[str] = []
         current_metadata: dict = {}
         current_length = 0
-        target_chunk_size = self._get_chunk_size()
+        target_chunk_size = self.chunk_size
 
         source_name = getattr(file, "name", "")
 

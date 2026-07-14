@@ -5,32 +5,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable, Optional
 
 import chromadb
+from collections import defaultdict
+from config_provider import get_config
 
 if TYPE_CHECKING:
     from .embedding_manager import EmbeddingManager
-
-
-class _MockConfigProvider:
-    """Minimal mock for test compatibility.
-
-    Provides a fallback when actual ConfigProvider is unavailable.
-    """
-
-    @property
-    def db_path(self) -> str:
-        return "./chroma_db"
-
-    @property
-    def collection_name(self) -> str:
-        return "my_rag_collection"
-
-    @property
-    def n_results(self) -> int:
-        return 3
+    from config_provider import ConfigProvider
 
 
 # Type alias for embedding function creator callable
-EmbeddingCreator = Callable[[], Optional[object]]
+EmbeddingCreator = Callable[[], object | None]
 
 
 class VectorStore:
@@ -43,11 +27,11 @@ class VectorStore:
         self,
         db_path: str | None = None,
         collection_name: str | None = None,
-        embedding_creator: Optional[EmbeddingCreator] = None,
-        embedding_manager: Optional[EmbeddingManager] = None,
-        config_provider=None,  # noqa: ANN001
+        embedding_creator: EmbeddingCreator | None = None,
+        embedding_manager: EmbeddingManager | None = None,
+        config_provider: ConfigProvider | None = None,
     ) -> None:
-        cfg = config_provider or _MockConfigProvider()
+        cfg = config_provider or get_config()
         self._config = cfg
         self.db_path = db_path or cfg.db_path
         self.collection_name = collection_name or cfg.collection_name
@@ -102,7 +86,7 @@ class VectorStore:
         documents = [chunk["text"] for chunk in chunks]
         metadatas = [chunk["metadata"] for chunk in chunks]
 
-        self._collection.add(
+        self.collection.add(
             ids=ids,
             embeddings=None,  # Use server-side embedding if configured
             documents=documents,
@@ -126,18 +110,16 @@ class VectorStore:
 
         self._ensure_collection()
 
-        results = self._collection.query(
+        results = self.collection.query(
             query_texts=[query_text],
             n_results=n_results,
-            # include=["documents", "metadatas", "distances"],  # type: ignore
         )
 
         if not results["ids"]:
             return []
 
         all_results = []
-        for i in range(len(results["ids"])):
-            query_id = results["ids"][i]
+        for i, query_id in enumerate(results["ids"]):
             for j, doc_id in enumerate(query_id):
                 all_results.append(
                     {
@@ -154,8 +136,7 @@ class VectorStore:
 
     def get_collection_size(self) -> int:
         """Return the number of documents in the collection."""
-        self._ensure_collection()
-        return self._collection.count()  # type: ignore[no-any-return]
+        return self.collection.count()  # type: ignore[no-any-return]
 
     def get_all_documents(self) -> list[dict]:
         """Return all documents in the collection (for keyword search indexing).
@@ -163,22 +144,19 @@ class VectorStore:
         Returns:
             List of dicts with keys 'id', 'text', 'metadata'.
         """
-        self._ensure_collection()
-        result = self._collection.get(include=["documents", "metadatas"])  # type: ignore[arg-type]
+        result = self.collection.get(include=["documents", "metadatas"])  # type: ignore[arg-type]
 
         if not result["ids"]:
             return []
 
-        documents: list[dict] = []
-        for i, doc_id in enumerate(result["ids"]):
-            documents.append(
-                {
-                    "id": doc_id,
-                    "text": result["documents"][i] if result["documents"] else "",  # type: ignore[index]
-                    "metadata": result["metadatas"][i] if result["metadatas"] else {},  # type: ignore[index]
-                }
-            )
-        return documents
+        return [
+            {
+                "id": doc_id,
+                "text": result["documents"][i] if result["documents"] else "",  # type: ignore[index]
+                "metadata": result["metadatas"][i] if result["metadatas"] else {},  # type: ignore[index]
+            }
+            for i, doc_id in enumerate(result["ids"])
+        ]
 
     def get_all_files(self) -> list[dict]:
         """Return all indexed files grouped by source.
@@ -187,19 +165,27 @@ class VectorStore:
             List of dicts with keys 'source', 'type', 'chunk_count',
             'page_range' (str), 'preview'.
         """
-        self._ensure_collection()
-        result = self._collection.get(include=["documents", "metadatas"])
+        result = self.collection.get(include=["documents", "metadatas"])
         if not result["ids"]:
             return []
 
         # Group documents by source filename
-        groups: dict[str, list[dict]] = {}
+        groups: dict[str, list[dict]] = defaultdict(list)
         for i, doc_id in enumerate(result["ids"]):
             meta = result["metadatas"][i] if result["metadatas"] else {}  # type: ignore[index]
             docs_list = result["documents"]
             text = docs_list[i] if docs_list else ""  # type: ignore[index]
             source = meta.get("source", "unknown")
-            groups.setdefault(source, []).append({"meta": meta, "text": text, "id": doc_id})
+            groups[source].append({"meta": meta, "text": text, "id": doc_id})
+
+        def _get_int_key(m: dict, k: str) -> int | None:
+            v = m.get(k)
+            if isinstance(v, int):
+                return v
+            try:
+                return int(v)
+            except (ValueError, TypeError):
+                return None
 
         files: list[dict] = []
         for source, chunks in groups.items():
@@ -211,25 +197,15 @@ class VectorStore:
             for c in chunks:
                 meta = c["meta"]
 
-                # Guard against non-integer metadata values (e.g. list, str) from ChromaDB
-                def _int_key(k: str) -> int | None:
-                    v = meta.get(k)
-                    if isinstance(v, int):
-                        return v
-                    try:
-                        return int(v)
-                    except (ValueError, TypeError):
-                        pass
-
-                if (page := _int_key("page")) is not None:
+                if (page := _get_int_key(meta, "page")) is not None:
                     type_labels.add("PDF")
                     page_nums.append(page)
-                elif _int_key("row") is not None:
+                elif _get_int_key(meta, "row") is not None:
                     type_labels.add("CSV")
-                elif (para := _int_key("paragraph")) is not None:
+                elif (para := _get_int_key(meta, "paragraph")) is not None:
                     type_labels.add("DOCX")
                     docx_paras.append(para)
-                elif (chunk := _int_key("chunk")) is not None:
+                elif (chunk := _get_int_key(meta, "chunk")) is not None:
                     type_labels.add("TXT")
                     txt_chunks.append(chunk)
 

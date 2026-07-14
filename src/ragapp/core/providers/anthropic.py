@@ -2,40 +2,10 @@
 
 from __future__ import annotations
 
-# Re-export at module level for test patching
-AnthropicClient = None  # type: ignore[assignment]
-_setter_called = False
+from .base import ChatMessage, Provider
 
 
-def _set_anthropic(cls):
-    """Setter for Anthropic client - used by tests to inject mock."""
-    global AnthropicClient, _setter_called
-    AnthropicClient = cls
-    _setter_called = True
-
-
-def _get_anthropic_client_class():
-    """Get Anthropic client class - supports test patching."""
-
-    # First check if test has patched via this module
-    global AnthropicClient
-    if AnthropicClient is not None:
-        return AnthropicClient
-
-    import sys
-
-    llm_mod = sys.modules.get("core.llm")
-    if llm_mod is not None:
-        result = getattr(llm_mod, "Anthropic", None)
-        if result is not None:
-            return result
-
-    from anthropic import Anthropic
-
-    return Anthropic
-
-
-class AnthropicProvider:
+class AnthropicProvider(Provider):
     name = "Anthropic"
 
     def __init__(self, model: str, temperature: float = 0.2, max_tokens: int = 1024) -> None:
@@ -43,8 +13,10 @@ class AnthropicProvider:
         self._temperature = temperature
         self._max_tokens = max_tokens
 
-    def chat(self, messages, **kwargs):
+    def chat(self, messages: list[ChatMessage]) -> str:
         import os
+
+        from anthropic import Anthropic
 
         from .base import KeyMissingError as KME
 
@@ -52,8 +24,7 @@ class AnthropicProvider:
         if not key:
             raise KME("`ANTHROPIC_API_KEY` is missing in the environment.")
 
-        AnthropicClientClass = _get_anthropic_client_class()
-        client = AnthropicClientClass(api_key=key)
+        client = Anthropic(api_key=key)
 
         system_prompt = None
         chat_msgs = []
@@ -65,6 +36,7 @@ class AnthropicProvider:
 
         kwargs_dict = {"model": self._model, "messages": chat_msgs}
         kwargs_dict["max_tokens"] = self._max_tokens
+        kwargs_dict["temperature"] = self._temperature
         if system_prompt:
             kwargs_dict["system"] = system_prompt
 

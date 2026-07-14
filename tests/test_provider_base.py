@@ -91,8 +91,8 @@ class TestProviderProtocol:
         r = _Registry()
         try:
             r.resolve_provider("xyz-nonexistent-model")
-            assert False, "Should have raised ValueError"
-        except ValueError as e:
+            assert False, "Should have raised UnsupportedModelError"
+        except UnsupportedModelError as e:
             assert "No provider registered for model" in str(e)
 
 

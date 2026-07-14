@@ -28,7 +28,7 @@ class TestOpenAIProvider:
         mock_response = MagicMock()
         mock_response.choices = [MagicMock(message=MagicMock(content="Hello world"))]
 
-        with patch("core.providers.openai._get_openai_client") as MockGetClient:
+        with patch("core.providers.openai.get_openai_client") as MockGetClient:
             mock_client = MagicMock()
             mock_client.chat.completions.create.return_value = mock_response
             MockGetClient.return_value = MagicMock(return_value=mock_client)
@@ -49,7 +49,7 @@ class TestOpenAIProvider:
         mock_response = MagicMock()
         mock_response.choices = [MagicMock(message=MagicMock(content=None))]
 
-        with patch("core.providers.openai._get_openai_client") as MockGetClient:
+        with patch("core.providers.openai.get_openai_client") as MockGetClient:
             mock_client = MagicMock()
             mock_client.chat.completions.create.return_value = mock_response
             MockGetClient.return_value = MagicMock(return_value=mock_client)
@@ -81,7 +81,7 @@ class TestOpenAIProvider:
         mock_response = MagicMock()
         mock_response.choices = [MagicMock(message=MagicMock(content="Groq reply"))]
 
-        with patch("core.providers.openai._get_openai_client") as MockGetClient:
+        with patch("core.providers.openai.get_openai_client") as MockGetClient:
             mock_client = MagicMock()
             mock_client.chat.completions.create.return_value = mock_response
             MockGetClient.return_value = MagicMock(return_value=mock_client)
@@ -95,19 +95,10 @@ class TestOpenAIProvider:
 
     def test_get_openai_client_returns_class(self):
         """_get_openai_client returns the OpenAI class."""
-        from core.providers.openai import _get_openai_client
+        from core.providers._openai_compat import get_openai_client
 
-        result = _get_openai_client()
+        result = get_openai_client()
         assert hasattr(result, "__name__") or callable(result)
 
 
-class TestOpenAISetter:
-    """Tests for the test-only _set_openai setter."""
 
-    def test_setter_patches_class(self):
-        from core.providers import openai as openai_mod
-
-        MockClass = MagicMock()
-        openai_mod._set_openai(MockClass)
-        assert openai_mod.OpenAI is MockClass
-        assert openai_mod._setter_called is True

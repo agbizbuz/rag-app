@@ -248,20 +248,7 @@ class TestVectorStore:
         _ = vs.collection  # Should work without error (mock returns itself)
 
 
-class TestMockConfigProvider:
-    """Tests for the internal _MockConfigProvider."""
 
-    def test_db_path(self):
-        from core.vector_store import _MockConfigProvider
-
-        mock_cfg = _MockConfigProvider()
-        assert mock_cfg.db_path == "./chroma_db"
-
-    def test_collection_name(self):
-        from core.vector_store import _MockConfigProvider
-
-        mock_cfg = _MockConfigProvider()
-        assert mock_cfg.collection_name == "my_rag_collection"
 
 
 class TestVectorStoreEmbeddingFunction:

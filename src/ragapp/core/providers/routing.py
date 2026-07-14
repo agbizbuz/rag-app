@@ -1,8 +1,6 @@
 """Provider routing and registration logic."""
 
-# Type aliases for protocol and provider types
-Protocol = str
-ProviderProtocol = type  # Simplified - represents callable returning Provider class
+from .base import UnsupportedModelError
 
 
 class _Registry:
@@ -34,7 +32,7 @@ class _Registry:
             if model_id.lower().startswith(prefix.lower()):
                 return provider_class
 
-        raise ValueError(f"No provider registered for model: {model_id}")
+        raise UnsupportedModelError(f"No provider registered for model: {model_id}")
 
 
 _REGISTRY = _Registry()
@@ -42,7 +40,3 @@ register = _REGISTRY.register
 resolve_provider = _REGISTRY.resolve_provider
 
 
-class UnsupportedModelError(Exception):
-    """Raised when no provider matches the given model ID."""
-
-    pass

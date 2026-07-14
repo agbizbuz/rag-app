@@ -9,6 +9,12 @@ import streamlit as st
 from core.evaluator import EvaluationManager
 
 
+def _get_rating_symbol(rating: str | None, verbose: bool = False) -> str:
+    if verbose:
+        return {"thumbs_up": "👍 Good", "thumbs_down": "👎 Bad"}.get(rating, "None")
+    return {"thumbs_up": "👍", "thumbs_down": "👎"}.get(rating, "—")
+
+
 def render_evaluation_tab() -> None:
     """Render the RAG Evaluation tab."""
     st.header("📊 RAG Evaluation Dashboard")
@@ -117,7 +123,7 @@ def render_evaluation_tab() -> None:
         # Build pandas DataFrame for display
         table_data = []
         for r in filtered_records:
-            rating_symbol = "👍" if r.rating == "thumbs_up" else ("👎" if r.rating == "thumbs_down" else "—")
+            rating_symbol = _get_rating_symbol(r.rating)
             faith_str = f"{r.faithfulness_score}/5" if r.faithfulness_score else "—"
             rel_str = f"{r.relevance_score}/5" if r.relevance_score else "—"
 
@@ -192,9 +198,7 @@ def render_evaluation_tab() -> None:
             time_str = (
                 r.timestamp.split("T")[0] + " " + r.timestamp.split("T")[1][:8] if "T" in r.timestamp else r.timestamp
             )
-            rating_symbol = (
-                "👍 Good" if r.rating == "thumbs_up" else ("👎 Bad" if r.rating == "thumbs_down" else "None")
-            )
+            rating_symbol = _get_rating_symbol(r.rating, verbose=True)
 
             expander_title = f"Query {i + 1}: {r.query[:50]}... | Model: {r.model} | {time_str}"
             with st.expander(expander_title):

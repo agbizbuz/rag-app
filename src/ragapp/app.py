@@ -52,7 +52,9 @@ def _main(config: ConfigProvider | None = None) -> None:
     # Sidebar handles its own state via session keys
     from ui.sidebar import render_sidebar
 
-    selected_model = render_sidebar(vs, cfg) or selected_model
+    sidebar_model = render_sidebar(vs, cfg)
+    if sidebar_model:
+        selected_model = sidebar_model
 
     # Tab navigation
     (tab1, tab2, tab3, tab4) = st.tabs(
@@ -67,12 +69,12 @@ def _main(config: ConfigProvider | None = None) -> None:
     with tab1:
         from ui.builder_tab import render_builder
 
-        _ = render_builder(vs)  # noqa: F841
+        render_builder(vs)
 
     with tab2:
-        from ui.query_tab import render_query_tab as _render_query_tab
+        from ui.query_tab import render_query_tab
 
-        _render_query_tab(retriever, selected_model)  # noqa: F841
+        render_query_tab(retriever, selected_model)
 
     with tab3:
         from ui.evaluation_tab import render_evaluation_tab
@@ -80,9 +82,9 @@ def _main(config: ConfigProvider | None = None) -> None:
         render_evaluation_tab()
 
     with tab4:
-        from ui.db_tab import render_db_tab as _render_db_tab
+        from ui.db_tab import render_db_tab
 
-        _render_db_tab(vs)
+        render_db_tab(vs)
 
 
 _main()

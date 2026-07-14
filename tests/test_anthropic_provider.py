@@ -1,6 +1,6 @@
 """Tests for src/ragapp/core/providers/anthropic.py."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 class TestAnthropicProvider:
@@ -40,14 +40,14 @@ class TestAnthropicProvider:
         mock_response = MagicMock()
         mock_response.content = [mock_content_block]
 
-        mock_client = MagicMock()
-        mock_client.messages.create.return_value = mock_response
+        with patch("anthropic.Anthropic") as MockAnthropic:
+            mock_client = MagicMock()
+            mock_client.messages.create.return_value = mock_response
+            MockAnthropic.return_value = mock_client
 
-        anth_mod._set_anthropic(MagicMock(return_value=mock_client))
-
-        p = AnthropicProvider("claude-3-haiku")
-        msgs = [MagicMock(role="user", content="hello"), MagicMock(role="system", content="Be concise")]
-        result = p.chat(msgs)
+            p = AnthropicProvider("claude-3-haiku")
+            msgs = [MagicMock(role="user", content="hello"), MagicMock(role="system", content="Be concise")]
+            result = p.chat(msgs)
 
         assert result == "Claude answer"
         mock_client.messages.create.assert_called_once()
@@ -61,13 +61,4 @@ class TestAnthropicProvider:
         assert call_kwargs["system"] == "Be concise"
 
 
-class TestAnthropicSetter:
-    """Tests for the test-only _set_anthropic setter."""
 
-    def test_setter_patches_class(self):
-        from core.providers import anthropic as anth_mod
-
-        MockClass = MagicMock()
-        anth_mod._set_anthropic(MockClass)
-        assert anth_mod.AnthropicClient is MockClass
-        assert anth_mod._setter_called is True
