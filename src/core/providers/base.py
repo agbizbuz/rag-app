@@ -46,6 +46,11 @@ class Provider(ABC):
     @abstractmethod
     def chat(self, messages: list[ChatMessage]) -> str: ...
 
+    def _get_model_name(self, full_name: str):
+        print(full_name)
+        lst = full_name.split(":")
+        return ":".join(lst[2:])
+
     def validate_key(self, key_name: str) -> None:
         """Raise KeyMissingError if the env var is not set."""
         import os

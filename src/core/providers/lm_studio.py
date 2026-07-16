@@ -1,10 +1,7 @@
 """LM Studio provider (OpenAI-compatible local server)."""
 
 from __future__ import annotations
-
 import os
-
-
 from ._openai_compat import get_openai_client
 from .base import ChatMessage, Provider
 
@@ -13,7 +10,7 @@ class LMStudioProvider(Provider):
     name = "LM Studio"
 
     def __init__(self, model: str, temperature=0.2, max_tokens=1024) -> None:
-        self._model = model
+        self._model = self._get_model_name(model)
         self._temperature = temperature
         self._max_tokens = max_tokens
         self._base_url = os.environ.get("LM_STUDIO_BASE_URL", "http://localhost:1234/v1")

@@ -10,7 +10,7 @@ class GeminiProvider(Provider):
     name = "Google Gemini"
 
     def __init__(self, model: str, temperature=0.2, max_tokens=1024) -> None:
-        self._model = model
+        self._model = self._get_model_name(model)
         self._temperature = temperature
         self._max_tokens = max_tokens
 

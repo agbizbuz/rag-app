@@ -3,7 +3,7 @@ requires = ["setuptools>=42"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-where = ['src/ragapp']
+where = ['src']
 # include = ['ragapp*']
 
 [project]
@@ -55,19 +55,17 @@ select = ["E", "F", "I"]
 [tool.ruff.lint.per-file-ignores]
 "tests/conftest.py" = ["E501"]
 "tests/test_parser.py" = ["E501", "F401"]
-"src/ragapp/app.py" = ["E501", "I001", "E702"]
-"src/ragapp/core/llm.py" = ["E501"]
-"src/ragapp/config.py" = ["E501"]
-"src/ragapp/core/parser.py" = ["E501"]
-"src/ragapp/core/vector_store.py" = ["E501"]
+"src/app.py" = ["E501", "I001", "E702"]
+"src/core/llm.py" = ["E501"]
+"src/config.py" = ["E501"]
+"src/core/parser.py" = ["E501"]
+"src/core/vector_store.py" = ["E501"]
 
 [tool.coverage.run]
-source = ["ragapp"]
-omit = [
-  "src/ragapp/app.py",
-  "src/ragapp/ui/*.py",
-  "src/ragapp/ui/components/*.py",
-]
+source = ["src"]
+omit = ["src/app.py"]
+# omit = ["src/app.py", "src/ui/*.py", "src/ui/components/*.py"]
+# omit = ["src/app.py", "src/ui/components/*.py"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -81,4 +79,4 @@ show_missing = true
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-report=term-missing --cov-report=html"
 testpaths = ["tests"]
-pythonpath = [".", "src/ragapp"]
+pythonpath = [".", "src"]

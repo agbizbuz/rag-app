@@ -38,5 +38,3 @@ class _Registry:
 _REGISTRY = _Registry()
 register = _REGISTRY.register
 resolve_provider = _REGISTRY.resolve_provider
-
-

@@ -10,7 +10,7 @@ class TestGeminiProvider:
     def test_init_sets_attributes(self):
         from core.providers.gemini import GeminiProvider
 
-        p = GeminiProvider("gemini-pro", temperature=0.3, max_tokens=512)
+        p = GeminiProvider("gemini:gemini:gemini-pro", temperature=0.3, max_tokens=512)
         assert p._model == "gemini-pro"
         assert p.name == "Google Gemini"
         assert p._temperature == 0.3
@@ -32,7 +32,7 @@ class TestGeminiProvider:
         with patch.dict(sys.modules, {"google.generativeai": mock_genai}):
             from core.providers.gemini import GeminiProvider
 
-            p = GeminiProvider("gemini-pro")
+            p = GeminiProvider("gemini:gemini:gemini-pro")
             msgs = [MagicMock(role="user", content="hello")]
             result = p.chat(msgs)
             assert result == "Gemini says hello"
@@ -53,7 +53,7 @@ class TestGeminiProvider:
         with patch.dict(sys.modules, {"google.generativeai": mock_genai}):
             from core.providers.gemini import GeminiProvider
 
-            p = GeminiProvider("gemini-pro")
+            p = GeminiProvider("gemini:gemini:gemini-pro")
             msgs = [
                 MagicMock(role="system", content="System prompt"),
                 MagicMock(role="user", content="User query"),
@@ -69,7 +69,7 @@ class TestGeminiProvider:
         from core.providers.base import KeyMissingError as KME
         from core.providers.gemini import GeminiProvider
 
-        p = GeminiProvider("gemini-pro")
+        p = GeminiProvider("gemini:gemini:gemini-pro")
         msgs = [MagicMock(role="user", content="hello")]
         try:
             p.chat(msgs)

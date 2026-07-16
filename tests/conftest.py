@@ -91,7 +91,7 @@ def docx_bytes():
     return buf
 
 
-SRC_RAGAPP_PATH = SRC_PATH / "ragapp"
+SRC_RAGAPP_PATH = SRC_PATH
 # Ensure .env file exists for tests with valid settings
 ENV_FILE = SRC_RAGAPP_PATH / ".env"
 if not ENV_FILE.exists():

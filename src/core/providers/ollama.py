@@ -3,10 +3,6 @@
 from __future__ import annotations
 
 import os
-import re
-
-strip_pattern = re.compile("ollama:", re.IGNORECASE)
-
 
 from ._openai_compat import get_openai_client
 from .base import ChatMessage, Provider
@@ -16,7 +12,7 @@ class OllamaProvider(Provider):
     name = "Ollama"
 
     def __init__(self, model: str, temperature=0.2, max_tokens=1024) -> None:
-        self._model = strip_pattern.sub("", model)
+        self._model = self._get_model_name(model)
         self._temperature = temperature
         self._max_tokens = max_tokens
         base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")

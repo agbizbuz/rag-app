@@ -143,7 +143,7 @@ def render_evaluation_tab() -> None:
             )
 
         df = pd.DataFrame(table_data)
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width="stretch", hide_index=True)
 
         # 3. Actions Row (Download / Clear)
         act_col1, act_col2, act_col3 = st.columns([1, 1, 2])
@@ -157,7 +157,7 @@ def render_evaluation_tab() -> None:
                 data=json_str,
                 file_name="rag_evaluation_logs.json",
                 mime="application/json",
-                use_container_width=True,
+                width="stretch",
             )
 
         # CSV Export bytes
@@ -169,12 +169,12 @@ def render_evaluation_tab() -> None:
                 data=csv_str,
                 file_name="rag_evaluation_logs.csv",
                 mime="text/csv",
-                use_container_width=True,
+                width="stretch",
             )
 
         with act_col3:
             # Double confirm clear
-            if st.button("🗑️ Clear Evaluation History", type="secondary", use_container_width=True):
+            if st.button("🗑️ Clear Evaluation History", type="secondary", width='stretch'):
                 st.session_state._show_clear_confirm = True
 
             if st.session_state.get("_show_clear_confirm", False):

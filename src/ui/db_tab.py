@@ -48,7 +48,7 @@ def render_db_tab(vs) -> None:  # noqa: PLR0912
                     }
                 )
             df = pd.DataFrame(rows)
-            st.dataframe(df, use_container_width=True, hide_index=True)
+            st.dataframe(df, width="stretch", hide_index=True)
     st.write("---")
 
     # Management section
@@ -58,7 +58,7 @@ def render_db_tab(vs) -> None:  # noqa: PLR0912
         st.warning("This will permanently delete all indexed documents.")
         _, btn_col, _ = st.columns([3, 1, 3])
         with btn_col:
-            if st.button("Confirm Delete", type="primary", use_container_width=True):
+            if st.button("Confirm Delete", type="primary", width="stretch"):
                 vs.delete_collection()
                 st.session_state["vector_store"]._collection = None  # noqa: SLF001
                 st.session_state["confirm_delete"] = False

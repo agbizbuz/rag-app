@@ -10,7 +10,7 @@ class HuggingFaceProvider(Provider):
     name = "HuggingFace"
 
     def __init__(self, model: str, temperature: float = 0.0, max_tokens: int = 1024) -> None:
-        self._model = model
+        self._model = self._get_model_name(model)
         self._temperature = temperature
         self._max_tokens = max_tokens
 

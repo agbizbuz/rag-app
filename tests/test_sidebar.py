@@ -138,7 +138,7 @@ class TestResolveModels:
                 result = _resolve_models(info)
 
         # Both models returned from mock; set comparison is correct
-        assert set(result) == {"llama3", "gpt-4"}
+        assert set(result) == {"ollama:llama3", "ollama:gpt-4"}
 
 
 class TestRenderSidebar:

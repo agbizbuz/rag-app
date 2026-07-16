@@ -75,7 +75,7 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
     if retriever.vector_store.get_collection_size() == 0:
         st.warning("\U0001f6a8 Database is empty.")
         st.info("Navigate to the **Builder** tab to ingest your documents first.")
-        st.page_link("https://google.com", label="Google Search", use_container_width=True)
+        st.page_link("https://google.com", label="Google Search", width="stretch")
         return
 
     st.header("Ask Your Documents")
