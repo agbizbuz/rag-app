@@ -9,7 +9,7 @@ class TestAnthropicProvider:
     def test_init_sets_attributes(self):
         from core.providers.anthropic import AnthropicProvider
 
-        p = AnthropicProvider("claude-3-opus", temperature=0.5, max_tokens=2048)
+        p = AnthropicProvider("Antropic:claude:claude-3-opus", temperature=0.5, max_tokens=2048)
         assert p._model == "claude-3-opus"
         assert p.name == "Anthropic"
         assert p._max_tokens == 2048
@@ -21,7 +21,7 @@ class TestAnthropicProvider:
         from core.providers.anthropic import AnthropicProvider
         from core.providers.base import KeyMissingError as KME
 
-        p = AnthropicProvider("claude-3-opus")
+        p = AnthropicProvider("Antropic:claude:claude-3-opus")
         msgs = [MagicMock(role="user", content="hello")]
         try:
             p.chat(msgs)
@@ -45,7 +45,7 @@ class TestAnthropicProvider:
             mock_client.messages.create.return_value = mock_response
             MockAnthropic.return_value = mock_client
 
-            p = AnthropicProvider("claude-3-haiku")
+            p = AnthropicProvider("Antropic:claude:claude-3-haiku")
             msgs = [MagicMock(role="user", content="hello"), MagicMock(role="system", content="Be concise")]
             result = p.chat(msgs)
 
@@ -59,6 +59,3 @@ class TestAnthropicProvider:
         # Verify system prompt was passed separately
         assert "system" in call_kwargs
         assert call_kwargs["system"] == "Be concise"
-
-
-

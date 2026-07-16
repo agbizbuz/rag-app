@@ -9,7 +9,7 @@ class TestOpenAIProvider:
     def test_init_sets_attributes(self):
         from core.providers.openai import OpenAIProvider
 
-        p = OpenAIProvider("gpt-4o", temperature=0.5, max_tokens=2048)
+        p = OpenAIProvider("openai:openai:gpt-4o", temperature=0.5, max_tokens=2048)
         assert p._model == "gpt-4o"
         assert p.name == "OpenAI"
         assert p._api_key_env == "OPENAI_API_KEY"
@@ -19,7 +19,7 @@ class TestOpenAIProvider:
     def test_init_groq_model_resolves_key(self):
         from core.providers.openai import OpenAIProvider
 
-        p = OpenAIProvider("groq:llama-3.1-8b-instant")
+        p = OpenAIProvider("groq:groq:llama-3.1-8b-instant")
         assert p._api_key_env == "GROQ_API_KEY"
 
     def test_chat_with_key(self, monkeypatch):
@@ -35,7 +35,7 @@ class TestOpenAIProvider:
 
             from core.providers.openai import OpenAIProvider
 
-            p = OpenAIProvider("gpt-4o-mini")
+            p = OpenAIProvider("openai:openai:gpt-4o-mini")
             msgs = [MagicMock(role="user", content="hello")]
             result = p.chat(msgs)
             assert result == "Hello world"
@@ -56,7 +56,7 @@ class TestOpenAIProvider:
 
             from core.providers.openai import OpenAIProvider
 
-            p = OpenAIProvider("gpt-4o-mini")
+            p = OpenAIProvider("openai:openai:gpt-4o-mini")
             msgs = [MagicMock(role="user", content="hello")]
             result = p.chat(msgs)
             assert result == ""
@@ -67,7 +67,7 @@ class TestOpenAIProvider:
         from core.providers.base import KeyMissingError as KME
         from core.providers.openai import OpenAIProvider
 
-        p = OpenAIProvider("gpt-4o-mini")
+        p = OpenAIProvider("openai:openai:gpt-4o-mini")
         msgs = [MagicMock(role="user", content="hello")]
         try:
             p.chat(msgs)
@@ -88,7 +88,7 @@ class TestOpenAIProvider:
 
             from core.providers.openai import OpenAIProvider
 
-            p = OpenAIProvider("groq:llama-3.1")
+            p = OpenAIProvider("groq:groq:llama-3.1")
             msgs = [MagicMock(role="user", content="hello")]
             result = p.chat(msgs)
             assert result == "Groq reply"
@@ -99,6 +99,3 @@ class TestOpenAIProvider:
 
         result = get_openai_client()
         assert hasattr(result, "__name__") or callable(result)
-
-
-

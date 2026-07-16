@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from typing import Callable
 
@@ -41,9 +40,8 @@ PROVIDERS: list[ProviderInfo] = [
         key_env="GROQ_API_KEY",
         model_options=[
             "groq:llama-3.1-8b-instant",
-            "groq:llama-3.1-70b-versatile",
-            "groq:llama-3.1-405b-reasoning",
-            "groq:gemma2-9b-it",
+            "groq:llama-3.3-70b-versatile",
+            "qwen3.6-27b",
         ],
     ),
 ]
@@ -57,7 +55,7 @@ def fetch_ollama_models(base_url: str) -> list[str]:
     try:
         resp = requests.get(f"{base_url}/api/tags", timeout=get_config().discovery_timeout)
         resp.raise_for_status()
-        return [f"{m['name']}" for m in resp.json().get("models", [])]
+        return [f"ollama:{m['name']}" for m in resp.json().get("models", [])]
     except Exception:
         return []
 

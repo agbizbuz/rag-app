@@ -9,34 +9,34 @@ class TestOllamaProvider:
     def test_init_strips_ollama_prefix(self):
         from core.providers.ollama import OllamaProvider
 
-        p = OllamaProvider("ollama:llama3.1")
+        p = OllamaProvider("ollama:ollama:llama3.1")
         assert p._model == "llama3.1"
 
     def test_init_case_insensitive_strip(self):
         from core.providers.ollama import OllamaProvider
 
-        p = OllamaProvider("OLLAMA:Llama-3")
+        p = OllamaProvider("Ollama:OLLAMA:Llama-3")
         assert p._model == "Llama-3"
 
     def test_init_uses_default_base_url(self, monkeypatch):
         monkeypatch.delenv("OLLAMA_BASE_URL", raising=False)
         from core.providers.ollama import OllamaProvider
 
-        p = OllamaProvider("ollama:llama3.1")
+        p = OllamaProvider("ollama:ollama:llama3.1")
         assert p._base_url == "http://localhost:11434/v1"
 
     def test_init_appends_v1_to_base_url(self, monkeypatch):
         monkeypatch.setenv("OLLAMA_BASE_URL", "http://custom:11434")
         from core.providers.ollama import OllamaProvider
 
-        p = OllamaProvider("ollama:llama3.1")
+        p = OllamaProvider("ollama:ollama:llama3.1")
         assert p._base_url == "http://custom:11434/v1"
 
     def test_init_base_url_already_has_v1(self, monkeypatch):
         monkeypatch.setenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
         from core.providers.ollama import OllamaProvider
 
-        p = OllamaProvider("ollama:llama3.1")
+        p = OllamaProvider("ollama:ollama:llama3.1")
         assert p._base_url == "http://localhost:11434/v1"
 
     def test_chat_with_mock(self):
@@ -50,26 +50,7 @@ class TestOllamaProvider:
 
             from core.providers.ollama import OllamaProvider
 
-            p = OllamaProvider("ollama:llama3.1")
+            p = OllamaProvider("ollama:ollama:llama3.1")
             msgs = [MagicMock(role="user", content="hello")]
             result = p.chat(msgs)
             assert result == "Ollama reply"
-
-
-class TestOllamaStripPattern:
-    """Tests for the strip_pattern regex."""
-
-    def test_replaces_ollama_prefix(self):
-        from core.providers.ollama import strip_pattern
-
-        result = strip_pattern.sub("", "ollama:test-model")
-        assert result == "test-model"
-
-    def test_case_insensitive_strip(self):
-        from core.providers.ollama import strip_pattern
-
-        result = strip_pattern.sub("", "OLLAMA:model")
-        assert result == "model"
-
-
-

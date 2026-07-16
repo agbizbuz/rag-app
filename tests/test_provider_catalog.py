@@ -40,7 +40,7 @@ class TestFetchFunctions:
 
         with patch("requests.get", return_value=mock_response):
             result = fetch_ollama_models("http://localhost:11434")
-            assert set(result) == {"llama3.1", "mistral"}
+            assert set(result) == {"ollama:llama3.1", "ollama:mistral"}
 
     def test_fetch_ollama_models_empty(self):
         from ui.components.provider_catalog import fetch_ollama_models

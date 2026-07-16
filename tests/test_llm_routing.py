@@ -39,24 +39,24 @@ class TestProviderRouting:
         from core.providers.lm_studio import LMStudioProvider
         from core.providers.routing import _REGISTRY
 
-        p = _REGISTRY.resolve_provider("lm-studio:llama-3.1-instruct")
+        p = _REGISTRY.resolve_provider("lmstudio:llama-3.1-instruct")
         assert p == LMStudioProvider
         assert p.name == "LM Studio"
 
     def test_huggingface_routing(self, monkeypatch):
         """Test HuggingFace provider routing via Hub ID pattern."""
-        from core.providers.openai import OpenAIProvider
+        from core.providers.huggingface import HuggingFaceProvider
         from core.providers.routing import _REGISTRY
 
         # HuggingFace uses hub model IDs without prefix - resolves to default OpenAIProvider
-        p = _REGISTRY.resolve_provider("meta-llama/Llama-3.3-70B-Instruct")
-        assert p == OpenAIProvider
+        p = _REGISTRY.resolve_provider("hf:meta-llama/Llama-3.3-70B-Instruct")
+        assert p == HuggingFaceProvider
 
     def test_unsupported_model(self):
         """Test that unsupported model IDs fall back to default OpenAI provider."""
         from core.providers.routing import _REGISTRY
 
-        p = _REGISTRY.resolve_provider("gpt-4o-mini")
+        p = _REGISTRY.resolve_provider("openai:gpt-4o-mini")
         assert p is not None
 
     def test_openai_default_routing(self, monkeypatch):
@@ -65,17 +65,18 @@ class TestProviderRouting:
         from core.providers.openai import OpenAIProvider
         from core.providers.routing import _REGISTRY
 
-        p = _REGISTRY.resolve_provider("gpt-4o-mini")
+        p = _REGISTRY.resolve_provider("openai:gpt-4o-mini")
         assert p == OpenAIProvider
 
     def test_claude_routing(self, monkeypatch):
         """Test Claude model routing to Anthropic provider."""
         self._setup_key(monkeypatch, "ANTHROPIC_API_KEY", "test-key")
         from core.providers.routing import _REGISTRY
+        from core.providers.anthropic import AnthropicProvider
 
-        p = _REGISTRY.resolve_provider("claude-3-haiku-20240307")
+        p = _REGISTRY.resolve_provider("claude:claude-3-haiku-20240307")
         # Should resolve to AnthropicProvider (or at least a valid provider)
-        assert p is not None
+        assert p == AnthropicProvider
 
     def test_gemini_routing(self, monkeypatch):
         """Test Gemini model routing."""
@@ -83,5 +84,5 @@ class TestProviderRouting:
         from core.providers.gemini import GeminiProvider
         from core.providers.routing import _REGISTRY
 
-        p = _REGISTRY.resolve_provider("gemini-pro")
+        p = _REGISTRY.resolve_provider("gemini:gemini-pro")
         assert p == GeminiProvider
