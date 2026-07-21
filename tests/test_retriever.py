@@ -3,6 +3,8 @@
 from unittest.mock import MagicMock
 
 from core.retriever import RAGRetriever
+from config_provider import ConfigProvider
+from core.parser import ParserRegistry
 
 
 class TestRAGRetriever:

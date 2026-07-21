@@ -7,38 +7,30 @@ from .base import (
     RAGError,
     UnsupportedModelError,
 )
-from .routing import _REGISTRY, register, resolve_provider
+from .routing import ProviderRegistry
 
 
-def _register_all():
+def register_all_providers(registry: ProviderRegistry) -> None:
+    """Register all available providers to the given registry instance."""
     from .anthropic import AnthropicProvider  # noqa: TLE001
-
-    register("claude:", AnthropicProvider)
+    registry.register("claude:", AnthropicProvider)
 
     from .gemini import GeminiProvider  # noqa: TLE001
-
-    register("gemini:", GeminiProvider)
+    registry.register("gemini:", GeminiProvider)
 
     from .huggingface import HuggingFaceProvider  # noqa: TLE001
-
-    register("hf:", HuggingFaceProvider)
+    registry.register("hf:", HuggingFaceProvider)
 
     from .lm_studio import LMStudioProvider  # noqa: TLE001
-
-    # register("lm-studio:", LMStudioProvider)
-    register("lmstudio:", LMStudioProvider)  # alias used by provider_catalog UI
+    registry.register("lmstudio:", LMStudioProvider)  # alias used by provider_catalog UI
 
     from .ollama import OllamaProvider  # noqa: TLE001
-
-    register("ollama:", OllamaProvider)
+    registry.register("ollama:", OllamaProvider)
 
     from .openai import OpenAIProvider  # noqa: TLE001
+    registry.register("openai:", OpenAIProvider)  # Default for gpt-* models
+    registry.register("groq:", OpenAIProvider)  # Groq uses same provider but with GROQ_API_KEY
 
-    register("openai:", OpenAIProvider)  # Default for gpt-* models
-    register("groq:", OpenAIProvider)  # Groq uses same provider but with GROQ_API_KEY
-
-
-_register_all()
 
 __all__ = [
     "ChatMessage",
@@ -47,7 +39,6 @@ __all__ = [
     "Provider",
     "RAGError",
     "UnsupportedModelError",
-    "_REGISTRY",
-    "register",
-    "resolve_provider",
+    "ProviderRegistry",
+    "register_all_providers",
 ]

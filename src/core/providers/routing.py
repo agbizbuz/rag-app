@@ -3,8 +3,8 @@
 from .base import UnsupportedModelError
 
 
-class _Registry:
-    """Singleton registry of available providers."""
+class ProviderRegistry:
+    """Registry of available providers."""
 
     def __init__(self) -> None:
         self._registry: list[tuple[str, type]] = []
@@ -33,8 +33,3 @@ class _Registry:
                 return provider_class
 
         raise UnsupportedModelError(f"No provider registered for model: {model_id}")
-
-
-_REGISTRY = _Registry()
-register = _REGISTRY.register
-resolve_provider = _REGISTRY.resolve_provider

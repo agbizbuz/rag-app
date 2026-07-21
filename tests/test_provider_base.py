@@ -79,18 +79,22 @@ class TestProviderProtocol:
     """Tests for the provider protocol and routing."""
 
     def test_registry_resolve_by_prefix(self):
-        from core.providers import _REGISTRY
+        from core.providers.routing import ProviderRegistry
+        from core.providers import register_all_providers
+
+        registry = ProviderRegistry()
+        register_all_providers(registry)
 
         # These should be registered by the auto-registration in __init__
-        p = _REGISTRY.resolve_provider("openai:openai:gpt-4o-mini")
+        p = registry.resolve_provider("openai:gpt-4o-mini")
         assert p is not None
 
     def test_registry_raises_for_unknown(self):
-        from core.providers.routing import _Registry
+        from core.providers.routing import ProviderRegistry
 
-        r = _Registry()
+        r = ProviderRegistry()
         try:
-            r.resolve_provider("gemini:gemini:xyz-nonexistent-model")
+            r.resolve_provider("gemini:xyz-nonexistent-model")
             assert False, "Should have raised UnsupportedModelError"
         except UnsupportedModelError as e:
             assert "No provider registered for model" in str(e)

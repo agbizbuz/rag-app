@@ -18,7 +18,7 @@ class TestGetLlmResponse:
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         mock_cls, _ = self._make_mock()
 
-        with patch("core.providers.routing.resolve_provider", return_value=mock_cls):
+        with patch("core.providers.routing.ProviderRegistry.resolve_provider", return_value=mock_cls):
             from core.llm import get_llm_response
 
             result = get_llm_response("ctx", "query", "gpt-4o-mini")
@@ -29,7 +29,7 @@ class TestGetLlmResponse:
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         mock_cls, _ = self._make_mock()
 
-        with patch("core.providers.routing.resolve_provider", return_value=mock_cls):
+        with patch("core.providers.routing.ProviderRegistry.resolve_provider", return_value=mock_cls):
             from core.llm import get_llm_response
 
             result = get_llm_response("ctx", "query", "groq:llama-3.1-8b-instant")
@@ -40,7 +40,7 @@ class TestGetLlmResponse:
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         mock_cls, _ = self._make_mock()
 
-        with patch("core.providers.routing.resolve_provider", return_value=mock_cls):
+        with patch("core.providers.routing.ProviderRegistry.resolve_provider", return_value=mock_cls):
             from core.llm import get_llm_response
 
             result = get_llm_response("ctx", "query", "ollama:llama3.1")
@@ -51,7 +51,7 @@ class TestGetLlmResponse:
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         mock_cls, _ = self._make_mock()
 
-        with patch("core.providers.routing.resolve_provider", return_value=mock_cls):
+        with patch("core.providers.routing.ProviderRegistry.resolve_provider", return_value=mock_cls):
             from core.llm import get_llm_response
 
             result = get_llm_response("ctx", "query", "lm-studio:llama-3.1-instruct")
@@ -62,7 +62,7 @@ class TestGetLlmResponse:
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         mock_cls, _ = self._make_mock()
 
-        with patch("core.providers.routing.resolve_provider", return_value=mock_cls):
+        with patch("core.providers.routing.ProviderRegistry.resolve_provider", return_value=mock_cls):
             from core.llm import get_llm_response
 
             result = get_llm_response("ctx", "query", "claude-3-opus-20240229")
@@ -73,7 +73,7 @@ class TestGetLlmResponse:
         monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
         mock_cls, _ = self._make_mock()
 
-        with patch("core.providers.routing.resolve_provider", return_value=mock_cls):
+        with patch("core.providers.routing.ProviderRegistry.resolve_provider", return_value=mock_cls):
             from core.llm import get_llm_response
 
             result = get_llm_response("ctx", "query", "gemini-pro")
@@ -93,7 +93,7 @@ class TestGetLlmResponse:
         """Unknown model returns error."""
         from core.providers.base import UnsupportedModelError as UME
 
-        with patch("core.providers.routing.resolve_provider", side_effect=UME("No provider for xyz")):
+        with patch("core.providers.routing.ProviderRegistry.resolve_provider", side_effect=UME("No provider for xyz")):
             from core.llm import get_llm_response
 
             result = get_llm_response("ctx", "query", "xyz-model")
@@ -103,7 +103,7 @@ class TestGetLlmResponse:
         """All providers are instantiated with (model, temperature, max_tokens)."""
         mock_cls, mock_instance = self._make_mock()
 
-        with patch("core.providers.routing.resolve_provider", return_value=mock_cls):
+        with patch("core.providers.routing.ProviderRegistry.resolve_provider", return_value=mock_cls):
             from core.llm import get_llm_response
 
             get_llm_response("ctx", "query", "gpt-4o-mini")

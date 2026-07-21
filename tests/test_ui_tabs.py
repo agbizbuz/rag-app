@@ -57,13 +57,16 @@ class TestQueryTabLogic:
         sys.modules["streamlit"] = st
 
         from ui.query_tab import render_query_tab
+        from config_provider import ConfigProvider
+from unittest.mock import MagicMock
+        from core.providers.routing import ProviderRegistry
 
         mock_vs = MagicMock()
         mock_vs.get_collection_size.return_value = 0
         mock_retriever = MagicMock()
         mock_retriever.vector_store = mock_vs
 
-        render_query_tab(mock_retriever, "gpt-4o-mini")
+        render_query_tab(mock_retriever, "gpt-4o-mini", config_provider=ConfigProvider(MagicMock()), provider_registry=ProviderRegistry())
         assert st.warning.call_count >= 1
 
     def test_query_not_called_when_no_results(self):
@@ -90,8 +93,11 @@ class TestQueryTabLogic:
         sys.modules["streamlit"] = st
 
         from ui.query_tab import render_query_tab
+        from config_provider import ConfigProvider
+from unittest.mock import MagicMock
+        from core.providers.routing import ProviderRegistry
 
-        render_query_tab(mock_retriever, "gpt-4o-mini")
+        render_query_tab(mock_retriever, "gpt-4o-mini", config_provider=ConfigProvider(MagicMock()), provider_registry=ProviderRegistry())
         assert mock_retriever.retrieve.call_count == 1
 
     @patch("core.evaluator.EvaluationManager")
@@ -152,8 +158,11 @@ class TestQueryTabLogic:
         sys.modules["core.llm"] = mock_llm_mod
 
         from ui.query_tab import render_query_tab
+        from config_provider import ConfigProvider
+from unittest.mock import MagicMock
+        from core.providers.routing import ProviderRegistry
 
-        render_query_tab(mock_retriever, "gpt-4o-mini")
+        render_query_tab(mock_retriever, "gpt-4o-mini", config_provider=ConfigProvider(MagicMock()), provider_registry=ProviderRegistry())
 
         assert mock_retriever.retrieve.called
 
@@ -218,8 +227,11 @@ class TestQueryTabLogic:
         sys.modules["streamlit"] = st
 
         from ui.query_tab import render_query_tab
+        from config_provider import ConfigProvider
+from unittest.mock import MagicMock
+        from core.providers.routing import ProviderRegistry
 
-        render_query_tab(mock_retriever, "gpt-4o-mini")
+        render_query_tab(mock_retriever, "gpt-4o-mini", config_provider=ConfigProvider(MagicMock()), provider_registry=ProviderRegistry())
 
         mock_eval_manager.update_feedback.assert_any_call("test-id", rating="thumbs_up")
 
@@ -284,7 +296,10 @@ class TestQueryTabLogic:
         sys.modules["streamlit"] = st
 
         from ui.query_tab import render_query_tab
+        from config_provider import ConfigProvider
+from unittest.mock import MagicMock
+        from core.providers.routing import ProviderRegistry
 
-        render_query_tab(mock_retriever, "gpt-4o-mini")
+        render_query_tab(mock_retriever, "gpt-4o-mini", config_provider=ConfigProvider(MagicMock()), provider_registry=ProviderRegistry())
 
         mock_eval_manager.update_feedback.assert_any_call("test-id", rating="thumbs_down")

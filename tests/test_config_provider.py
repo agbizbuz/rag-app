@@ -73,18 +73,7 @@ class TestSettings:
 class TestConfigProvider:
     """Tests for config_provider.ConfigProvider."""
 
-    def test_singleton_returns_instance(self):
-        from config_provider import ConfigProvider, get_config
 
-        cfg = get_config()
-        assert isinstance(cfg, ConfigProvider)
-
-    def test_singleton_reuses_instance(self):
-        from config_provider import get_config
-
-        cfg1 = get_config()
-        cfg2 = get_config()
-        assert cfg1 is cfg2
 
     def test_default_values_via_config_provider(self):
         from config_provider import ConfigProvider
@@ -212,7 +201,7 @@ class TestEmbeddingFunction:
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         from core.embedding_function import create_embedding_function
 
-        result = create_embedding_function()
+        result = create_embedding_function(ConfigProvider())
         assert result is None
 
     def test_with_openai_key_calls_factory(self, monkeypatch):
@@ -223,6 +212,6 @@ class TestEmbeddingFunction:
             MockEF.return_value = "mock_ef"
             from core.embedding_function import create_embedding_function
 
-            result = create_embedding_function()
+            result = create_embedding_function(ConfigProvider())
             assert result == "mock_ef"
             MockEF.assert_called_once_with(api_key="sk-test-key", model_name="text-embedding-3-small")

@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Callable, Optional
 
 import chromadb
 from collections import defaultdict
-from config_provider import get_config
 
 if TYPE_CHECKING:
     from .embedding_manager import EmbeddingManager
@@ -25,16 +24,15 @@ class VectorStore:
 
     def __init__(
         self,
+        config_provider: ConfigProvider,
         db_path: str | None = None,
         collection_name: str | None = None,
         embedding_creator: EmbeddingCreator | None = None,
         embedding_manager: EmbeddingManager | None = None,
-        config_provider: ConfigProvider | None = None,
     ) -> None:
-        cfg = config_provider or get_config()
-        self._config = cfg
-        self.db_path = db_path or cfg.db_path
-        self.collection_name = collection_name or cfg.collection_name
+        self._config = config_provider
+        self.db_path = db_path or self._config.db_path
+        self.collection_name = collection_name or self._config.collection_name
 
         self._client = chromadb.PersistentClient(path=self.db_path)
         self._collection: chromadb.Collection | None = None
@@ -43,7 +41,7 @@ class VectorStore:
 
         from .embedding_manager import EmbeddingManager
 
-        self._embedding_manager = embedding_manager or EmbeddingManager(config_provider=cfg)
+        self._embedding_manager = embedding_manager or EmbeddingManager(config_provider=self._config)
 
     @property
     def collection(self) -> chromadb.Collection:
