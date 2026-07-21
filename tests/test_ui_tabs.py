@@ -39,7 +39,9 @@ class TestBuilderTab:
 
         from ui.builder_tab import render_builder
 
-        render_builder(mock_vs)
+        mock_config = MagicMock()
+        mock_config.max_file_size_bytes = 50 * 1024 * 1024
+        render_builder(mock_vs, parser_registry=MagicMock(), config_provider=mock_config)
         st.error.assert_called()
 
 
@@ -58,7 +60,6 @@ class TestQueryTabLogic:
 
         from ui.query_tab import render_query_tab
         from config_provider import ConfigProvider
-from unittest.mock import MagicMock
         from core.providers.routing import ProviderRegistry
 
         mock_vs = MagicMock()
@@ -94,7 +95,6 @@ from unittest.mock import MagicMock
 
         from ui.query_tab import render_query_tab
         from config_provider import ConfigProvider
-from unittest.mock import MagicMock
         from core.providers.routing import ProviderRegistry
 
         render_query_tab(mock_retriever, "gpt-4o-mini", config_provider=ConfigProvider(MagicMock()), provider_registry=ProviderRegistry())
@@ -159,7 +159,6 @@ from unittest.mock import MagicMock
 
         from ui.query_tab import render_query_tab
         from config_provider import ConfigProvider
-from unittest.mock import MagicMock
         from core.providers.routing import ProviderRegistry
 
         render_query_tab(mock_retriever, "gpt-4o-mini", config_provider=ConfigProvider(MagicMock()), provider_registry=ProviderRegistry())
@@ -228,7 +227,6 @@ from unittest.mock import MagicMock
 
         from ui.query_tab import render_query_tab
         from config_provider import ConfigProvider
-from unittest.mock import MagicMock
         from core.providers.routing import ProviderRegistry
 
         render_query_tab(mock_retriever, "gpt-4o-mini", config_provider=ConfigProvider(MagicMock()), provider_registry=ProviderRegistry())
@@ -297,7 +295,6 @@ from unittest.mock import MagicMock
 
         from ui.query_tab import render_query_tab
         from config_provider import ConfigProvider
-from unittest.mock import MagicMock
         from core.providers.routing import ProviderRegistry
 
         render_query_tab(mock_retriever, "gpt-4o-mini", config_provider=ConfigProvider(MagicMock()), provider_registry=ProviderRegistry())

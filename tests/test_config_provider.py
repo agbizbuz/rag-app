@@ -27,6 +27,10 @@ class TestSettings:
 
     def test_settings_defaults(self, monkeypatch):
         _clear_all_keys(monkeypatch)
+        monkeypatch.setenv("CHROMA_DB_PATH", "./chroma_db")
+        monkeypatch.setenv("COLLECTION_NAME", "my_rag_collection")
+        monkeypatch.setenv("LLM_TEMPERATURE", "0.2")
+        monkeypatch.setenv("LLM_MAX_TOKENS", "1024")
         from config import Settings
 
         s = Settings()
@@ -75,7 +79,11 @@ class TestConfigProvider:
 
 
 
-    def test_default_values_via_config_provider(self):
+    def test_default_values_via_config_provider(self, monkeypatch):
+        monkeypatch.setenv("CHROMA_DB_PATH", "./chroma_db")
+        monkeypatch.setenv("COLLECTION_NAME", "my_rag_collection")
+        monkeypatch.setenv("LLM_TEMPERATURE", "0.2")
+        monkeypatch.setenv("LLM_MAX_TOKENS", "1024")
         from config_provider import ConfigProvider
 
         cfg = ConfigProvider()
@@ -199,6 +207,7 @@ class TestEmbeddingFunction:
 
     def test_no_openai_key_returns_none(self, monkeypatch):
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        from config_provider import ConfigProvider
         from core.embedding_function import create_embedding_function
 
         result = create_embedding_function(ConfigProvider())
@@ -206,6 +215,7 @@ class TestEmbeddingFunction:
 
     def test_with_openai_key_calls_factory(self, monkeypatch):
         monkeypatch.setenv("OPENAI_API_KEY", "sk-test-key")
+        from config_provider import ConfigProvider
         from unittest.mock import patch
 
         with patch("chromadb.utils.embedding_functions.OpenAIEmbeddingFunction") as MockEF:

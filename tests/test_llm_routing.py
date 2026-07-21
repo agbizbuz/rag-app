@@ -1,5 +1,7 @@
 """Tests for src/ragapp/core/providers provider routing logic."""
 
+from unittest.mock import MagicMock
+
 
 class TestProviderRouting:
     """Verify that get_llm_response routes to the correct provider based on model prefix."""
@@ -23,9 +25,16 @@ class TestProviderRouting:
     def test_groq_missing_key(self, monkeypatch):
         """Without GROQ_API_KEY, should return error string."""
         from core.llm import get_llm_response
+        from core.providers.openai import OpenAIProvider
 
         monkeypatch.delenv("GROQ_API_KEY", raising=False)
-        result = get_llm_response("ctx", "groq:llama-3.1-8b-instant", "groq:llama-3.1-8b-instant")
+        mock_cfg = MagicMock()
+        mock_cfg.llm_temperature = 0.2
+        mock_cfg.llm_max_tokens = 1024
+        mock_cfg.system_prompt = "You are a helpful assistant."
+        mock_reg = MagicMock()
+        mock_reg.resolve_provider = MagicMock(return_value=OpenAIProvider)
+        result = get_llm_response("ctx", "groq:llama-3.1-8b-instant", "groq:llama-3.1-8b-instant", mock_cfg, mock_reg)
         assert "\u26a0\ufe0f" in result and "GROQ_API_KEY" in result
 
     def test_ollama_routing(self, monkeypatch):

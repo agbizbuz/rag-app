@@ -19,7 +19,6 @@ class TestVectorStore:
 
         from core.vector_store import VectorStore
         from config_provider import ConfigProvider
-        from unittest.mock import MagicMock
 
         vs = VectorStore(config_provider=mock_cfg)
         # Replace the lazy-initialized client with our mock
@@ -30,7 +29,6 @@ class TestVectorStore:
     def test_init_default_config(self):
         from core.vector_store import VectorStore
         from config_provider import ConfigProvider
-        from unittest.mock import MagicMock
 
         with patch("core.vector_store.chromadb.PersistentClient") as MockClient:
             MockClient.return_value = MagicMock()
@@ -40,7 +38,6 @@ class TestVectorStore:
     def test_init_with_custom_config(self):
         from core.vector_store import VectorStore
         from config_provider import ConfigProvider
-        from unittest.mock import MagicMock
 
         with patch("core.vector_store.chromadb.PersistentClient"):
             cfg = MagicMock()
@@ -239,8 +236,7 @@ class TestVectorStore:
             MockClient.return_value = mock_inst
 
             from core.vector_store import VectorStore
-        from config_provider import ConfigProvider
-        from unittest.mock import MagicMock
+            from config_provider import ConfigProvider
 
             vs = VectorStore(ConfigProvider(MagicMock()))
             _ = vs.collection  # triggers lazy init
@@ -268,7 +264,6 @@ class TestVectorStoreEmbeddingFunction:
         with patch("core.vector_store.chromadb.PersistentClient"):
             from core.embedding_function import create_embedding_function
             from config_provider import ConfigProvider
-            from unittest.mock import MagicMock
 
             assert create_embedding_function(ConfigProvider(MagicMock())) is None
 
@@ -276,8 +271,7 @@ class TestVectorStoreEmbeddingFunction:
         """Test that an injected embedding creator is used."""
         with patch("core.vector_store.chromadb.PersistentClient"):
             from core.vector_store import VectorStore
-        from config_provider import ConfigProvider
-        from unittest.mock import MagicMock
+            from config_provider import ConfigProvider
 
             mock_ef = MagicMock()
             mock_cfg = MagicMock()

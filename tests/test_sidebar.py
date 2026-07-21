@@ -91,7 +91,7 @@ class TestGetProviderModels:
         from ui.sidebar import _get_provider_models
 
         openai_info = next(p for p in PROVIDERS if p.name == "OpenAI")
-        models = _get_provider_models(openai_info)
+        models = _get_provider_models(openai_info, timeout=3)
         assert "gpt-4o-mini" in models
 
 

@@ -141,12 +141,10 @@ def test_evaluation_manager_lifecycle(mock_config, temp_log_path):
     assert not os.path.exists(temp_log_path)
 
 
-@patch("core.providers.routing.ProviderRegistry.resolve_provider")
-def test_llm_judge_evaluate_success(mock_resolve, mock_config):
+def test_llm_judge_evaluate_success(mock_config):
     """Test LLMJudge successful evaluation parsing."""
     mock_provider_cls = MagicMock()
     mock_instance = MagicMock()
-    # Mock LLM returns a json string inside tags
     mock_instance.chat.return_value = """
     ```json
     {
@@ -158,7 +156,8 @@ def test_llm_judge_evaluate_success(mock_resolve, mock_config):
     ```
     """
     mock_provider_cls.return_value = mock_instance
-    mock_resolve.return_value = mock_provider_cls
+    mock_registry = MagicMock()
+    mock_registry.resolve_provider = MagicMock(return_value=mock_provider_cls)
 
     res = LLMJudge.evaluate(
         query="test query",
@@ -166,6 +165,7 @@ def test_llm_judge_evaluate_success(mock_resolve, mock_config):
         answer="test answer",
         model="gpt-4o-mini",
         config_provider=mock_config,
+        provider_registry=mock_registry,
     )
 
     assert res["faithfulness_score"] == 5
@@ -174,14 +174,14 @@ def test_llm_judge_evaluate_success(mock_resolve, mock_config):
     assert "Directly answers" in res["relevance_reason"]
 
 
-@patch("core.providers.routing.ProviderRegistry.resolve_provider")
-def test_llm_judge_evaluate_failure(mock_resolve, mock_config):
+def test_llm_judge_evaluate_failure(mock_config):
     """Test LLMJudge graceful failure handling on malformed JSON response."""
     mock_provider_cls = MagicMock()
     mock_instance = MagicMock()
     mock_instance.chat.return_value = "not a json string"
     mock_provider_cls.return_value = mock_instance
-    mock_resolve.return_value = mock_provider_cls
+    mock_registry = MagicMock()
+    mock_registry.resolve_provider = MagicMock(return_value=mock_provider_cls)
 
     res = LLMJudge.evaluate(
         query="test query",
@@ -189,6 +189,7 @@ def test_llm_judge_evaluate_failure(mock_resolve, mock_config):
         answer="test answer",
         model="gpt-4o-mini",
         config_provider=mock_config,
+        provider_registry=mock_registry,
     )
 
     assert "error" in res
