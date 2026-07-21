@@ -33,9 +33,7 @@ class BaseParser(ABC):
     def chunk_size(self) -> int:
         if self._chunk_size is not None:
             return self._chunk_size
-        from config_provider import get_config
-
-        return get_config().chunk_size
+        raise ValueError("chunk_size must be provided to BaseParser")
 
     @abstractmethod
     def parse(self, file) -> list[Chunk]:

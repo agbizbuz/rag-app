@@ -15,7 +15,7 @@ def _get_rating_symbol(rating: str | None, verbose: bool = False) -> str:
     return {"thumbs_up": "👍", "thumbs_down": "👎"}.get(rating, "—")
 
 
-def render_evaluation_tab() -> None:
+def render_evaluation_tab(config_provider, provider_registry) -> None:
     """Render the RAG Evaluation tab."""
     st.header("📊 RAG Evaluation Dashboard")
     st.caption(
@@ -23,7 +23,7 @@ def render_evaluation_tab() -> None:
         "and qualitative alignment (user feedback, AI-as-a-judge scorecards) of your local RAG system."
     )
 
-    manager = EvaluationManager()
+    manager = EvaluationManager(config_provider=config_provider)
     records = manager.get_records()
 
     if not records:

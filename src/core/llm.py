@@ -22,7 +22,8 @@ def get_llm_response(
     query_context: str,
     user_query: str,
     llm_model: str,
-    config_provider=None,  # noqa: ANN001
+    config_provider,
+    provider_registry,
 ) -> str:
     """Query the selected LLM provider for a given context and model.
 
@@ -30,21 +31,19 @@ def get_llm_response(
         query_context: The retrieved context from vector store.
         user_query: The user's question.
         llm_model: The model identifier (e.g., "gpt-4o-mini", "ollama:llama3").
-        config_provider: Optional injected ConfigProvider to avoid import cycles.
+        config_provider: Injected ConfigProvider instance.
+        provider_registry: Injected ProviderRegistry instance.
 
     Returns:
         LLM-generated text or error message prefixed with ⚠️.
     """
-    from config_provider import get_config as _get_cfg
-
-    cfg = config_provider or _get_cfg()
+    cfg = config_provider
     temperature = cfg.llm_temperature  # type: ignore[union-attr]
     max_tokens = cfg.llm_max_tokens  # type: ignore[union-attr]
 
     from .providers.base import ChatMessage as CM
     from .providers.base import KeyMissingError as KME
     from .providers.base import UnsupportedModelError as UME
-    from .providers.routing import resolve_provider
 
     system_prompt = cfg.system_prompt  # type: ignore[union-attr]
 
@@ -57,7 +56,7 @@ def get_llm_response(
     ]
 
     try:
-        provider_class = resolve_provider(llm_model)
+        provider_class = provider_registry.resolve_provider(llm_model)
     except UME as exc:
         return f"\u26a0\ufe0f {exc}"
 

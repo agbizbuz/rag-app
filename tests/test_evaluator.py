@@ -8,6 +8,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from config_provider import ConfigProvider
 from core.evaluator import EvaluationManager, EvaluationRecord, LLMJudge
+from config_provider import ConfigProvider
+from core.providers.routing import ProviderRegistry
 
 
 @pytest.fixture
@@ -139,7 +141,7 @@ def test_evaluation_manager_lifecycle(mock_config, temp_log_path):
     assert not os.path.exists(temp_log_path)
 
 
-@patch("core.providers.routing.resolve_provider")
+@patch("core.providers.routing.ProviderRegistry.resolve_provider")
 def test_llm_judge_evaluate_success(mock_resolve, mock_config):
     """Test LLMJudge successful evaluation parsing."""
     mock_provider_cls = MagicMock()
@@ -172,7 +174,7 @@ def test_llm_judge_evaluate_success(mock_resolve, mock_config):
     assert "Directly answers" in res["relevance_reason"]
 
 
-@patch("core.providers.routing.resolve_provider")
+@patch("core.providers.routing.ProviderRegistry.resolve_provider")
 def test_llm_judge_evaluate_failure(mock_resolve, mock_config):
     """Test LLMJudge graceful failure handling on malformed JSON response."""
     mock_provider_cls = MagicMock()

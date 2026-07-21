@@ -15,7 +15,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from config_provider import ConfigProvider, get_config
+from config_provider import ConfigProvider
 
 logger = logging.getLogger(__name__)
 
@@ -110,8 +110,8 @@ class EvaluationRecord:
 class EvaluationManager:
     """Handles persistence of evaluation records to a local JSON file."""
 
-    def __init__(self, config_provider: ConfigProvider | None = None) -> None:
-        self._config = config_provider or get_config()
+    def __init__(self, config_provider: ConfigProvider) -> None:
+        self._config = config_provider
         # Fallback if property is not defined
         self.log_path = getattr(self._config, "evaluation_log_path", "./evaluation_logs.json")
 
@@ -208,7 +208,8 @@ class LLMJudge:
         context: str,
         answer: str,
         model: str,
-        config_provider: ConfigProvider | None = None,
+        config_provider,
+        provider_registry,
     ) -> dict[str, Any]:
         """Evaluate the quality (faithfulness and relevance) of a response.
 
@@ -218,15 +219,14 @@ class LLMJudge:
             answer: The generated answer text.
             model: The LLM model to use for the evaluation.
             config_provider: Configuration provider dependency.
+            provider_registry: Provider registry dependency.
 
         Returns:
             Dict containing scores and reasons, or error message.
         """
-        from config_provider import get_config as _get_cfg
         from core.providers.base import ChatMessage as CM
-        from core.providers.routing import resolve_provider
 
-        cfg = config_provider or _get_cfg()
+        cfg = config_provider
         temperature = 0.0  # Determinisitic scoring
         max_tokens = cfg.llm_max_tokens
 
@@ -255,7 +255,7 @@ Do not include any other markdown formatting (like ```json), introduction, or tr
 """
         messages = [CM("user", prompt.format(context=context, query=query, answer=answer))]
         try:
-            provider_class = resolve_provider(model)
+            provider_class = provider_registry.resolve_provider(model)
             instance = provider_class(model=model, temperature=temperature, max_tokens=max_tokens)
             response = instance.chat(messages)
 

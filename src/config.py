@@ -48,4 +48,3 @@ class Settings(BaseSettings):
     evaluation_log_path: str = Field(default="./evaluation_logs.json", validation_alias="EVALUATION_LOG_PATH")
 
 
-settings = Settings()

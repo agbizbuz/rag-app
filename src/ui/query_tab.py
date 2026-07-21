@@ -66,7 +66,7 @@ def _safe_filename(query: str, max_len: int = 40) -> str:
     return slug[:max_len] if slug else "rag_export"
 
 
-def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
+def render_query_tab(retriever: RAGRetriever, llm_model: str, config_provider, provider_registry) -> None:
     """Render the Query tab with RAG execution and performance metrics."""
     import time
 
@@ -83,9 +83,7 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
     if "_system_prompt" not in st.session_state:
         st.session_state["_system_prompt"] = None  # will be populated via ConfigProvider below
 
-    from config_provider import get_config as _get_cfg
-
-    _cfg = _get_cfg()
+    _cfg = config_provider
     _default_prompt = _cfg.system_prompt  # reads Settings.DEFAULT → env fallback → hardcoded default
 
     with st.expander("⚙️ Edit System Prompt", expanded=False):
@@ -112,7 +110,7 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
         return
 
     # Initalize evaluation manager
-    eval_manager = EvaluationManager()
+    eval_manager = EvaluationManager(config_provider=config_provider)
 
     # Search & Answer button triggers search
     if st.button("Search & Answer", type="primary"):
@@ -129,7 +127,7 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
 
             # 2. Display LLM answer
             context_str = retriever.format_context(results)
-            answer = get_llm_response(context_str, user_query, llm_model)
+            answer = get_llm_response(context_str, user_query, llm_model, config_provider=config_provider, provider_registry=provider_registry)
             latency = time.time() - start_time
 
             # 3. Create evaluation record
@@ -231,7 +229,11 @@ def render_query_tab(retriever: RAGRetriever, llm_model: str) -> None:
                 if st.button("Run AI Judge Evaluation", key=f"judge_{record_id}", type="secondary"):
                     with st.spinner("AI Judge evaluating response..."):
                         context_str = retriever.format_context(results)
-                        eval_res = LLMJudge.evaluate(user_query, context_str, answer, llm_model)
+                        eval_res = LLMJudge.evaluate(
+                            user_query, context_str, answer, llm_model,
+                            config_provider=config_provider,
+                            provider_registry=provider_registry
+                        )
                         if "error" in eval_res:
                             st.error(eval_res["error"])
                         else:

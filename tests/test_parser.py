@@ -1,8 +1,20 @@
 """Tests for src/ragapp/core/parser.py process_file function."""
 
 import io
+from unittest.mock import patch
+import pytest
 
-from core.parser import process_file
+from core.parser import ParserRegistry
+from config_provider import ConfigProvider
+from config import Settings
+
+@pytest.fixture
+def parser_registry():
+    return ParserRegistry()
+
+@pytest.fixture
+def mock_config():
+    return ConfigProvider(Settings())
 
 
 def _txt_bytes():
@@ -70,18 +82,18 @@ def _docx_bytes():
 class TestProcessFileTXT:
     """Tests for TXT file processing."""
 
-    def test_process_txt_basic(self):
+    def test_process_txt_basic(self, parser_registry, mock_config):
         txt_file = _txt_bytes()
-        chunks = process_file(txt_file)
+        chunks = parser_registry.process_file(txt_file, mock_config)
 
         assert len(chunks) == 1, f"Expected 1 chunk (content < 1000 bytes), got {len(chunks)}"
         assert all("id" in c for c in chunks), "Each chunk must have an 'id'"
         assert all("text" in c for c in chunks), "Each chunk must have 'text'"
         assert all("metadata" in c for c in chunks), "Each chunk must have 'metadata'"
 
-    def test_process_txt_metadata(self):
+    def test_process_txt_metadata(self, parser_registry, mock_config):
         txt_file = _txt_bytes()
-        chunks = process_file(txt_file)
+        chunks = parser_registry.process_file(txt_file, mock_config)
 
         for chunk in chunks:
             assert chunk["metadata"]["source"] == "test.txt", f"Source mismatch: {chunk['metadata']['source']}"
@@ -91,7 +103,7 @@ class TestProcessFileTXT:
 class TestProcessFileTXTWordSplit:
     """Tests for TXT parser word-boundary chunking (lines 20-22 of txt_parser)."""
 
-    def test_txt_long_content_triggers_word_split(self):
+    def test_txt_long_content_triggers_word_split(self, parser_registry, mock_config):
         """Content > 1000 chars should use rfind space to avoid mid-word splits."""
         words = ["word" + str(i) for i in range(400)]
         content = " ".join(words)
@@ -99,7 +111,7 @@ class TestProcessFileTXTWordSplit:
         buf = io.BytesIO(content.encode("utf-8"))
         buf.name = "long.txt"
 
-        chunks = process_file(buf)
+        chunks = parser_registry.process_file(buf, mock_config)
 
         assert len(chunks) >= 2, f"Expected at least 2 chunks from long content, got {len(chunks)}"
         for chunk in chunks:
@@ -107,38 +119,38 @@ class TestProcessFileTXTWordSplit:
             last_token = text.split(" ")[-1] if " " in text else text
             assert last_token == text[-len(last_token) :], f"Trailing space issue: {repr(text[-20:])}"
 
-    def test_txt_under_threshold(self):
+    def test_txt_under_threshold(self, parser_registry, mock_config):
         """Content under 1000 chars should produce exactly 1 chunk."""
         content = "x" * 900  # well under 1000
 
         buf = io.BytesIO(content.encode("utf-8"))
         buf.name = "short.txt"
 
-        chunks = process_file(buf)
+        chunks = parser_registry.process_file(buf, mock_config)
         assert len(chunks) == 1, f"Expected 1 chunk for content under threshold, got {len(chunks)}"
 
 
 class TestProcessFilePDF:
     """Tests for PDF file processing."""
 
-    def test_process_pdf_basic(self):
+    def test_process_pdf_basic(self, parser_registry, mock_config):
         pdf_file = _pdf_bytes()
-        chunks = process_file(pdf_file)
+        chunks = parser_registry.process_file(pdf_file, mock_config)
 
         assert len(chunks) == 0, f"Minimal synthetic PDF yields no extractable text (expected), got {len(chunks)}"
         assert all("id" in c for c in chunks), "Each chunk must have an 'id'"
         assert all("text" in c for c in chunks), "Each chunk must have 'text'"
         assert all("metadata" in c for c in chunks), "Each chunk must have 'metadata'"
 
-    def test_process_pdf_metadata(self):
+    def test_process_pdf_metadata(self, parser_registry, mock_config):
         pdf_file = _pdf_bytes()
-        chunks = process_file(pdf_file)
+        chunks = parser_registry.process_file(pdf_file, mock_config)
 
         for chunk in chunks:
             assert chunk["metadata"]["source"] == "test.pdf", f"Source mismatch: {chunk['metadata']['source']}"
             assert "page" in chunk["metadata"], f"PDF metadata missing 'page': {chunk['metadata']}"
 
-    def test_process_pdf_multi_paragraph_splits_into_chunks(self):
+    def test_process_pdf_multi_paragraph_splits_into_chunks(self, parser_registry, mock_config):
         """Test PDF page with extractable text containing newlines (covers paragraph splitting)."""
         from unittest.mock import MagicMock, patch
 
@@ -151,7 +163,7 @@ class TestProcessFilePDF:
 
         pdf_file = _pdf_bytes()
         with patch("pypdf.PdfReader", return_value=mock_reader):
-            chunks = process_file(pdf_file)
+            chunks = parser_registry.process_file(pdf_file, mock_config)
 
         # 6 small paragraphs (total ~120 chars) are merged into 1 chunk
         assert len(chunks) == 1, f"Expected 1 merged chunk from small paragraphs, got {len(chunks)}"
@@ -161,15 +173,15 @@ class TestProcessFilePDF:
         assert chunks[0]["metadata"]["page"] == [1, 1, 1, 2, 2, 2]
         assert chunks[0]["metadata"]["paragraph"] == [0, 1, 2, 0, 1, 2]
 
-    def test_process_pdf_corrupt_file_returns_empty(self):
+    def test_process_pdf_corrupt_file_returns_empty(self, parser_registry, mock_config):
         """Corrupt / invalid PDF should return [] instead of crashing."""
         buf = io.BytesIO(b"this is not a valid PDF at all")
         buf.name = "corrupt.pdf"
 
-        chunks = process_file(buf)
+        chunks = parser_registry.process_file(buf, mock_config)
         assert chunks == [], f"Expected empty list for corrupt PDF, got {len(chunks)} chunks"
 
-    def test_process_pdf_empty_pages_skipped(self):
+    def test_process_pdf_empty_pages_skipped(self, parser_registry, mock_config):
         """Pages with only whitespace should be skipped."""
         from unittest.mock import MagicMock, patch
 
@@ -184,13 +196,13 @@ class TestProcessFilePDF:
 
         buf = _pdf_bytes()
         with patch("pypdf.PdfReader", return_value=mock_reader):
-            chunks = process_file(buf)
+            chunks = parser_registry.process_file(buf, mock_config)
 
         assert len(chunks) == 1, f"Expected 1 chunk (empty page skipped), got {len(chunks)}"
         assert chunks[0]["text"] == "Real content here."
         assert chunks[0]["metadata"]["page"] == 2
 
-    def test_process_pdf_small_paragraphs_merged(self):
+    def test_process_pdf_small_paragraphs_merged(self, parser_registry, mock_config):
         """Multiple small paragraphs should be merged into one chunk when under target_chunk_size."""
         from unittest.mock import MagicMock, patch
 
@@ -203,7 +215,7 @@ class TestProcessFilePDF:
 
         buf = _pdf_bytes()
         with patch("pypdf.PdfReader", return_value=mock_reader):
-            chunks = process_file(buf)
+            chunks = parser_registry.process_file(buf, mock_config)
 
         # All three paragraphs should be merged into a single chunk
         assert len(chunks) == 1, f"Expected 1 merged chunk, got {len(chunks)}"
@@ -211,7 +223,7 @@ class TestProcessFilePDF:
         assert "Short B." in chunks[0]["text"]
         assert "Short C." in chunks[0]["text"]
 
-    def test_process_pdf_large_page_gets_own_chunk(self):
+    def test_process_pdf_large_page_gets_own_chunk(self, parser_registry, mock_config):
         """A page with >1000 chars and no paragraph breaks should be word-boundary sub-chunked."""
         from unittest.mock import MagicMock, patch
 
@@ -224,7 +236,7 @@ class TestProcessFilePDF:
 
         buf = _pdf_bytes()
         with patch("pypdf.PdfReader", return_value=mock_reader):
-            chunks = process_file(buf)
+            chunks = parser_registry.process_file(buf, mock_config)
 
         assert len(chunks) >= 2, f"Expected >=2 sub-chunks from oversized page, got {len(chunks)}"
         # Each sub-chunk should end at a word boundary (no partial words)
@@ -233,7 +245,7 @@ class TestProcessFilePDF:
             assert not text.endswith(" "), f"Chunk should be stripped: {repr(text[-20:])}"
             assert "sub_chunk" in chunk["metadata"], "Oversized chunks should have 'sub_chunk' metadata"
 
-    def test_process_pdf_metadata_consistency(self):
+    def test_process_pdf_metadata_consistency(self, parser_registry, mock_config):
         """Every chunk should always have both 'page' and 'paragraph' in metadata."""
         from unittest.mock import MagicMock, patch
 
@@ -249,7 +261,7 @@ class TestProcessFilePDF:
 
         buf = _pdf_bytes()
         with patch("pypdf.PdfReader", return_value=mock_reader):
-            chunks = process_file(buf)
+            chunks = parser_registry.process_file(buf, mock_config)
 
         for chunk in chunks:
             assert "page" in chunk["metadata"], f"Missing 'page' in metadata: {chunk['metadata']}"
@@ -259,15 +271,15 @@ class TestProcessFilePDF:
 class TestProcessFileCSV:
     """Tests for CSV file processing."""
 
-    def test_process_csv_basic(self):
+    def test_process_csv_basic(self, parser_registry, mock_config):
         csv_file = _csv_bytes()
-        chunks = process_file(csv_file)
+        chunks = parser_registry.process_file(csv_file, mock_config)
 
         assert len(chunks) == 3, f"Expected 3 rows as chunks, got {len(chunks)}"
 
-    def test_process_csv_metadata(self):
+    def test_process_csv_metadata(self, parser_registry, mock_config):
         csv_file = _csv_bytes()
-        chunks = process_file(csv_file)
+        chunks = parser_registry.process_file(csv_file, mock_config)
 
         for chunk in chunks:
             assert chunk["metadata"]["source"] == "test.csv", f"Source mismatch: {chunk['metadata']['source']}"
@@ -277,21 +289,21 @@ class TestProcessFileCSV:
 class TestProcessFileDOCX:
     """Tests for DOCX file processing."""
 
-    def test_process_docx_basic(self):
+    def test_process_docx_basic(self, parser_registry, mock_config):
         docx_file = _docx_bytes()
-        chunks = process_file(docx_file)
+        chunks = parser_registry.process_file(docx_file, mock_config)
 
         assert len(chunks) == 1, f"Expected 1 paragraph as chunk, got {len(chunks)}"
 
-    def test_process_docx_metadata(self):
+    def test_process_docx_metadata(self, parser_registry, mock_config):
         docx_file = _docx_bytes()
-        chunks = process_file(docx_file)
+        chunks = parser_registry.process_file(docx_file, mock_config)
 
         for chunk in chunks:
             assert chunk["metadata"]["source"] == "test.docx", f"Source mismatch: {chunk['metadata']['source']}"
             assert "paragraph" in chunk["metadata"], f"DOCX metadata missing 'paragraph': {chunk['metadata']}"
 
-    def test_process_docx_with_table(self):
+    def test_process_docx_with_table(self, parser_registry, mock_config):
         """Test DOCX table content generates markdown (lines 43-60 of docx_parser)."""
         from docx import Document
 
@@ -308,10 +320,10 @@ class TestProcessFileDOCX:
         buf.seek(0)
         buf.name = "test_table.docx"
 
-        chunks = process_file(buf)
+        chunks = parser_registry.process_file(buf, mock_config)
         assert len(chunks) >= 1, f"Expected at least 1 chunk from DOCX with table, got {len(chunks)}"
 
-    def test_process_docx_bullet_and_numbered_lists(self):
+    def test_process_docx_bullet_and_numbered_lists(self, parser_registry, mock_config):
         """Test bullet/number list formatting (lines 36, 38 of docx_parser)."""
         from docx import Document
 
@@ -326,10 +338,10 @@ class TestProcessFileDOCX:
         buf.seek(0)
         buf.name = "test_list.docx"
 
-        chunks = process_file(buf)
+        chunks = parser_registry.process_file(buf, mock_config)
         assert len(chunks) >= 1, f"Expected at least 1 chunk from DOCX with lists, got {len(chunks)}"
 
-    def test_process_docx_large_paragraph_triggers_self_chunk(self):
+    def test_process_docx_large_paragraph_triggers_self_chunk(self, parser_registry, mock_config):
         """Test that paragraph > target_chunk_size gets its own chunk (lines 89-99 of docx_parser)."""
         from docx import Document
 
@@ -342,10 +354,10 @@ class TestProcessFileDOCX:
         buf.seek(0)
         buf.name = "test_large.docx"
 
-        chunks = process_file(buf)
+        chunks = parser_registry.process_file(buf, mock_config)
         assert len(chunks) >= 1, f"Expected at least 1 chunk from large paragraph, got {len(chunks)}"
 
-    def test_process_docx_table_splits_across_chunks(self):
+    def test_process_docx_table_splits_across_chunks(self, parser_registry, mock_config):
         """Oversized table with many rows should split into multiple chunks."""
         from docx import Document
 
@@ -364,7 +376,7 @@ class TestProcessFileDOCX:
         buf.seek(0)
         buf.name = "test_split.docx"
 
-        chunks = process_file(buf)
+        chunks = parser_registry.process_file(buf, mock_config)
         assert len(chunks) >= 3, f"Expected oversize table to split across >= 3 chunks, got {len(chunks)}: " + [
             ch["text"][:80].replace(chr(10), " ") for ch in chunks
         ]
@@ -372,7 +384,7 @@ class TestProcessFileDOCX:
         for chunk in chunks:
             assert "table" in chunk["metadata"], f"Missing 'table' metadata on chunk {chunk['text'][:60]}"
 
-    def test_process_docx_table_empty_cells_render_as_placeholder(self):
+    def test_process_docx_table_empty_cells_render_as_placeholder(self, parser_registry, mock_config):
         """Empty cells are rendered as ``(empty)`` placeholders, not bare ``||``."""
         from docx import Document
 
@@ -388,12 +400,12 @@ class TestProcessFileDOCX:
         buf.seek(0)
         buf.name = "test_empty.docx"
 
-        chunks = process_file(buf)
+        chunks = parser_registry.process_file(buf, mock_config)
         assert len(chunks) >= 1, f"No table chunks produced: {chunks}"
         full_text = "\n".join(ch["text"] for ch in chunks)
         assert "(empty)" in full_text, f"Expected '(empty)' placeholder in rendered table text, got:\n{full_text[:400]}"
 
-    def test_process_docx_table_ragged_separator_keeps_valid_markdown(self):
+    def test_process_docx_table_ragged_separator_keeps_valid_markdown(self, parser_registry, mock_config):
         """A ragged-table row's separator uses its own actual cell count so the markdown stays well-formed."""
         from core.parsers.docx_parser import DocxParser
         from docx import Document
@@ -427,7 +439,7 @@ class TestProcessFileDOCX:
             f"First separator should match header width. Expected:\n{expected_cols}\nGot:\n{sep_lines[0]}"
         )
 
-    def test_process_docx_small_table_uses_single_chunk(self):
+    def test_process_docx_small_table_uses_single_chunk(self, parser_registry, mock_config):
         """A small table fits cleanly into one chunk — no spurious splitting."""
         from docx import Document
 
@@ -442,7 +454,7 @@ class TestProcessFileDOCX:
         buf.seek(0)
         buf.name = "test_small.docx"
 
-        chunks = process_file(buf)
+        chunks = parser_registry.process_file(buf, mock_config)
         table_chunks = [ch for ch in chunks if "table" in ch["metadata"]]
         assert len(table_chunks) == 1, (
             f"Expected exactly one chunk for a small table, got {len(table_chunks)}: {[ch['text'][:80] for ch in table_chunks]}"
@@ -452,20 +464,20 @@ class TestProcessFileDOCX:
 class TestProcessFileUnsupported:
     """Tests for unsupported file types."""
 
-    def test_process_txt_with_unsupported_extension(self):
+    def test_process_txt_with_unsupported_extension(self, parser_registry, mock_config):
         import io
 
         # Create a BytesIO with .xyz extension (unsupported)
         buf = io.BytesIO(b"some content")
         buf.name = "test.xyz"
-        chunks = process_file(buf)
+        chunks = parser_registry.process_file(buf, mock_config)
         assert len(chunks) == 0, f"Expected empty list for unsupported format, got {chunks}"
 
-    def test_process_with_no_extension(self):
+    def test_process_with_no_extension(self, parser_registry, mock_config):
         import io
 
         # BytesIO with no extension
         buf = io.BytesIO(b"some content")
         buf.name = "noextension"
-        chunks = process_file(buf)
+        chunks = parser_registry.process_file(buf, mock_config)
         assert len(chunks) == 0, f"Expected empty list for file without extension, got {chunks}"

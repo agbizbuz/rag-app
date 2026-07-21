@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Optional
 
-from config_provider import get_config
 from core.vector_store import VectorStore
 
 
@@ -14,9 +13,9 @@ class RAGRetriever:
     Separates the query/search mechanics from storage, session, and UI.
     """
 
-    def __init__(self, vector_store: VectorStore, config_provider=None) -> None:
+    def __init__(self, vector_store: VectorStore, config_provider) -> None:
         self.vector_store = vector_store
-        self._config = config_provider or get_config()
+        self._config = config_provider
 
     def retrieve(self, query: str, n_results: Optional[int] = None) -> list[dict]:
         """Query the vector store for relevant document chunks.

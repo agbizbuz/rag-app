@@ -3,13 +3,14 @@
 from unittest.mock import MagicMock, patch
 
 from core.embedding_manager import EmbeddingManager
+from config_provider import ConfigProvider
 
 
 class TestEmbeddingManager:
     """Tests for EmbeddingManager."""
 
     def test_init_default(self):
-        manager = EmbeddingManager()
+        manager = EmbeddingManager(ConfigProvider())
         assert manager._config is not None
 
     def test_init_custom_config(self):
@@ -19,7 +20,7 @@ class TestEmbeddingManager:
 
     def test_get_embedding_function_no_key(self, monkeypatch):
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-        manager = EmbeddingManager()
+        manager = EmbeddingManager(ConfigProvider())
         assert manager.get_embedding_function() is None
         assert not manager.is_openai
 

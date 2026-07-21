@@ -5,8 +5,6 @@ from __future__ import annotations
 import os
 from typing import Optional
 
-from config_provider import get_config
-
 
 class EmbeddingManager:
     """Manages embedding function configuration and instantiation.
@@ -15,8 +13,8 @@ class EmbeddingManager:
     separating these concerns from storage/persistence modules.
     """
 
-    def __init__(self, config_provider=None) -> None:
-        self._config = config_provider or get_config()
+    def __init__(self, config_provider) -> None:
+        self._config = config_provider
 
     def get_embedding_function(self) -> Optional[object]:
         """Return the configured embedding function, or None for ChromaDB default.

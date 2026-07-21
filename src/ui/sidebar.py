@@ -10,10 +10,10 @@ from core.vector_store import VectorStore
 from ui.components.provider_catalog import PROVIDERS
 
 
-def _get_provider_models(provider_info):
+def _get_provider_models(provider_info, timeout: int):
     """Return list of model identifiers for a provider with appropriate prefix."""
     if provider_info.discover_models and provider_info.base_url_key:
-        discovered = _resolve_models(provider_info)
+        discovered = _resolve_models(provider_info, timeout)
         if discovered:
             return discovered
         return []
@@ -80,13 +80,13 @@ def render_sidebar(vs: VectorStore, config: ConfigProvider) -> str:
         selected_provider_info = next(info for name, info in provider_options if name == selected_provider_name)
 
         # Model selection - shows models for the currently selected provider
-        provider_models = _get_provider_models(selected_provider_info)
+        provider_models = _get_provider_models(selected_provider_info, config.discovery_timeout)
 
         if not provider_models:
             st.info("🔄 Discovering available models...")
             # Force discovery by checking server health
             if selected_provider_info.discover_models and selected_provider_info.base_url_key:
-                discovered = _resolve_models(selected_provider_info)
+                discovered = _resolve_models(selected_provider_info, config.discovery_timeout)
                 if discovered:
                     provider_models = [f"{selected_provider_name}:{m}" for m in discovered]
                 else:
@@ -224,13 +224,13 @@ def render_key_status(info) -> None:
             return  # No URL set
 
         label = f"**{info.name} Server:**"
-        reachable = _check_server_health(url, info.discover_models)
+        reachable = _check_server_health(url, info.discover_models, 3) # Use a hardcoded timeout for the UI indicator or pass config
 
         status = "✅" if reachable else "⚠️ Unreachable"
         st.write(f"{label} {status}")
 
 
-def _resolve_models(info):  # noqa: ANN001
+def _resolve_models(info, timeout: int):  # noqa: ANN001
     """Return dynamically-discovered models or empty list."""
     base_url = os.environ.get(info.base_url_key, "")
     if not info.discover_models or not base_url:
@@ -238,24 +238,24 @@ def _resolve_models(info):  # noqa: ANN001
 
     try:
         func = info.discover_models
-        return func(base_url)
+        return func(base_url, timeout)
     except Exception:
         # Server unreachable - let UI show a warning
         return []
 
 
-def _check_server_health(base_url, discover_func):  # noqa: ANN001
+def _check_server_health(base_url, discover_func, timeout: int = 3):  # noqa: ANN001
     """Check if server is reachable by trying to list models."""
     try:
         from ui.components.provider_catalog import fetch_lm_studio_models, fetch_ollama_models
 
         if discover_func == fetch_ollama_models:
-            return len(fetch_ollama_models(base_url)) > 0
+            return len(fetch_ollama_models(base_url, timeout)) > 0
         elif discover_func == fetch_lm_studio_models:
-            return len(fetch_lm_studio_models(base_url)) > 0
+            return len(fetch_lm_studio_models(base_url, timeout)) > 0
         else:
             # Generic fallback - try calling it directly
-            discover_func(base_url)
+            discover_func(base_url, timeout)
             return True
     except Exception:
         return False

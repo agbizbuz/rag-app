@@ -154,18 +154,3 @@ class ConfigProvider:
         return os.environ.get("GROQ_API_KEY")
 
 
-# Singleton instance for use as a module-level utility (optional global fallback)
-_config_provider_instance: ConfigProvider | None = None
-
-
-def get_config() -> ConfigProvider:
-    """Return the singleton ConfigProvider instance.
-
-    Creates on first call if needed. For tests, you can override with:
-        from config import Settings
-        config_provider_instance = ConfigProvider(Settings())
-    """
-    global _config_provider_instance
-    if _config_provider_instance is None:
-        _config_provider_instance = ConfigProvider()
-    return _config_provider_instance

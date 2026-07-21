@@ -18,6 +18,8 @@ class TestVectorStore:
         mock_cfg.n_results = 3
 
         from core.vector_store import VectorStore
+        from config_provider import ConfigProvider
+        from unittest.mock import MagicMock
 
         vs = VectorStore(config_provider=mock_cfg)
         # Replace the lazy-initialized client with our mock
@@ -27,14 +29,18 @@ class TestVectorStore:
 
     def test_init_default_config(self):
         from core.vector_store import VectorStore
+        from config_provider import ConfigProvider
+        from unittest.mock import MagicMock
 
         with patch("core.vector_store.chromadb.PersistentClient") as MockClient:
             MockClient.return_value = MagicMock()
-            vs = VectorStore()
+            vs = VectorStore(ConfigProvider(MagicMock()))
             assert isinstance(vs, VectorStore)
 
     def test_init_with_custom_config(self):
         from core.vector_store import VectorStore
+        from config_provider import ConfigProvider
+        from unittest.mock import MagicMock
 
         with patch("core.vector_store.chromadb.PersistentClient"):
             cfg = MagicMock()
@@ -233,8 +239,10 @@ class TestVectorStore:
             MockClient.return_value = mock_inst
 
             from core.vector_store import VectorStore
+        from config_provider import ConfigProvider
+        from unittest.mock import MagicMock
 
-            vs = VectorStore()
+            vs = VectorStore(ConfigProvider(MagicMock()))
             _ = vs.collection  # triggers lazy init
             mock_inst.get_or_create_collection.assert_called_once()
 
@@ -259,13 +267,17 @@ class TestVectorStoreEmbeddingFunction:
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         with patch("core.vector_store.chromadb.PersistentClient"):
             from core.embedding_function import create_embedding_function
+            from config_provider import ConfigProvider
+            from unittest.mock import MagicMock
 
-            assert create_embedding_function() is None
+            assert create_embedding_function(ConfigProvider(MagicMock())) is None
 
     def test_embedding_creator_injected(self):
         """Test that an injected embedding creator is used."""
         with patch("core.vector_store.chromadb.PersistentClient"):
             from core.vector_store import VectorStore
+        from config_provider import ConfigProvider
+        from unittest.mock import MagicMock
 
             mock_ef = MagicMock()
             mock_cfg = MagicMock()
