@@ -44,7 +44,7 @@ class TestRAGRetriever:
 
     def test_format_context(self):
         mock_vs = MagicMock()
-        retriever = RAGRetriever(vector_store=mock_vs)
+        retriever = RAGRetriever(vector_store=mock_vs, config_provider=MagicMock())
 
         results = [
             {"text": "chunk 1", "metadata": {}},
@@ -55,7 +55,7 @@ class TestRAGRetriever:
 
     def test_retrieve_formatted_context(self):
         mock_vs = MagicMock()
-        retriever = RAGRetriever(vector_store=mock_vs)
+        retriever = RAGRetriever(vector_store=mock_vs, config_provider=MagicMock())
 
         mock_vs.query.return_value = [
             {"text": "chunk 1", "metadata": {}},

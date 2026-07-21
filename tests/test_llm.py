@@ -13,109 +13,111 @@ class TestGetLlmResponse:
         mock_cls.return_value = mock_instance
         return mock_cls, mock_instance
 
+    def _make_config(self):
+        cfg = MagicMock()
+        cfg.llm_temperature = 0.2
+        cfg.llm_max_tokens = 1024
+        cfg.system_prompt = "You are a helpful assistant."
+        return cfg
+
+    def _make_registry(self, return_value=None, side_effect=None):
+        reg = MagicMock()
+        reg.resolve_provider = MagicMock(return_value=return_value, side_effect=side_effect)
+        return reg
+
     def test_openai_routing(self, monkeypatch):
         """gpt-* models route to OpenAI provider."""
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         mock_cls, _ = self._make_mock()
 
-        with patch("core.providers.routing.ProviderRegistry.resolve_provider", return_value=mock_cls):
-            from core.llm import get_llm_response
+        from core.llm import get_llm_response
 
-            result = get_llm_response("ctx", "query", "gpt-4o-mini")
-            assert "mock response" in result
+        result = get_llm_response("ctx", "query", "gpt-4o-mini", self._make_config(), self._make_registry(return_value=mock_cls))
+        assert "mock response" in result
 
     def test_openai_groq_routing(self, monkeypatch):
         """groq: models route to OpenAI provider."""
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         mock_cls, _ = self._make_mock()
 
-        with patch("core.providers.routing.ProviderRegistry.resolve_provider", return_value=mock_cls):
-            from core.llm import get_llm_response
+        from core.llm import get_llm_response
 
-            result = get_llm_response("ctx", "query", "groq:llama-3.1-8b-instant")
-            assert "mock response" in result
+        result = get_llm_response("ctx", "query", "groq:llama-3.1-8b-instant", self._make_config(), self._make_registry(return_value=mock_cls))
+        assert "mock response" in result
 
     def test_ollama_routing(self, monkeypatch):
         """ollama: models route to OllamaProvider."""
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         mock_cls, _ = self._make_mock()
 
-        with patch("core.providers.routing.ProviderRegistry.resolve_provider", return_value=mock_cls):
-            from core.llm import get_llm_response
+        from core.llm import get_llm_response
 
-            result = get_llm_response("ctx", "query", "ollama:llama3.1")
-            assert "mock response" in result
+        result = get_llm_response("ctx", "query", "ollama:llama3.1", self._make_config(), self._make_registry(return_value=mock_cls))
+        assert "mock response" in result
 
     def test_lm_studio_routing(self, monkeypatch):
         """lm-studio: models route to LMStudioProvider."""
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         mock_cls, _ = self._make_mock()
 
-        with patch("core.providers.routing.ProviderRegistry.resolve_provider", return_value=mock_cls):
-            from core.llm import get_llm_response
+        from core.llm import get_llm_response
 
-            result = get_llm_response("ctx", "query", "lm-studio:llama-3.1-instruct")
-            assert "mock response" in result
+        result = get_llm_response("ctx", "query", "lm-studio:llama-3.1-instruct", self._make_config(), self._make_registry(return_value=mock_cls))
+        assert "mock response" in result
 
     def test_anthropic_routing(self, monkeypatch):
         """claude-* models route to AnthropicProvider."""
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         mock_cls, _ = self._make_mock()
 
-        with patch("core.providers.routing.ProviderRegistry.resolve_provider", return_value=mock_cls):
-            from core.llm import get_llm_response
+        from core.llm import get_llm_response
 
-            result = get_llm_response("ctx", "query", "claude-3-opus-20240229")
-            assert "mock response" in result
+        result = get_llm_response("ctx", "query", "claude-3-opus-20240229", self._make_config(), self._make_registry(return_value=mock_cls))
+        assert "mock response" in result
 
     def test_gemini_routing(self, monkeypatch):
         """gemini-* models route to GeminiProvider."""
         monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
         mock_cls, _ = self._make_mock()
 
-        with patch("core.providers.routing.ProviderRegistry.resolve_provider", return_value=mock_cls):
-            from core.llm import get_llm_response
+        from core.llm import get_llm_response
 
-            result = get_llm_response("ctx", "query", "gemini-pro")
-            assert "mock response" in result
+        result = get_llm_response("ctx", "query", "gemini-pro", self._make_config(), self._make_registry(return_value=mock_cls))
+        assert "mock response" in result
 
     def test_key_missing_returns_error(self, monkeypatch):
         """Missing key returns warning-prefixed error."""
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        from core.providers.openai import OpenAIProvider
         from core.llm import get_llm_response
 
-        with patch("core.providers.openai.OpenAIProvider") as MockProvider:
-            MockProvider.side_effect = Exception("`OPENAI_API_KEY` is missing")
-            result = get_llm_response("ctx", "query", "gpt-4o-mini")
-            assert "\u26a0\ufe0f" in result
+        result = get_llm_response("ctx", "query", "gpt-4o-mini", self._make_config(), self._make_registry(return_value=OpenAIProvider))
+        assert "\u26a0\ufe0f" in result
 
     def test_unsupported_model_returns_error(self):
         """Unknown model returns error."""
         from core.providers.base import UnsupportedModelError as UME
+        from core.llm import get_llm_response
 
-        with patch("core.providers.routing.ProviderRegistry.resolve_provider", side_effect=UME("No provider for xyz")):
-            from core.llm import get_llm_response
-
-            result = get_llm_response("ctx", "query", "xyz-model")
-            assert "\u26a0\ufe0f" in result
+        result = get_llm_response("ctx", "query", "xyz-model", self._make_config(), self._make_registry(side_effect=UME("No provider for xyz")))
+        assert "\u26a0\ufe0f" in result
 
     def test_uniform_instantiation(self, monkeypatch):
         """All providers are instantiated with (model, temperature, max_tokens)."""
         mock_cls, mock_instance = self._make_mock()
 
-        with patch("core.providers.routing.ProviderRegistry.resolve_provider", return_value=mock_cls):
-            from core.llm import get_llm_response
+        from core.llm import get_llm_response
 
-            get_llm_response("ctx", "query", "gpt-4o-mini")
+        get_llm_response("ctx", "query", "gpt-4o-mini", self._make_config(), self._make_registry(return_value=mock_cls))
 
-            # Verify uniform constructor call
-            mock_cls.assert_called_once()
-            call_kwargs = mock_cls.call_args
-            assert call_kwargs.kwargs["model"] == "gpt-4o-mini"
-            assert "temperature" in call_kwargs.kwargs
-            assert "max_tokens" in call_kwargs.kwargs
-            # No api_key_env should be passed — provider resolves it internally
-            assert "api_key_env" not in call_kwargs.kwargs
+        # Verify uniform constructor call
+        mock_cls.assert_called_once()
+        call_kwargs = mock_cls.call_args
+        assert call_kwargs.kwargs["model"] == "gpt-4o-mini"
+        assert "temperature" in call_kwargs.kwargs
+        assert "max_tokens" in call_kwargs.kwargs
+        # No api_key_env should be passed — provider resolves it internally
+        assert "api_key_env" not in call_kwargs.kwargs
 
 
 class TestChatMessage:
