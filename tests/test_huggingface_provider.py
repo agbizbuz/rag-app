@@ -10,8 +10,8 @@ class TestHuggingFaceProvider:
     def test_init_sets_attributes(self):
         from core.providers.huggingface import HuggingFaceProvider
 
-        p = HuggingFaceProvider("hf:hf:meta-llama/Llama-3.3-70B-Instruct", temperature=0.5, max_tokens=2048)
-        assert p._model == "meta-llama/Llama-3.3-70B-Instruct"
+        p = HuggingFaceProvider("meta-llama/Meta-Llama-3.1-70B-Instruct", temperature=0.5, max_tokens=2048)
+        assert p._model == "meta-llama/Meta-Llama-3.1-70B-Instruct"
         assert p.name == "HuggingFace"
 
     def test_chat_with_key(self):
@@ -24,7 +24,7 @@ class TestHuggingFaceProvider:
             with patch("requests.post", return_value=mock_response) as mock_post:
                 from core.providers.huggingface import HuggingFaceProvider
 
-                p = HuggingFaceProvider("hf:hf:meta-llama/Llama-3.3-70B-Instruct")
+                p = HuggingFaceProvider("meta-llama/Meta-Llama-3.1-70B-Instruct")
                 msgs = [MagicMock(role="user", content="hello")]
                 result = p.chat(msgs)
                 assert result == "HF says hello"
@@ -43,7 +43,7 @@ class TestHuggingFaceProvider:
             with patch("requests.post", return_value=mock_response):
                 from core.providers.huggingface import HuggingFaceProvider
 
-                p = HuggingFaceProvider("hf:hf:test-model")
+                p = HuggingFaceProvider("test-model")
                 msgs = [MagicMock(role="user", content="hello")]
                 result = p.chat(msgs)
                 assert result == "Direct text response"
@@ -59,7 +59,7 @@ class TestHuggingFaceProvider:
             with patch("requests.post", return_value=mock_response):
                 from core.providers.huggingface import HuggingFaceProvider
 
-                p = HuggingFaceProvider("hf:hf:test-model")
+                p = HuggingFaceProvider("test-model")
                 msgs = [MagicMock(role="user", content="hello")]
                 try:
                     p.chat(msgs)
@@ -77,7 +77,7 @@ class TestHuggingFaceProvider:
             from core.providers.base import KeyMissingError as KME
             from core.providers.huggingface import HuggingFaceProvider
 
-            p = HuggingFaceProvider("hf:hf:test-model")
+            p = HuggingFaceProvider("test-model")
             msgs = [MagicMock(role="user", content="hello")]
             try:
                 p.chat(msgs)

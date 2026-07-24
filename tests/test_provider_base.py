@@ -74,6 +74,9 @@ class _TestProvider(Provider):
     def chat(self, messages, temperature=0.0):
         return "test response"
 
+    def _get_api_key(self):
+        return "test-key-for-testing"
+
 
 class TestProviderProtocol:
     """Tests for the provider protocol and routing."""

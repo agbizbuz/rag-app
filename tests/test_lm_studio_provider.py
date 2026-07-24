@@ -23,7 +23,7 @@ class TestLMStudioProvider:
         mock_response = MagicMock()
         mock_response.choices = [MagicMock(message=MagicMock(content="LM Studio reply"))]
 
-        with patch("core.providers.lm_studio.get_openai_client") as MockGetClient:
+        with patch("core.providers.openai_compat.get_openai_client") as MockGetClient:
             mock_client_class = MagicMock()
             mock_instance = MagicMock()
             mock_instance.chat.completions.create.return_value = mock_response
@@ -45,7 +45,7 @@ class TestLMStudioProvider:
         mock_response = MagicMock()
         mock_response.choices = [MagicMock(message=MagicMock(content="OK"))]
 
-        with patch("core.providers.lm_studio.get_openai_client") as MockGetClient:
+        with patch("core.providers.openai_compat.get_openai_client") as MockGetClient:
             mock_client_class = MagicMock()
             mock_instance = MagicMock()
             mock_instance.chat.completions.create.return_value = mock_response
