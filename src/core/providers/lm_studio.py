@@ -1,27 +1,24 @@
 """LM Studio provider (OpenAI-compatible local server)."""
 
 from __future__ import annotations
+
 import os
-from ._openai_compat import get_openai_client
-from .base import ChatMessage, Provider
+
+from .openai_compat import OpenAICompatProvider, get_openai_client  # noqa: F401 re-export
 
 
-class LMStudioProvider(Provider):
+class LMStudioProvider(OpenAICompatProvider):
+    """LM Studio provider — uses the "lm-studio" sentinel API key."""
+
     name = "LM Studio"
 
-    def __init__(self, model: str, temperature=0.2, max_tokens=1024) -> None:
-        self._model = self._get_model_name(model)
-        self._temperature = temperature
-        self._max_tokens = max_tokens
+    def __init__(self, model: str, temperature: float = 0.2, max_tokens: int = 1024) -> None:
         self._base_url = os.environ.get("LM_STUDIO_BASE_URL", "http://localhost:1234/v1")
+        super().__init__(model, temperature=temperature, max_tokens=max_tokens)
 
-    def chat(self, messages: list[ChatMessage]) -> str:
-        OAI = get_openai_client()
-        client = OAI(api_key="lm-studio", base_url=self._base_url)
-        messages_dicts = [{"role": m.role, "content": m.content} for m in messages]
-        resp = client.chat.completions.create(
-            model=self._model,
-            messages=messages_dicts,
-            temperature=self._temperature,
-        )
-        return resp.choices[0].message.content or ""
+    def _get_api_key(self) -> str:
+        # LM Studio uses a sentinel key "lm-studio", not an env var
+        return "lm-studio"
+
+
+__all__ = ["LMStudioProvider", "get_openai_client"]

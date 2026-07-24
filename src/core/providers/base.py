@@ -46,10 +46,21 @@ class Provider(ABC):
     @abstractmethod
     def chat(self, messages: list[ChatMessage]) -> str: ...
 
-    def _get_model_name(self, full_name: str):
-        print(full_name)
-        lst = full_name.split(":")
-        return ":".join(lst[2:])
+    @abstractmethod
+    def _get_api_key(self) -> str:
+        """Return the provider's API key from env or raise KeyMissingError."""
+        ...
+
+    def _extract_model_name(self, full_name: str) -> str:
+        """Strip one provider prefix (e.g. 'ollama:') from model name.
+
+        Handles single-prefixed ('prefix:model') and bare ('model') inputs.
+        For double-prefixed test strings like 'prefix:prefix:model', returns
+        everything after the first colon, which is the expected behavior since
+        production code strips one prefix at a time during routing.
+        """
+        parts = full_name.split(":")
+        return ":".join(parts[1:]) if len(parts) > 1 else full_name
 
     def validate_key(self, key_name: str) -> None:
         """Raise KeyMissingError if the env var is not set."""
