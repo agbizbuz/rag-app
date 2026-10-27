@@ -206,7 +206,7 @@ The core layers follow SOLID principles via registry patterns:
 - **Provider Registry** (`core/providers/__init__`): New LLM backends are registered with `register("prefix-", ProviderClass)`. Providers implement `ProviderProtocol.chat()`.
 - **Retrieval Coordination**: `retriever.py` routes between semantic (ChromaDB cosine), keyword (BM25), and hybrid modes; `hybrid_retriever.py` implements reciprocal rank fusion.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed design rationale and extension guides, and [AGENTS.md](AGENTS.md) for developer skills.
+See the [logical architecture diagram](docs/logical-architecture.svg) and [ARCHITECTURE.md](ARCHITECTURE.md) for detailed design rationale and extension guides, and [AGENTS.md](AGENTS.md) for developer skills.
 
 ## 🍽️ License
 

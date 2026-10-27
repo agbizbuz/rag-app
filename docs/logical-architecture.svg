@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" role="img" aria-label="Logical architecture of the RAG app: Streamlit tabs call ingestion, retrieval, generation and evaluation services in the core layer; the vector store persists to ChromaDB, providers call LLM backends, evaluation appends to a JSON log, and ConfigProvider injects settings into the core." font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="960" height="600" fill="#ffffff"/>
+
+  <!-- layers -->
+  <g fill="#f1f5f9" stroke="#94a3b8" stroke-width="1">
+    <rect x="20" y="20" width="920" height="100" rx="8"/>
+    <rect x="20" y="140" width="720" height="320" rx="8"/>
+    <rect x="760" y="140" width="180" height="320" rx="8" stroke-dasharray="5 3"/>
+    <rect x="20" y="480" width="720" height="100" rx="8"/>
+  </g>
+  <g fill="#64748b" font-size="11" font-weight="600">
+    <text x="36" y="38">UI LAYER · Streamlit · app.py wires the tabs</text>
+    <text x="36" y="156">CORE LAYER</text>
+    <text x="776" y="156">CONFIG</text>
+    <text x="36" y="498">PERSISTENCE &amp; EXTERNAL</text>
+  </g>
+
+  <!-- arrows -->
+  <g stroke="#475569" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <line x1="100" y1="100" x2="100" y2="180"/>
+    <line x1="198" y1="100" x2="198" y2="340"/>
+    <line x1="350" y1="100" x2="350" y2="180"/>
+    <line x1="420" y1="100" x2="420" y2="180"/>
+    <line x1="575" y1="100" x2="575" y2="180"/>
+    <line x1="700" y1="100" x2="700" y2="180"/>
+    <line x1="840" y1="100" x2="840" y2="180"/>
+    <line x1="111" y1="220" x2="111" y2="240"/>
+    <line x1="111" y1="280" x2="111" y2="340"/>
+    <line x1="111" y1="410" x2="111" y2="384"/>
+    <line x1="266" y1="220" x2="266" y2="240"/>
+    <line x1="266" y1="280" x2="266" y2="340"/>
+    <line x1="340" y1="220" x2="340" y2="340"/>
+    <line x1="461" y1="220" x2="461" y2="240"/>
+    <line x1="461" y1="280" x2="461" y2="520"/>
+    <line x1="616" y1="240" x2="616" y2="220"/>
+    <line x1="690" y1="220" x2="690" y2="520"/>
+    <line x1="290" y1="384" x2="290" y2="520"/>
+    <line x1="850" y1="240" x2="850" y2="220"/>
+    <line x1="780" y1="200" x2="745" y2="200" stroke-dasharray="4 3"/>
+  </g>
+
+  <!-- arrow labels -->
+  <g fill="#334155" font-size="11">
+    <text x="104" y="145">upload</text>
+    <text x="202" y="145">manage</text>
+    <text x="354" y="145">retrieve</text>
+    <text x="424" y="145">generate</text>
+    <text x="579" y="145">record</text>
+    <text x="704" y="145">read</text>
+    <text x="844" y="145">model + keys</text>
+    <text x="115" y="315">chunks</text>
+    <text x="115" y="400">embeds</text>
+    <text x="270" y="315">all docs</text>
+    <text x="344" y="300">semantic</text>
+    <text x="465" y="400">chat()</text>
+    <text x="620" y="232">scores</text>
+    <text x="694" y="400">append</text>
+    <text x="294" y="510">persist</text>
+  </g>
+
+  <!-- boxes -->
+  <g fill="#ffffff" stroke="#475569" stroke-width="1.2">
+    <rect x="40" y="52" width="120" height="48" rx="5"/>
+    <rect x="170" y="52" width="150" height="48" rx="5"/>
+    <rect x="336" y="52" width="244" height="48" rx="5"/>
+    <rect x="596" y="52" width="160" height="48" rx="5"/>
+    <rect x="772" y="52" width="132" height="48" rx="5"/>
+
+    <rect x="36" y="180" width="150" height="40" rx="5"/>
+    <rect x="36" y="240" width="150" height="40" rx="5"/>
+    <rect x="211" y="180" width="150" height="40" rx="5"/>
+    <rect x="211" y="240" width="110" height="40" rx="5"/>
+    <rect x="386" y="180" width="150" height="40" rx="5"/>
+    <rect x="386" y="240" width="150" height="40" rx="5"/>
+    <rect x="561" y="180" width="150" height="40" rx="5"/>
+    <rect x="561" y="240" width="110" height="40" rx="5"/>
+    <rect x="36" y="340" width="325" height="44" rx="5"/>
+    <rect x="36" y="410" width="150" height="36" rx="5"/>
+
+    <rect x="780" y="180" width="140" height="40" rx="5"/>
+    <rect x="780" y="240" width="140" height="40" rx="5"/>
+  </g>
+  <g fill="#ffffff" stroke="#2563eb" stroke-width="1.5">
+    <rect x="211" y="520" width="150" height="44" rx="5"/>
+    <rect x="386" y="520" width="150" height="44" rx="5"/>
+    <rect x="561" y="520" width="150" height="44" rx="5"/>
+  </g>
+
+  <!-- box text -->
+  <g fill="#0f172a" text-anchor="middle" font-weight="600">
+    <text x="100" y="73">Builder tab</text>
+    <text x="245" y="73">Database tab</text>
+    <text x="458" y="73">Query tab</text>
+    <text x="676" y="73">Evaluation tab</text>
+    <text x="838" y="73">Sidebar</text>
+
+    <text x="111" y="197">parser.py</text>
+    <text x="111" y="257">Parsers</text>
+    <text x="286" y="197">HybridRetriever</text>
+    <text x="266" y="257">KeywordSearcher</text>
+    <text x="461" y="197">llm.py</text>
+    <text x="461" y="257">Provider registry</text>
+    <text x="636" y="197">EvaluationManager</text>
+    <text x="616" y="257">LLMJudge</text>
+    <text x="198" y="358">VectorStore</text>
+    <text x="111" y="425">EmbeddingManager</text>
+
+    <text x="850" y="197">ConfigProvider</text>
+    <text x="850" y="257">Settings</text>
+
+    <text x="286" y="539">ChromaDB</text>
+    <text x="461" y="539">LLM backends</text>
+    <text x="636" y="539">evaluation_logs</text>
+  </g>
+  <g fill="#475569" text-anchor="middle" font-size="11">
+    <text x="100" y="90">upload + ingest</text>
+    <text x="245" y="90">inspect + reset</text>
+    <text x="458" y="90">ask · answer · rate</text>
+    <text x="676" y="90">metrics dashboard</text>
+    <text x="838" y="90">provider + model</text>
+
+    <text x="111" y="211">process_file()</text>
+    <text x="111" y="271">pdf · txt · csv · docx</text>
+    <text x="286" y="211">semantic + BM25, RRF</text>
+    <text x="266" y="271">BM25</text>
+    <text x="461" y="211">get_llm_response()</text>
+    <text x="461" y="271">prefix → provider</text>
+    <text x="636" y="211">record + read</text>
+    <text x="616" y="271">faithfulness</text>
+    <text x="198" y="374">add · query · get_all_documents</text>
+    <text x="111" y="438">OpenAI | local</text>
+
+    <text x="850" y="211">singleton</text>
+    <text x="850" y="271">.env → Pydantic</text>
+
+    <text x="286" y="555">chroma_db/</text>
+    <text x="461" y="555">cloud APIs + local</text>
+    <text x="636" y="555">.json</text>
+
+    <text x="850" y="330">Injected into</text>
+    <text x="850" y="346">VectorStore, retrievers,</text>
+    <text x="850" y="362">EmbeddingManager;</text>
+    <text x="850" y="378">read by llm.py + sidebar</text>
+  </g>
+</svg>

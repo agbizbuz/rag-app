@@ -29,6 +29,12 @@ This is a **Streamlit-based RAG application** that ingests local documents into 
 
 ## System Architecture
 
+### Logical View
+
+![Logical architecture](docs/logical-architecture.svg)
+
+### Module Graph
+
 ```mermaid
 graph TB
     subgraph UI["UI Layer (Streamlit)"]
